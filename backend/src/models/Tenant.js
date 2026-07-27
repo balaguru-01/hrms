@@ -5,15 +5,13 @@ const tenantSchema = new mongoose.Schema(
   {
     companyName: {
       type: String,
-      required: [true, "Company name is required"],
+      required: true,
       trim: true,
-      minlength: 2,
-      maxlength: 100,
     },
 
     companyCode: {
       type: String,
-      required: [true, "Company code is required"],
+      required: true,
       unique: true,
       uppercase: true,
       trim: true,
@@ -21,31 +19,20 @@ const tenantSchema = new mongoose.Schema(
 
     email: {
       type: String,
-      required: [true, "Company email is required"],
+      required: true,
       unique: true,
       lowercase: true,
-      trim: true,
-      validate: {
-        validator: validator.isEmail,
-        message: "Invalid email",
-      },
+      validate: [validator.isEmail, "Invalid Email"],
     },
 
     phone: {
       type: String,
-      required: [true, "Phone number is required"],
-      trim: true,
+      required: true,
     },
 
     website: {
       type: String,
-      trim: true,
-      validate: {
-        validator: function (value) {
-          return !value || validator.isURL(value);
-        },
-        message: "Invalid website URL",
-      },
+      default: "",
     },
 
     logo: {
@@ -55,8 +42,7 @@ const tenantSchema = new mongoose.Schema(
 
     industry: {
       type: String,
-      required: true,
-      trim: true,
+      default: "IT",
     },
 
     address: {
@@ -81,14 +67,12 @@ const tenantSchema = new mongoose.Schema(
       },
 
       startDate: Date,
-
       endDate: Date,
     },
 
     employeeLimit: {
       type: Number,
       default: 10,
-      min: 1,
     },
 
     isActive: {
@@ -106,6 +90,4 @@ const tenantSchema = new mongoose.Schema(
   }
 );
 
-tenantSchema.index({ companyCode: 1 });
-tenantSchema.index({ email: 1 });
 module.exports = mongoose.model("Tenant", tenantSchema);

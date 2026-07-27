@@ -5,7 +5,7 @@ const permissionSchema = new mongoose.Schema(
     module: {
       type: String,
       required: true,
-      trim: true,
+      lowercase: true,
     },
 
     action: {
@@ -23,11 +23,11 @@ const permissionSchema = new mongoose.Schema(
       ],
     },
 
-    name: {
+    permissionName: {
       type: String,
       unique: true,
       required: true,
-      trim: true,
+      lowercase: true,
     },
 
     description: {
@@ -44,7 +44,5 @@ const permissionSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
-
-permissionSchema.index({ name: 1 }, { unique: true });
 
 module.exports = mongoose.model("Permission", permissionSchema);
