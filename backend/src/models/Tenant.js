@@ -108,5 +108,4 @@ const tenantSchema = new mongoose.Schema(
 
 tenantSchema.index({ companyCode: 1 });
 tenantSchema.index({ email: 1 });
-
 module.exports = mongoose.model("Tenant", tenantSchema);
