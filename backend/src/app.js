@@ -7,7 +7,10 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.send("HRMS Backend Running...");
+  res.json({
+    success: true,
+    message: "HRMS Backend Running"
+  });
 });
 
 module.exports = app;
