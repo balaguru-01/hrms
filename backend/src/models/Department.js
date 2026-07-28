@@ -2,10 +2,10 @@ const mongoose = require("mongoose");
 
 const departmentSchema = new mongoose.Schema(
 {
-    tenant:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Tenant",
-        required:true
+    tenantName:{
+        type:String,
+        required:true,
+        trim:true
     },
 
     departmentName:{
@@ -17,7 +17,8 @@ const departmentSchema = new mongoose.Schema(
     departmentCode:{
         type:String,
         required:true,
-        uppercase:true
+        uppercase:true,
+        trim:true
     },
 
     description:{
@@ -25,9 +26,14 @@ const departmentSchema = new mongoose.Schema(
         default:""
     },
 
-    manager:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Employee"
+    managerEmployeeId:{
+        type:String,
+        default:null
+    },
+
+    managerName:{
+        type:String,
+        default:null
     },
 
     isActive:{
@@ -40,4 +46,4 @@ const departmentSchema = new mongoose.Schema(
     timestamps:true
 });
 
-module.exports=mongoose.model("Department",departmentSchema);
+module.exports = mongoose.model("Department", departmentSchema);

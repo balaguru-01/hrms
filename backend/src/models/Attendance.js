@@ -1,16 +1,29 @@
-const mongoose=require("mongoose");
+const mongoose = require("mongoose");
 
-const attendanceSchema=new mongoose.Schema(
+const attendanceSchema = new mongoose.Schema(
 {
-    tenant:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Tenant",
+    tenantName:{
+        type:String,
         required:true
     },
 
-    employee:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Employee",
+    employeeId:{
+        type:String,
+        required:true
+    },
+
+    employeeName:{
+        type:String,
+        required:true
+    },
+
+    departmentName:{
+        type:String,
+        required:true
+    },
+
+    designation:{
+        type:String,
         required:true
     },
 
@@ -48,4 +61,4 @@ const attendanceSchema=new mongoose.Schema(
     timestamps:true
 });
 
-module.exports=mongoose.model("Attendance",attendanceSchema);
+module.exports = mongoose.model("Attendance", attendanceSchema);

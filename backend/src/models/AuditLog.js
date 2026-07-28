@@ -1,30 +1,50 @@
-const mongoose=require("mongoose");
+const mongoose = require("mongoose");
 
-const auditSchema=new mongoose.Schema(
+const auditSchema = new mongoose.Schema(
 {
-    tenant:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Tenant"
+    tenantName:{
+        type:String,
+        required:true
     },
 
-    user:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"User"
+    employeeId:{
+        type:String,
+        required:true
     },
 
-    action:String,
+    employeeName:{
+        type:String,
+        required:true
+    },
 
-    module:String,
+    action:{
+        type:String,
+        required:true
+    },
 
-    description:String,
+    module:{
+        type:String,
+        required:true
+    },
 
-    ipAddress:String,
+    description:{
+        type:String,
+        required:true
+    },
 
-    device:String
+    ipAddress:{
+        type:String,
+        default:""
+    },
+
+    device:{
+        type:String,
+        default:""
+    }
 
 },
 {
     timestamps:true
 });
 
-module.exports=mongoose.model("AuditLog",auditSchema);
+module.exports = mongoose.model("AuditLog", auditSchema);

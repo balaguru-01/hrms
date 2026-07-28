@@ -1,20 +1,33 @@
-const mongoose=require("mongoose");
+const mongoose = require("mongoose");
 
-const notificationSchema=new mongoose.Schema(
+const notificationSchema = new mongoose.Schema(
 {
-    tenant:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Tenant"
+    tenantName:{
+        type:String,
+        required:true
     },
 
-    receiver:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"User"
+    receiverEmployeeId:{
+        type:String,
+        required:true
     },
 
-    title:String,
+    receiverName:{
+        type:String,
+        required:true
+    },
 
-    message:String,
+    title:{
+        type:String,
+        required:true,
+        trim:true
+    },
+
+    message:{
+        type:String,
+        required:true,
+        trim:true
+    },
 
     isRead:{
         type:Boolean,
@@ -26,4 +39,4 @@ const notificationSchema=new mongoose.Schema(
     timestamps:true
 });
 
-module.exports=mongoose.model("Notification",notificationSchema);
+module.exports = mongoose.model("Notification", notificationSchema);

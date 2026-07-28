@@ -7,7 +7,6 @@ const Permission = require("../models/Permission");
 const Role = require("../models/Role");
 const User = require("../models/User");
 const Department = require("../models/Department");
-const Employee = require("../models/Employee");
 const Attendance = require("../models/Attendance");
 const Request = require("../models/Request");
 const Task = require("../models/Task");
@@ -29,7 +28,6 @@ const seedDatabase = async () => {
         await Task.deleteMany({});
         await Notification.deleteMany({});
         await AuditLog.deleteMany({});
-        await Employee.deleteMany({});
         await Department.deleteMany({});
         await User.deleteMany({});
         await Role.deleteMany({});
@@ -39,436 +37,466 @@ const seedDatabase = async () => {
         console.log("Old Data Deleted");
 
         // ==========================
-        // TENANT
-        // ==========================
+// TENANT
+// ==========================
 
-        const tenant = await Tenant.create({
+const tenant = await Tenant.create({
 
-            tenantName: "ABC Technologies",
+    tenantName: "ABC Technologies",
 
-            companyCode: "ABC001",
+    companyCode: "ABC001",
 
-            email: "admin@abctech.com",
+    email: "admin@abctech.com",
 
-            phone: "9876543210",
+    phone: "9876543210",
 
-            website: "https://abctech.com",
+    website: "https://abctech.com",
 
-            industry: "Software",
+    industry: "Software",
 
-            address: {
+    address:{
 
-                doorNumber: "15A",
+        doorNumber:"15A",
 
-                street: "Anna Nagar",
+        street:"Anna Nagar",
 
-                city: "Chennai",
+        city:"Chennai",
 
-                state: "Tamil Nadu",
+        state:"Tamil Nadu",
 
-                country: "India",
+        country:"India",
 
-                postalCode: "600001"
+        postalCode:"600001"
 
-            },
+    },
 
-            subscription: {
+    subscription:{
 
-                plan: "Enterprise",
+        plan:"Enterprise",
 
-                status: "Active"
+        status:"Active"
 
-            },
+    },
 
-            employeeLimit: 500
+    employeeLimit:500
 
-        });
+});
 
-        console.log("Tenant Created");
+console.log("Tenant Created");
 
-        // ==========================
-        // PERMISSIONS
-        // ==========================
 
-        const permissions = await Permission.insertMany([
+// ==========================
+// PERMISSIONS
+// ==========================
 
-            {
-                module: "employee",
-                action: "create",
-                permissionName: "employee.create",
-                description: "Create Employee"
-            },
+await Permission.insertMany([
 
-            {
-                module: "employee",
-                action: "read",
-                permissionName: "employee.read",
-                description: "View Employee"
-            },
+{
+    module:"employee",
+    action:"create",
+    permissionName:"employee.create",
+    description:"Create Employee"
+},
 
-            {
-                module: "employee",
-                action: "update",
-                permissionName: "employee.update",
-                description: "Update Employee"
-            },
+{
+    module:"employee",
+    action:"read",
+    permissionName:"employee.read",
+    description:"View Employee"
+},
 
-            {
-                module: "employee",
-                action: "delete",
-                permissionName: "employee.delete",
-                description: "Delete Employee"
-            },
+{
+    module:"employee",
+    action:"update",
+    permissionName:"employee.update",
+    description:"Update Employee"
+},
 
-            {
-                module: "department",
-                action: "manage",
-                permissionName: "department.manage",
-                description: "Manage Departments"
-            },
+{
+    module:"employee",
+    action:"delete",
+    permissionName:"employee.delete",
+    description:"Delete Employee"
+},
 
-            {
-                module: "attendance",
-                action: "manage",
-                permissionName: "attendance.manage",
-                description: "Manage Attendance"
-            },
+{
+    module:"department",
+    action:"manage",
+    permissionName:"department.manage",
+    description:"Manage Departments"
+},
 
-            {
-                module: "leave",
-                action: "approve",
-                permissionName: "leave.approve",
-                description: "Approve Leave"
-            },
+{
+    module:"attendance",
+    action:"manage",
+    permissionName:"attendance.manage",
+    description:"Manage Attendance"
+},
 
-            {
-                module: "task",
-                action: "manage",
-                permissionName: "task.manage",
-                description: "Manage Tasks"
-            },
+{
+    module:"leave",
+    action:"approve",
+    permissionName:"leave.approve",
+    description:"Approve Leave"
+},
 
-            {
-                module: "report",
-                action: "export",
-                permissionName: "report.export",
-                description: "Export Reports"
-            }
+{
+    module:"task",
+    action:"manage",
+    permissionName:"task.manage",
+    description:"Manage Tasks"
+},
 
-        ]);
+{
+    module:"report",
+    action:"export",
+    permissionName:"report.export",
+    description:"Export Reports"
+}
 
-        console.log("Permissions Created");
-        // ==========================
-        // ROLES
-        // ==========================
+]);
 
-        const superAdminRole = await Role.create({
+console.log("Permissions Created");
 
-            roleName: "Super Admin",
 
-            description: "Complete System Access",
+// ==========================
+// ROLES
+// ==========================
 
-            permissions: permissions.map(permission => permission._id),
+await Role.create({
 
-            isSystemRole: true
+    roleName:"Super Admin",
 
-        });
+    description:"Complete System Access",
 
-        const hrRole = await Role.create({
+    permissions:[
 
-            roleName: "HR Manager",
+        "employee.create",
+        "employee.read",
+        "employee.update",
+        "employee.delete",
+        "department.manage",
+        "attendance.manage",
+        "leave.approve",
+        "task.manage",
+        "report.export"
 
-            description: "HR Operations",
+    ],
 
-            permissions: [
+    isSystemRole:true
 
-                permissions[0]._id,
-                permissions[1]._id,
-                permissions[2]._id,
-                permissions[4]._id,
-                permissions[5]._id,
-                permissions[6]._id
+});
 
-            ],
+await Role.create({
 
-            isSystemRole: true
+    roleName:"HR Manager",
 
-        });
+    description:"HR Operations",
 
-        const employeeRole = await Role.create({
+    permissions:[
 
-            roleName: "Employee",
+        "employee.create",
+        "employee.read",
+        "employee.update",
+        "department.manage",
+        "attendance.manage",
+        "leave.approve"
 
-            description: "Employee Access",
+    ],
 
-            permissions: [
+    isSystemRole:true
 
-                permissions[1]._id
+});
 
-            ],
+await Role.create({
 
-            isSystemRole: true
+    roleName:"Employee",
 
-        });
+    description:"Employee Access",
 
-        console.log("Roles Created");
+    permissions:[
 
-        // ==========================
-        // ADMIN USER
-        // ==========================
+        "employee.read"
 
-        const hashedPassword = await bcrypt.hash("Admin@123",10);
+    ],
 
-        const adminUser = await User.create({
+    isSystemRole:true
 
-            tenant: tenant._id,
+});
 
-            role: superAdminRole._id,
+console.log("Roles Created");
 
-            firstName: "System",
+         // ==========================
+// DEPARTMENTS
+// ==========================
 
-            lastName: "Administrator",
+await Department.create({
 
-            email: "admin@abctech.com",
+    tenantName: "ABC Technologies",
 
-            password: hashedPassword,
+    departmentName: "Information Technology",
 
-            phone: "9876543210"
+    departmentCode: "IT001",
 
-        });
+    description: "Handles software development and IT operations",
 
-        console.log("Admin User Created");
+    managerEmployeeId: "EMP001",
 
-        // ==========================
-        // DEPARTMENTS
-        // ==========================
+    managerName: "System Administrator",
 
-        const itDepartment = await Department.create({
+    isActive: true
 
-            tenant: tenant._id,
+});
 
-            departmentName: "Information Technology",
+await Department.create({
 
-            departmentCode: "IT001",
+    tenantName: "ABC Technologies",
 
-            description: "Handles software development and IT operations",
+    departmentName: "Human Resources",
 
-            isActive: true
+    departmentCode: "HR001",
 
-        });
+    description: "Handles employee management",
 
-        const hrDepartment = await Department.create({
+    managerEmployeeId: "EMP001",
 
-            tenant: tenant._id,
+    managerName: "System Administrator",
 
-            departmentName: "Human Resources",
+    isActive: true
 
-            departmentCode: "HR001",
+});
 
-            description: "Handles employee management",
+await Department.create({
 
-            isActive: true
+    tenantName: "ABC Technologies",
 
-        });
+    departmentName: "Finance",
 
-        const financeDepartment = await Department.create({
+    departmentCode: "FIN001",
 
-            tenant: tenant._id,
+    description: "Handles accounts and finance",
 
-            departmentName: "Finance",
+    managerEmployeeId: "EMP001",
 
-            departmentCode: "FIN001",
+    managerName: "System Administrator",
 
-            description: "Handles accounts and finance",
+    isActive: true
 
-            isActive: true
+});
 
-        });
+console.log("Departments Created");
 
-        console.log("Departments Created");
 
-      // ==========================
-      // EMPLOYEE
-      // ==========================
+// ==========================
+// ADMIN USER
+// ==========================
 
-      const adminEmployee = await Employee.create({
+const hashedPassword = await bcrypt.hash("Admin@123",10);
 
-          tenant: tenant._id,
+await User.create({
 
-          department: itDepartment._id,
+    tenantName:"ABC Technologies",
 
-          user: adminUser._id,
+    departmentName:"Information Technology",
 
-          role: superAdminRole._id,
+    roleName:"Super Admin",
 
-          employeeId: "EMP001",
+    reportsTo:null,
 
-          designation: "System Administrator",
+    employeeId:"EMP001",
 
-          joiningDate: new Date("2024-01-01"),
+    firstName:"System",
 
-          salary: 100000,
+    lastName:"Administrator",
 
-          employmentType: "Full-Time",
+    email:"admin@abctech.com",
 
-          reportsTo: null,
+    password:hashedPassword,
 
-          status: "Active"
+    phone:"9876543210",
 
-      });
+    designation:"System Administrator",
 
-      // Set Department Manager
-      itDepartment.manager = adminEmployee._id;
+    joiningDate:new Date("2024-01-01"),
 
-      await itDepartment.save();
+    salary:100000,
 
-      console.log("Employees Created");
+    employmentType:"Full-Time",
 
-           // ==========================
-        // ATTENDANCE
-        // ==========================
+    status:"Active",
 
-        await Attendance.create({
+    isActive:true
 
-            tenant: tenant._id,
+});
 
-            employee: adminEmployee._id,
+console.log("Admin User Created");
 
-            date: new Date("2026-07-28"),
 
-            checkIn: new Date("2026-07-28T09:00:00"),
+// ==========================
+// ATTENDANCE
+// ==========================
 
-            breakIn: new Date("2026-07-28T13:00:00"),
+await Attendance.create({
 
-            breakOut: new Date("2026-07-28T14:00:00"),
+    tenantName:"ABC Technologies",
 
-            checkOut: new Date("2026-07-28T18:00:00"),
+    employeeId:"EMP001",
 
-            breakHours: 1,
+    employeeName:"System Administrator",
 
-            workingHours: 8,
+    departmentName:"Information Technology",
 
-            status: "Present"
+    designation:"System Administrator",
 
-        });
+    date:new Date("2026-07-28"),
 
-        console.log("Attendance Created");
+    checkIn:new Date("2026-07-28T09:00:00"),
 
-              // ==========================
-        // REQUEST
-        // ==========================
+    breakIn:new Date("2026-07-28T13:00:00"),
 
-        await Request.create({
+    breakOut:new Date("2026-07-28T14:00:00"),
 
-            tenant: tenant._id,
+    checkOut:new Date("2026-07-28T18:00:00"),
 
-            employee: adminEmployee._id,
+    breakHours:1,
 
-            approvedBy: adminEmployee._id,
+    workingHours:8,
 
-            requestType: "Leave",
+    status:"Present"
 
-            leaveCategory: "Casual",
+});
 
-            fromDate: new Date("2026-08-01"),
+console.log("Attendance Created");
 
-            toDate: new Date("2026-08-02"),
 
-            reason: "Family Function",
+// ==========================
+// REQUEST
+// ==========================
 
-            status: "Pending"
+await Request.create({
 
-        });
+    tenantName:"ABC Technologies",
 
-        console.log("Request Created");
+    employeeId:"EMP001",
 
-        // ==========================
-        // TASK
-        // ==========================
+    employeeName:"System Administrator",
 
-        await Task.create({
+    departmentName:"Information Technology",
 
-            tenant: tenant._id,
+    designation:"System Administrator",
 
-            assignedTo: adminEmployee._id,
+    approvedBy:"HR Manager",
 
-            assignedBy: adminUser._id,
+    requestType:"Leave",
 
-            title: "Complete HRMS Backend",
+    leaveCategory:"Casual",
 
-            description: "Develop Authentication Module",
+    fromDate:new Date("2026-08-01"),
 
-            priority: "High",
+    toDate:new Date("2026-08-02"),
 
-            status: "In Progress",
+    reason:"Family Function",
 
-            dueDate: new Date("2026-08-05")
+    status:"Pending"
 
-        });
+});
 
-        console.log("Task Created");
+console.log("Request Created");
 
         // ==========================
-        // NOTIFICATION
-        // ==========================
+// TASK
+// ==========================
 
-        await Notification.create({
+await Task.create({
 
-            tenant: tenant._id,
+    tenantName: "ABC Technologies",
 
-            receiver: adminUser._id,
+    assignedToEmployeeId: "EMP001",
 
-            title: "Welcome",
+    assignedToName: "System Administrator",
 
-            message: "Welcome to HRMS",
+    assignedBy: "Super Admin",
 
-            isRead: false
+    title: "Complete HRMS Backend",
 
-        });
+    description: "Develop Authentication Module",
 
-        console.log("Notification Created");
+    priority: "High",
 
-        // ==========================
-        // AUDIT LOG
-        // ==========================
+    status: "In Progress",
 
-        await AuditLog.create({
+    dueDate: new Date("2026-08-05")
 
-            tenant: tenant._id,
+});
 
-            user: adminUser._id,
+console.log("Task Created");
 
-            action: "CREATE",
 
-            module: "System",
+// ==========================
+// NOTIFICATION
+// ==========================
 
-            description: "Initial database seeded successfully",
+await Notification.create({
 
-            ipAddress: "127.0.0.1",
+    tenantName: "ABC Technologies",
 
-            device: "Seed Script"
+    receiverEmployeeId: "EMP001",
 
-        });
+    receiverName: "System Administrator",
 
-        console.log("Audit Log Created");
+    title: "Welcome",
 
-        console.log("\n==========================================");
-        console.log("HRMS DATABASE SEEDED SUCCESSFULLY");
-        console.log("==========================================\n");
+    message: "Welcome to HRMS",
 
-        process.exit(0);
+    isRead: false
 
-    }
+});
 
-    catch(error){
+console.log("Notification Created");
 
-        console.error("\nSeed Error");
 
-        console.error(error);
+// ==========================
+// AUDIT LOG
+// ==========================
 
-        process.exit(1);
+await AuditLog.create({
 
-    }
+    tenantName: "ABC Technologies",
+
+    employeeId: "EMP001",
+
+    employeeName: "System Administrator",
+
+    action: "CREATE",
+
+    module: "System",
+
+    description: "Initial database seeded successfully",
+
+    ipAddress: "127.0.0.1",
+
+    device: "Seed Script"
+
+});
+
+console.log("Audit Log Created");
+
+console.log("\n========================================");
+console.log(" HRMS DATABASE SEEDED SUCCESSFULLY ");
+console.log("========================================\n");
+
+process.exit(0);
+
+}
+catch(error){
+
+    console.error("\nSeed Error");
+
+    console.error(error);
+
+    process.exit(1);
+
+}
 
 };
 

@@ -1,26 +1,37 @@
-const mongoose=require("mongoose");
+const mongoose = require("mongoose");
 
-const taskSchema=new mongoose.Schema(
+const taskSchema = new mongoose.Schema(
 {
-    tenant:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Tenant",
+    tenantName:{
+        type:String,
         required:true
     },
 
-    assignedTo:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Employee"
+    assignedToEmployeeId:{
+        type:String,
+        required:true
+    },
+
+    assignedToName:{
+        type:String,
+        required:true
     },
 
     assignedBy:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"User"
+        type:String,
+        required:true
     },
 
-    title:String,
+    title:{
+        type:String,
+        required:true,
+        trim:true
+    },
 
-    description:String,
+    description:{
+        type:String,
+        default:""
+    },
 
     priority:{
         type:String,
@@ -34,11 +45,14 @@ const taskSchema=new mongoose.Schema(
         default:"Pending"
     },
 
-    dueDate:Date
+    dueDate:{
+        type:Date,
+        required:true
+    }
 
 },
 {
     timestamps:true
 });
 
-module.exports=mongoose.model("Task",taskSchema);
+module.exports = mongoose.model("Task", taskSchema);

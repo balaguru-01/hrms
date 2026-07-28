@@ -1,18 +1,37 @@
 const mongoose = require("mongoose");
-const validator = require("validator");
 
 const userSchema = new mongoose.Schema(
 {
-    tenant:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Tenant",
-        required:true
+    tenantName:{
+        type:String,
+        required:true,
+        trim:true
     },
 
-    role:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Role",
-        required:true
+    departmentName:{
+        type:String,
+        required:true,
+        trim:true
+    },
+
+    roleName:{
+        type:String,
+        required:true,
+        trim:true
+    },
+
+    reportsTo:{
+        type:String,
+        default:null,
+        trim:true
+    },
+
+    employeeId:{
+        type:String,
+        required:true,
+        unique:true,
+        uppercase:true,
+        trim:true
     },
 
     firstName:{
@@ -23,6 +42,7 @@ const userSchema = new mongoose.Schema(
 
     lastName:{
         type:String,
+        required:true,
         trim:true
     },
 
@@ -31,7 +51,7 @@ const userSchema = new mongoose.Schema(
         required:true,
         unique:true,
         lowercase:true,
-        validate:[validator.isEmail,"Invalid Email"]
+        trim:true
     },
 
     password:{
@@ -40,26 +60,49 @@ const userSchema = new mongoose.Schema(
     },
 
     phone:{
-        type:String
+        type:String,
+        required:true
     },
 
-    profileImage:{
+    designation:{
         type:String,
-        default:""
+        required:true
+    },
+
+    joiningDate:{
+        type:Date,
+        required:true
+    },
+
+    salary:{
+        type:Number,
+        default:0
+    },
+
+    employmentType:{
+        type:String,
+        enum:[
+            "Full-Time",
+            "Part-Time",
+            "Intern",
+            "Contract"
+        ],
+        default:"Full-Time"
+    },
+
+    status:{
+        type:String,
+        enum:[
+            "Active",
+            "Inactive",
+            "Resigned"
+        ],
+        default:"Active"
     },
 
     isActive:{
         type:Boolean,
         default:true
-    },
-
-    isDeleted:{
-        type:Boolean,
-        default:false
-    },
-
-    lastLogin:{
-        type:Date
     }
 
 },
@@ -67,4 +110,4 @@ const userSchema = new mongoose.Schema(
     timestamps:true
 });
 
-module.exports = mongoose.model("User",userSchema);
+module.exports = mongoose.model("User", userSchema);

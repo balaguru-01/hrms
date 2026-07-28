@@ -42,7 +42,7 @@ const tenantSchema = new mongoose.Schema(
 
     industry:{
         type:String,
-        default:"IT"
+        required:true
     },
 
     address:{
