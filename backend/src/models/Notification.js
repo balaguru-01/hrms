@@ -16,12 +16,6 @@ const notificationSchema=new mongoose.Schema(
 
     message:String,
 
-    type:{
-        type:String,
-        enum:["System","Task","Leave","Attendance"],
-        default:"System"
-    },
-
     isRead:{
         type:Boolean,
         default:false

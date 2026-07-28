@@ -1,6 +1,6 @@
-const mongoose = require("mongoose");
+const mongoose=require("mongoose");
 
-const attendanceSchema = new mongoose.Schema(
+const attendanceSchema=new mongoose.Schema(
 {
     tenant:{
         type:mongoose.Schema.Types.ObjectId,
@@ -21,17 +21,26 @@ const attendanceSchema = new mongoose.Schema(
 
     checkIn:Date,
 
+    breakIn:Date,
+
+    breakOut:Date,
+
     checkOut:Date,
 
-    status:{
-        type:String,
-        enum:["Present","Absent","Leave","Half-Day"],
-        default:"Present"
+    breakHours:{
+        type:Number,
+        default:0
     },
 
     workingHours:{
         type:Number,
         default:0
+    },
+
+    status:{
+        type:String,
+        enum:["Present","Absent","Leave","Half-Day"],
+        default:"Present"
     }
 
 },

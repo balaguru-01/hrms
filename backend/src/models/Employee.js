@@ -19,6 +19,12 @@ const employeeSchema=new mongoose.Schema(
         required:true
     },
 
+    role:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Role",
+        required:true
+    },
+
     employeeId:{
         type:String,
         required:true,
@@ -46,9 +52,10 @@ const employeeSchema=new mongoose.Schema(
         default:"Full-Time"
     },
 
-    reportingManager:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Employee"
+    reportsTo: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Employee",
+        default: null
     },
 
     status:{
