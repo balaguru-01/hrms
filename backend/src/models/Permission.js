@@ -1,48 +1,122 @@
 const mongoose = require("mongoose");
 
+
 const permissionSchema = new mongoose.Schema(
-  {
-    module: {
-      type: String,
-      required: true,
-      lowercase: true,
+{
+    tenant:{
+        tenantId:{
+            type:mongoose.Schema.Types.ObjectId,
+            ref:"Tenant",
+            required:true,
+            index:true
+        },
+
+        orgName:{
+            type:String,
+            required:true,
+            trim:true
+        },
+
+        email:{
+            type:String,
+            required:true,
+            lowercase:true,
+            trim:true
+        }
     },
 
-    action: {
-      type: String,
-      required: true,
-      enum: [
-        "create",
-        "read",
-        "update",
-        "delete",
-        "approve",
-        "reject",
-        "export",
-        "manage",
-      ],
+
+    role:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Role",
+        required:true
     },
 
-    permissionName: {
-      type: String,
-      unique: true,
-      required: true,
-      lowercase: true,
+
+    module:{
+        type:String,
+        required:true,
+        lowercase:true,
+        trim:true
     },
 
-    description: {
-      type: String,
-      default: "",
+
+    actions:[
+    {
+        type:String,
+        enum:[
+            "create",
+            "read",
+            "update",
+            "delete",
+            "approve",
+            "reject",
+            "export",
+            "manage"
+        ]
+    }
+    ],
+
+
+    description:{
+        type:String,
+        default:""
     },
 
-    isActive: {
-      type: Boolean,
-      default: true,
+
+    createdBy:{
+        userId:{
+            type:mongoose.Schema.Types.ObjectId,
+            ref:"User",
+            required:true
+        },
+
+        name:{
+            type:String,
+            required:true
+        },
+
+        role:{
+            type:String,
+            required:true
+        }
     },
-  },
-  {
-    timestamps: true,
-  }
+
+
+    isActive:{
+        type:Boolean,
+        default:true
+    },
+
+
+    isDeleted:{
+        type:Boolean,
+        default:false
+    }
+
+},
+{
+    timestamps:true
+});
+
+
+permissionSchema.index({
+    "tenant.tenantId":1
+});
+
+
+permissionSchema.index(
+{
+    "tenant.tenantId":1,
+    role:1,
+    module:1
+},
+{
+    unique:true
+});
+
+
+module.exports = mongoose.model(
+    "Permission",
+    permissionSchema
 );
-
-module.exports = mongoose.model("Permission", permissionSchema);

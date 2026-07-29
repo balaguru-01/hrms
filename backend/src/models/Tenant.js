@@ -2,94 +2,143 @@ const mongoose = require("mongoose");
 const validator = require("validator");
 
 const tenantSchema = new mongoose.Schema(
-{
-    tenantName:{
-        type:String,
-        required:true,
-        trim:true
+  {
+    // Organization Name
+    orgName: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
     },
 
-    companyCode:{
-        type:String,
-        required:true,
-        unique:true,
-        uppercase:true,
-        trim:true
+
+    companyCode: {
+      type: String,
+      required: true,
+      unique: true,
+      uppercase: true,
+      trim: true,
     },
 
-    email:{
-        type:String,
-        required:true,
-        unique:true,
-        lowercase:true,
-        validate:[validator.isEmail,"Invalid Email"]
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      validate: [validator.isEmail, "Invalid Email"],
     },
 
-    phone:{
-        type:String,
-        required:true
+    phone: {
+      type: String,
+      required: true,
+      trim: true,
     },
 
-    website:{
-        type:String,
-        default:""
+    website: {
+      type: String,
+      default: "",
     },
 
-    logo:{
-        type:String,
-        default:""
+    logo: {
+      type: String,
+      default: "",
     },
 
-    industry:{
-        type:String,
-        default:"IT"
+    industry: {
+      type: String,
+      default: "IT",
     },
 
-    address:{
-        doorNumber:String,
-        street:String,
-        city:String,
-        state:String,
-        country:String,
-        postalCode:String
+    // Tenant Address
+    address: {
+      doorNumber: {
+        type: String,
+        default: "",
+      },
+
+      street: {
+        type: String,
+        default: "",
+      },
+
+      city: {
+        type: String,
+        default: "",
+      },
+
+      state: {
+        type: String,
+        default: "",
+      },
+
+      country: {
+        type: String,
+        default: "India",
+      },
+
+      postalCode: {
+        type: String,
+        default: "",
+      },
     },
 
-    subscription:{
-        plan:{
-            type:String,
-            enum:["Free","Basic","Premium","Enterprise"],
-            default:"Free"
-        },
+    // Subscription Information
+    subscription: {
+      plan: {
+        type: String,
+        enum: ["Free", "Basic", "Premium", "Enterprise"],
+        default: "Free",
+      },
 
-        status:{
-            type:String,
-            enum:["Trial","Active","Expired","Suspended"],
-            default:"Trial"
-        },
+      status: {
+        type: String,
+        enum: ["Trial", "Active", "Expired", "Suspended"],
+        default: "Trial",
+      },
 
-        startDate:Date,
+      startDate: {
+        type: Date,
+      },
 
-        endDate:Date
+      endDate: {
+        type: Date,
+      },
     },
 
-    employeeLimit:{
-        type:Number,
-        default:10
+    employeeLimit: {
+      type: Number,
+      default: 10,
     },
 
-    isActive:{
-        type:Boolean,
-        default:true
+    // Audit Information
+    createdBy: {
+      userId: {
+        type: String,
+      },
+
+      name: {
+        type: String,
+      },
+
+      role: {
+        type: String,
+      },
     },
 
-    isDeleted:{
-        type:Boolean,
-        default:false
-    }
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
 
-},
-{
-    timestamps:true
-});
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
 
-module.exports=mongoose.model("Tenant",tenantSchema);
+module.exports = mongoose.model("Tenant", tenantSchema);

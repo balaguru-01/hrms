@@ -1,39 +1,102 @@
 const mongoose = require("mongoose");
 
+
 const roleSchema = new mongoose.Schema(
-  {
-    roleName: {
-      type: String,
-      required: true,
-      unique: true,
-      trim: true,
+{
+    tenant:{
+        tenantId:{
+            type:mongoose.Schema.Types.ObjectId,
+            ref:"Tenant",
+            required:true,
+            index:true
+        },
+
+        orgName:{
+            type:String,
+            required:true,
+            trim:true
+        },
+
+        email:{
+            type:String,
+            required:true,
+            lowercase:true,
+            trim:true
+        }
     },
 
-    description: {
-      type: String,
-      default: "",
+
+    name:{
+        type:String,
+        required:true,
+        trim:true
     },
 
-    permissions: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Permission",
-      },
-    ],
 
-    isSystemRole: {
-      type: Boolean,
-      default: false,
+    description:{
+        type:String,
+        default:""
     },
 
-    isActive: {
-      type: Boolean,
-      default: true,
+
+    createdBy:{
+        userId:{
+            type:mongoose.Schema.Types.ObjectId,
+            ref:"User",
+            default:null
+        },
+
+        name:{
+            type:String,
+            required:true
+        },
+
+        role:{
+            type:String,
+            required:true
+        }
     },
-  },
-  {
-    timestamps: true,
-  }
+
+
+    isSystemRole:{
+        type:Boolean,
+        default:false
+    },
+
+
+    isActive:{
+        type:Boolean,
+        default:true
+    },
+
+
+    isDeleted:{
+        type:Boolean,
+        default:false
+    }
+
+},
+{
+    timestamps:true
+});
+
+
+roleSchema.index({
+    "tenant.tenantId":1
+});
+
+
+roleSchema.index(
+{
+    "tenant.tenantId":1,
+    name:1
+},
+{
+    unique:true
+});
+
+
+module.exports = mongoose.model(
+    "Role",
+    roleSchema
 );
-
-module.exports = mongoose.model("Role", roleSchema);
