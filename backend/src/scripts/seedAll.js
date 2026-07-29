@@ -1,475 +1,2960 @@
 require("dotenv").config();
 
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
+
 const connectDB = require("../config/database");
 
+
+// ===============================
+// MODELS
+// ===============================
+
 const Tenant = require("../models/Tenant");
-const Permission = require("../models/Permission");
-const Role = require("../models/Role");
 const User = require("../models/User");
+const Role = require("../models/Role");
+const Permission = require("../models/Permission");
 const Department = require("../models/Department");
-const Employee = require("../models/Employee");
-const Attendance = require("../models/Attendance");
-const Request = require("../models/Request");
 const Task = require("../models/Task");
+const Request = require("../models/Request");
+const Attendance = require("../models/Attendance");
 const Notification = require("../models/Notification");
 const AuditLog = require("../models/AuditLog");
 
-const bcrypt = require("bcryptjs");
+
+
+// ===============================
+// SEED FUNCTION
+// ===============================
 
 const seedDatabase = async () => {
 
     try {
 
+
+        // ===============================
+        // DATABASE CONNECTION
+        // ===============================
+
         await connectDB();
 
-        console.log("Connected to MongoDB");
+        console.log("Database Connected");
 
-        await Attendance.deleteMany({});
-        await Request.deleteMany({});
-        await Task.deleteMany({});
-        await Notification.deleteMany({});
-        await AuditLog.deleteMany({});
-        await Employee.deleteMany({});
-        await Department.deleteMany({});
-        await User.deleteMany({});
-        await Role.deleteMany({});
-        await Permission.deleteMany({});
-        await Tenant.deleteMany({});
 
-        console.log("Old Data Deleted");
 
-        // ==========================
-        // TENANT
-        // ==========================
+        /*
+        =================================
+        CLEAR OLD DATA
+        =================================
+        */
 
-        const tenant = await Tenant.create({
+        await Promise.all([
 
-            tenantName: "ABC Technologies",
+            Tenant.deleteMany(),
 
-            companyCode: "ABC001",
+            User.deleteMany(),
 
-            email: "admin@abctech.com",
+            Role.deleteMany(),
 
-            phone: "9876543210",
+            Permission.deleteMany(),
 
-            website: "https://abctech.com",
+            Department.deleteMany(),
 
-            industry: "Software",
+            Task.deleteMany(),
 
-            address: {
+            Request.deleteMany(),
 
-                doorNumber: "15A",
+            Attendance.deleteMany(),
 
-                street: "Anna Nagar",
+            Notification.deleteMany(),
 
-                city: "Chennai",
-
-                state: "Tamil Nadu",
-
-                country: "India",
-
-                postalCode: "600001"
-
-            },
-
-            subscription: {
-
-                plan: "Enterprise",
-
-                status: "Active"
-
-            },
-
-            employeeLimit: 500
-
-        });
-
-        console.log("Tenant Created");
-
-        // ==========================
-        // PERMISSIONS
-        // ==========================
-
-        const permissions = await Permission.insertMany([
-
-            {
-                module: "employee",
-                action: "create",
-                permissionName: "employee.create",
-                description: "Create Employee"
-            },
-
-            {
-                module: "employee",
-                action: "read",
-                permissionName: "employee.read",
-                description: "View Employee"
-            },
-
-            {
-                module: "employee",
-                action: "update",
-                permissionName: "employee.update",
-                description: "Update Employee"
-            },
-
-            {
-                module: "employee",
-                action: "delete",
-                permissionName: "employee.delete",
-                description: "Delete Employee"
-            },
-
-            {
-                module: "department",
-                action: "manage",
-                permissionName: "department.manage",
-                description: "Manage Departments"
-            },
-
-            {
-                module: "attendance",
-                action: "manage",
-                permissionName: "attendance.manage",
-                description: "Manage Attendance"
-            },
-
-            {
-                module: "leave",
-                action: "approve",
-                permissionName: "leave.approve",
-                description: "Approve Leave"
-            },
-
-            {
-                module: "task",
-                action: "manage",
-                permissionName: "task.manage",
-                description: "Manage Tasks"
-            },
-
-            {
-                module: "report",
-                action: "export",
-                permissionName: "report.export",
-                description: "Export Reports"
-            }
+            AuditLog.deleteMany()
 
         ]);
 
-        console.log("Permissions Created");
-        // ==========================
-        // ROLES
-        // ==========================
 
-        const superAdminRole = await Role.create({
+        console.log("Old Data Removed");
 
-            roleName: "Super Admin",
 
-            description: "Complete System Access",
 
-            permissions: permissions.map(permission => permission._id),
+        /*
+        =================================
+        TENANT CREATION
+        =================================
+        */
 
-            isSystemRole: true
+
+        const tenant = await Tenant.create({
+
+            orgName:"Seosaph Technologies",
+
+
+            companyCode:"SEOSA",
+
+
+            email:"admin@seosaph.com",
+
+
+            phone:"9876543210",
+
+
+            website:"https://seosaph.com",
+
+
+            industry:"IT",
+
+
+
+            address:{
+
+                doorNumber:"101",
+
+                street:"Tech Park Road",
+
+                city:"Coimbatore",
+
+                state:"Tamil Nadu",
+
+                country:"India",
+
+                postalCode:"641001"
+
+            },
+
+
+
+            subscription:{
+
+
+                plan:"Premium",
+
+
+                status:"Active",
+
+
+                startDate:new Date(),
+
+
+                endDate:new Date(
+
+                    new Date().setFullYear(
+
+                        new Date().getFullYear()+1
+
+                    )
+
+                )
+
+
+            },
+
+
+
+            employeeLimit:100,
+
+
+
+            createdBy:{
+
+
+                userId:null,
+
+
+                name:"System",
+
+
+                role:"System"
+
+
+            }
+
 
         });
 
-        const hrRole = await Role.create({
 
-            roleName: "HR Manager",
 
-            description: "HR Operations",
+        console.log("Tenant Created");
 
-            permissions: [
 
-                permissions[0]._id,
-                permissions[1]._id,
-                permissions[2]._id,
-                permissions[4]._id,
-                permissions[5]._id,
-                permissions[6]._id
 
-            ],
 
-            isSystemRole: true
 
-        });
+        /*
+        =================================
+        PASSWORD HASH
+        =================================
+        */
 
-        const employeeRole = await Role.create({
 
-            roleName: "Employee",
+        const password = await bcrypt.hash(
 
-            description: "Employee Access",
+            "Password@123",
 
-            permissions: [
+            10
 
-                permissions[1]._id
+        );
 
-            ],
 
-            isSystemRole: true
 
-        });
+        console.log("Password Generated");
 
-        console.log("Roles Created");
 
-        // ==========================
-        // ADMIN USER
-        // ==========================
+               
 
-        const hashedPassword = await bcrypt.hash("Admin@123",10);
+              /*
+        =================================
+        DEPARTMENTS
+        =================================
+        */
 
-        const adminUser = await User.create({
-
-            tenant: tenant._id,
-
-            role: superAdminRole._id,
-
-            firstName: "System",
-
-            lastName: "Administrator",
-
-            email: "admin@abctech.com",
-
-            password: hashedPassword,
-
-            phone: "9876543210"
-
-        });
-
-        console.log("Admin User Created");
-
-        // ==========================
-        // DEPARTMENTS
-        // ==========================
-
-        const itDepartment = await Department.create({
-
-            tenant: tenant._id,
-
-            departmentName: "Information Technology",
-
-            departmentCode: "IT001",
-
-            description: "Handles software development and IT operations",
-
-            isActive: true
-
-        });
 
         const hrDepartment = await Department.create({
 
-            tenant: tenant._id,
 
-            departmentName: "Human Resources",
+            tenant:{
 
-            departmentCode: "HR001",
+                tenantId:tenant._id,
 
-            description: "Handles employee management",
+                orgName:tenant.orgName,
 
-            isActive: true
+                email:tenant.email
+
+            },
+
+
+            name:"Human Resources",
+
+
+            departmentCode:"HR",
+
+
+            description:"Human Resource Department",
+
+
+
+            managedBy:{
+
+                userId:null,
+
+                name:null,
+
+                role:null
+
+            },
+
+
+            createdBy:{
+
+                userId:null,
+
+                name:"System",
+
+                role:"System"
+
+            },
+
+
+            isActive:true,
+
+            isDeleted:false
+
 
         });
+
+
+
+        const itDepartment = await Department.create({
+
+
+            tenant:{
+
+                tenantId:tenant._id,
+
+                orgName:tenant.orgName,
+
+                email:tenant.email
+
+            },
+
+
+            name:"Information Technology",
+
+
+            departmentCode:"IT",
+
+
+            description:"IT Department",
+
+
+
+            managedBy:{
+
+                userId:null,
+
+                name:null,
+
+                role:null
+
+            },
+
+
+            createdBy:{
+
+                userId:null,
+
+                name:"System",
+
+                role:"System"
+
+            },
+
+
+            isActive:true,
+
+            isDeleted:false
+
+
+        });
+
+
 
         const financeDepartment = await Department.create({
 
-            tenant: tenant._id,
 
-            departmentName: "Finance",
+            tenant:{
 
-            departmentCode: "FIN001",
+                tenantId:tenant._id,
 
-            description: "Handles accounts and finance",
+                orgName:tenant.orgName,
 
-            isActive: true
+                email:tenant.email
+
+            },
+
+
+            name:"Finance",
+
+
+            departmentCode:"FIN",
+
+
+            description:"Finance Department",
+
+
+
+            managedBy:{
+
+                userId:null,
+
+                name:null,
+
+                role:null
+
+            },
+
+
+            createdBy:{
+
+                userId:null,
+
+                name:"System",
+
+                role:"System"
+
+            },
+
+
+            isActive:true,
+
+            isDeleted:false
+
 
         });
+
+
 
         console.log("Departments Created");
 
-      // ==========================
-      // EMPLOYEE
-      // ==========================
 
-      const adminEmployee = await Employee.create({
 
-          tenant: tenant._id,
 
-          department: itDepartment._id,
 
-          user: adminUser._id,
+        /*
+        =================================
+        ROLES
+        =================================
+        */
 
-          role: superAdminRole._id,
 
-          employeeId: "EMP001",
 
-          designation: "System Administrator",
+        const superAdminRole = await Role.create({
 
-          joiningDate: new Date("2024-01-01"),
 
-          salary: 100000,
+            tenant:{
 
-          employmentType: "Full-Time",
+                tenantId:tenant._id,
 
-          reportsTo: null,
+                orgName:tenant.orgName,
 
-          status: "Active"
+                email:tenant.email
 
-      });
+            },
 
-      // Set Department Manager
-      itDepartment.manager = adminEmployee._id;
 
-      await itDepartment.save();
+            name:"SuperAdmin",
 
-      console.log("Employees Created");
 
-           // ==========================
-        // ATTENDANCE
-        // ==========================
+            description:"System Super Administrator",
 
-        await Attendance.create({
 
-            tenant: tenant._id,
 
-            employee: adminEmployee._id,
+            createdBy:{
 
-            date: new Date("2026-07-28"),
+                userId:null,
 
-            checkIn: new Date("2026-07-28T09:00:00"),
+                name:"System",
 
-            breakIn: new Date("2026-07-28T13:00:00"),
+                role:"System"
 
-            breakOut: new Date("2026-07-28T14:00:00"),
+            },
 
-            checkOut: new Date("2026-07-28T18:00:00"),
 
-            breakHours: 1,
+            isSystemRole:true,
 
-            workingHours: 8,
 
-            status: "Present"
+            isActive:true,
+
+            isDeleted:false
+
 
         });
 
-        console.log("Attendance Created");
 
-              // ==========================
-        // REQUEST
-        // ==========================
 
-        await Request.create({
 
-            tenant: tenant._id,
 
-            employee: adminEmployee._id,
+        const tenantAdminRole = await Role.create({
 
-            approvedBy: adminEmployee._id,
 
-            requestType: "Leave",
+            tenant:{
 
-            leaveCategory: "Casual",
+                tenantId:tenant._id,
 
-            fromDate: new Date("2026-08-01"),
+                orgName:tenant.orgName,
 
-            toDate: new Date("2026-08-02"),
+                email:tenant.email
 
-            reason: "Family Function",
+            },
 
-            status: "Pending"
+
+            name:"TenantAdmin",
+
+
+            description:"Tenant Administrator",
+
+
+
+            createdBy:{
+
+                userId:null,
+
+                name:"System",
+
+                role:"System"
+
+            },
+
+
+            isSystemRole:true,
+
+
+            isActive:true,
+
+            isDeleted:false
+
 
         });
+
+
+
+
+
+        const hrRole = await Role.create({
+
+
+            tenant:{
+
+                tenantId:tenant._id,
+
+                orgName:tenant.orgName,
+
+                email:tenant.email
+
+            },
+
+
+            name:"HR",
+
+
+            description:"Human Resource",
+
+
+
+            createdBy:{
+
+                userId:null,
+
+                name:"System",
+
+                role:"System"
+
+            },
+
+
+            isSystemRole:true,
+
+
+            isActive:true,
+
+            isDeleted:false
+
+
+        });
+
+
+
+
+
+
+        const managerRole = await Role.create({
+
+
+            tenant:{
+
+                tenantId:tenant._id,
+
+                orgName:tenant.orgName,
+
+                email:tenant.email
+
+            },
+
+
+            name:"Manager",
+
+
+            description:"Department Manager",
+
+
+
+            createdBy:{
+
+                userId:null,
+
+                name:"System",
+
+                role:"System"
+
+            },
+
+
+            isSystemRole:true,
+
+
+            isActive:true,
+
+            isDeleted:false
+
+
+        });
+
+
+
+
+
+
+        const employeeRole = await Role.create({
+
+
+            tenant:{
+
+                tenantId:tenant._id,
+
+                orgName:tenant.orgName,
+
+                email:tenant.email
+
+            },
+
+
+            name:"Employee",
+
+
+            description:"Employee",
+
+
+
+            createdBy:{
+
+                userId:null,
+
+                name:"System",
+
+                role:"System"
+
+            },
+
+
+            isSystemRole:true,
+
+
+            isActive:true,
+
+            isDeleted:false
+
+
+        });
+
+
+
+        console.log("Roles Created");
+
+
+               /*
+        =================================
+        USERS
+        =================================
+        */
+
+
+        // ===============================
+        // SUPER ADMIN
+        // ===============================
+
+
+        const superAdmin = await User.create({
+
+
+            tenant:{
+
+                tenantId:tenant._id,
+
+                orgName:tenant.orgName,
+
+                email:tenant.email
+
+            },
+
+
+            firstName:"Super",
+
+            lastName:"Admin",
+
+
+            email:"superadmin@seosaph.com",
+
+
+            password:password,
+
+
+            phone:"9876543201",
+
+
+
+            role:superAdminRole._id,
+
+
+
+            designation:"Super Administrator",
+
+
+
+            department:itDepartment._id,
+
+
+
+            joiningDate:new Date(),
+
+
+
+            employmentType:"Full-Time",
+
+
+
+            salary:150000,
+
+
+
+            reportingTo:{
+
+                userId:null,
+
+                name:null,
+
+                role:null
+
+            },
+
+
+
+            createdBy:{
+
+                userId:null,
+
+                name:"System",
+
+                role:"System"
+
+            },
+
+
+            status:"Active",
+
+            isActive:true,
+
+            isDeleted:false
+
+
+        });
+
+
+
+
+
+        // ===============================
+        // TENANT ADMIN
+        // ===============================
+
+
+        const tenantAdmin = await User.create({
+
+
+            tenant:{
+
+                tenantId:tenant._id,
+
+                orgName:tenant.orgName,
+
+                email:tenant.email
+
+            },
+
+
+            firstName:"Tenant",
+
+            lastName:"Admin",
+
+
+            email:"tenantadmin@seosaph.com",
+
+
+            password:password,
+
+
+            phone:"9876543202",
+
+
+
+            role:tenantAdminRole._id,
+
+
+
+            designation:"Tenant Administrator",
+
+
+
+            department:itDepartment._id,
+
+
+
+            joiningDate:new Date(),
+
+
+
+            employmentType:"Full-Time",
+
+
+
+            salary:100000,
+
+
+
+            reportingTo:{
+
+                userId:superAdmin._id,
+
+                name:"Super Admin",
+
+                role:"SuperAdmin"
+
+            },
+
+
+
+            createdBy:{
+
+                userId:superAdmin._id,
+
+                name:"Super Admin",
+
+                role:"SuperAdmin"
+
+            },
+
+
+            status:"Active",
+
+            isActive:true,
+
+            isDeleted:false
+
+
+        });
+
+
+
+
+
+        // ===============================
+        // HR USER
+        // ===============================
+
+
+        const hr = await User.create({
+
+
+            tenant:{
+
+                tenantId:tenant._id,
+
+                orgName:tenant.orgName,
+
+                email:tenant.email
+
+            },
+
+
+            firstName:"Priya",
+
+            lastName:"Sharma",
+
+
+            email:"hr@seosaph.com",
+
+
+            password:password,
+
+
+            phone:"9876543203",
+
+
+
+            role:hrRole._id,
+
+
+
+            designation:"HR Executive",
+
+
+
+            department:hrDepartment._id,
+
+
+
+            joiningDate:new Date(),
+
+
+
+            employmentType:"Full-Time",
+
+
+
+            salary:60000,
+
+
+
+            reportingTo:{
+
+                userId:tenantAdmin._id,
+
+                name:"Tenant Admin",
+
+                role:"TenantAdmin"
+
+            },
+
+
+
+            createdBy:{
+
+                userId:tenantAdmin._id,
+
+                name:"Tenant Admin",
+
+                role:"TenantAdmin"
+
+            },
+
+
+            status:"Active",
+
+            isActive:true,
+
+            isDeleted:false
+
+
+        });
+
+
+
+
+
+        // ===============================
+        // MANAGER
+        // ===============================
+
+
+        const manager = await User.create({
+
+
+            tenant:{
+
+                tenantId:tenant._id,
+
+                orgName:tenant.orgName,
+
+                email:tenant.email
+
+            },
+
+
+            firstName:"Arun",
+
+            lastName:"Kumar",
+
+
+            email:"manager@seosaph.com",
+
+
+            password:password,
+
+
+            phone:"9876543204",
+
+
+
+            role:managerRole._id,
+
+
+
+            designation:"Project Manager",
+
+
+
+            department:itDepartment._id,
+
+
+
+            joiningDate:new Date(),
+
+
+
+            employmentType:"Full-Time",
+
+
+
+            salary:80000,
+
+
+
+            reportingTo:{
+
+                userId:tenantAdmin._id,
+
+                name:"Tenant Admin",
+
+                role:"TenantAdmin"
+
+            },
+
+
+
+            createdBy:{
+
+                userId:tenantAdmin._id,
+
+                name:"Tenant Admin",
+
+                role:"TenantAdmin"
+
+            },
+
+
+            status:"Active",
+
+            isActive:true,
+
+            isDeleted:false
+
+
+        });
+
+
+
+
+
+        // ===============================
+        // EMPLOYEE
+        // ===============================
+
+
+        const employee = await User.create({
+
+
+            tenant:{
+
+                tenantId:tenant._id,
+
+                orgName:tenant.orgName,
+
+                email:tenant.email
+
+            },
+
+
+            firstName:"Rahul",
+
+            lastName:"Kumar",
+
+
+            email:"employee@seosaph.com",
+
+
+            password:password,
+
+
+            phone:"9876543205",
+
+
+
+            role:employeeRole._id,
+
+
+
+            designation:"Software Engineer",
+
+
+
+            department:itDepartment._id,
+
+
+
+            joiningDate:new Date(),
+
+
+
+            employmentType:"Full-Time",
+
+
+
+            salary:40000,
+
+
+
+            reportingTo:{
+
+                userId:manager._id,
+
+                name:"Arun Kumar",
+
+                role:"Manager"
+
+            },
+
+
+
+            createdBy:{
+
+                userId:manager._id,
+
+                name:"Arun Kumar",
+
+                role:"Manager"
+
+            },
+
+
+            status:"Active",
+
+            isActive:true,
+
+            isDeleted:false
+
+
+        });
+
+
+
+        console.log("Users Created");
+
+
+
+
+
+        /*
+        =================================
+        UPDATE DEPARTMENT MANAGERS
+        =================================
+        */
+
+
+        hrDepartment.managedBy = {
+
+
+            userId:hr._id,
+
+
+            name:"Priya Sharma",
+
+
+            role:"HR"
+
+
+        };
+
+
+        await hrDepartment.save();
+
+
+
+
+
+        itDepartment.managedBy = {
+
+
+            userId:manager._id,
+
+
+            name:"Arun Kumar",
+
+
+            role:"Manager"
+
+
+        };
+
+
+        await itDepartment.save();
+
+
+
+        console.log("Department Managers Updated");
+
+
+               /*
+        =================================
+        PERMISSIONS
+        =================================
+        */
+
+
+        // ===============================
+        // SUPER ADMIN PERMISSIONS
+        // ===============================
+
+
+        await Permission.insertMany([
+
+
+            {
+
+                tenant:{
+
+                    tenantId:tenant._id,
+
+                    orgName:tenant.orgName,
+
+                    email:tenant.email
+
+                },
+
+
+                role:superAdminRole._id,
+
+
+                module:"users",
+
+
+                actions:[
+
+                    "create",
+                    "read",
+                    "update",
+                    "delete",
+                    "approve",
+                    "reject",
+                    "export",
+                    "manage"
+
+                ],
+
+
+                description:"Full access to Users",
+
+
+
+                createdBy:{
+
+                    userId:superAdmin._id,
+
+                    name:"Super Admin",
+
+                    role:"SuperAdmin"
+
+                }
+
+            },
+
+
+
+            {
+
+                tenant:{
+
+                    tenantId:tenant._id,
+
+                    orgName:tenant.orgName,
+
+                    email:tenant.email
+
+                },
+
+
+                role:superAdminRole._id,
+
+
+                module:"departments",
+
+
+                actions:[
+
+                    "create",
+                    "read",
+                    "update",
+                    "delete",
+                    "manage"
+
+                ],
+
+
+                description:"Full access to Departments",
+
+
+
+                createdBy:{
+
+                    userId:superAdmin._id,
+
+                    name:"Super Admin",
+
+                    role:"SuperAdmin"
+
+                }
+
+            },
+
+
+
+            {
+
+                tenant:{
+
+                    tenantId:tenant._id,
+
+                    orgName:tenant.orgName,
+
+                    email:tenant.email
+
+                },
+
+
+                role:superAdminRole._id,
+
+
+                module:"roles",
+
+
+                actions:[
+
+                    "create",
+                    "read",
+                    "update",
+                    "delete",
+                    "manage"
+
+                ],
+
+
+                description:"Full access to Roles",
+
+
+
+                createdBy:{
+
+                    userId:superAdmin._id,
+
+                    name:"Super Admin",
+
+                    role:"SuperAdmin"
+
+                }
+
+            },
+
+
+
+            {
+
+                tenant:{
+
+                    tenantId:tenant._id,
+
+                    orgName:tenant.orgName,
+
+                    email:tenant.email
+
+                },
+
+
+                role:superAdminRole._id,
+
+
+                module:"permissions",
+
+
+                actions:[
+
+                    "create",
+                    "read",
+                    "update",
+                    "delete",
+                    "manage"
+
+                ],
+
+
+                description:"Full access to Permissions",
+
+
+
+                createdBy:{
+
+                    userId:superAdmin._id,
+
+                    name:"Super Admin",
+
+                    role:"SuperAdmin"
+
+                }
+
+            },
+
+
+
+            {
+
+                tenant:{
+
+                    tenantId:tenant._id,
+
+                    orgName:tenant.orgName,
+
+                    email:tenant.email
+
+                },
+
+
+                role:superAdminRole._id,
+
+
+                module:"attendance",
+
+
+                actions:[
+
+                    "create",
+                    "read",
+                    "update",
+                    "delete",
+                    "approve",
+                    "export"
+
+                ],
+
+
+                description:"Full access to Attendance",
+
+
+
+                createdBy:{
+
+                    userId:superAdmin._id,
+
+                    name:"Super Admin",
+
+                    role:"SuperAdmin"
+
+                }
+
+            },
+
+
+
+            {
+
+                tenant:{
+
+                    tenantId:tenant._id,
+
+                    orgName:tenant.orgName,
+
+                    email:tenant.email
+
+                },
+
+
+                role:superAdminRole._id,
+
+
+                module:"requests",
+
+
+                actions:[
+
+                    "create",
+                    "read",
+                    "update",
+                    "delete",
+                    "approve",
+                    "reject",
+                    "manage"
+
+                ],
+
+
+                description:"Full access to Requests",
+
+
+
+                createdBy:{
+
+                    userId:superAdmin._id,
+
+                    name:"Super Admin",
+
+                    role:"SuperAdmin"
+
+                }
+
+            },
+
+
+
+            {
+
+                tenant:{
+
+                    tenantId:tenant._id,
+
+                    orgName:tenant.orgName,
+
+                    email:tenant.email
+
+                },
+
+
+                role:superAdminRole._id,
+
+
+                module:"tasks",
+
+
+                actions:[
+
+                    "create",
+                    "read",
+                    "update",
+                    "delete",
+                    "manage"
+
+                ],
+
+
+                description:"Full access to Tasks",
+
+
+
+                createdBy:{
+
+                    userId:superAdmin._id,
+
+                    name:"Super Admin",
+
+                    role:"SuperAdmin"
+
+                }
+
+            }
+
+
+        ]);
+
+
+
+        console.log("SuperAdmin Permissions Created");
+
+
+
+
+
+
+
+        // ===============================
+        // TENANT ADMIN PERMISSIONS
+        // ===============================
+
+
+        await Permission.insertMany([
+
+
+            {
+
+                tenant:{
+
+                    tenantId:tenant._id,
+
+                    orgName:tenant.orgName,
+
+                    email:tenant.email
+
+                },
+
+
+                role:tenantAdminRole._id,
+
+
+                module:"users",
+
+
+                actions:[
+
+                    "create",
+                    "read",
+                    "update",
+                    "delete"
+
+                ],
+
+
+                description:"Manage Users",
+
+
+
+                createdBy:{
+
+                    userId:superAdmin._id,
+
+                    name:"Super Admin",
+
+                    role:"SuperAdmin"
+
+                }
+
+            },
+
+
+
+            {
+
+                tenant:{
+
+                    tenantId:tenant._id,
+
+                    orgName:tenant.orgName,
+
+                    email:tenant.email
+
+                },
+
+
+                role:tenantAdminRole._id,
+
+
+                module:"departments",
+
+
+                actions:[
+
+                    "create",
+                    "read",
+                    "update",
+                    "delete"
+
+                ],
+
+
+                description:"Manage Departments",
+
+
+
+                createdBy:{
+
+                    userId:superAdmin._id,
+
+                    name:"Super Admin",
+
+                    role:"SuperAdmin"
+
+                }
+
+            },
+
+
+
+            {
+
+                tenant:{
+
+                    tenantId:tenant._id,
+
+                    orgName:tenant.orgName,
+
+                    email:tenant.email
+
+                },
+
+
+                role:tenantAdminRole._id,
+
+
+                module:"roles",
+
+
+                actions:[
+
+                    "create",
+                    "read",
+                    "update"
+
+                ],
+
+
+                description:"Manage Roles",
+
+
+
+                createdBy:{
+
+                    userId:superAdmin._id,
+
+                    name:"Super Admin",
+
+                    role:"SuperAdmin"
+
+                }
+
+            },
+
+
+
+            {
+
+                tenant:{
+
+                    tenantId:tenant._id,
+
+                    orgName:tenant.orgName,
+
+                    email:tenant.email
+
+                },
+
+
+                role:tenantAdminRole._id,
+
+
+                module:"attendance",
+
+
+                actions:[
+
+                    "read",
+                    "update",
+                    "approve",
+                    "export"
+
+                ],
+
+
+                description:"Manage Attendance",
+
+
+
+                createdBy:{
+
+                    userId:superAdmin._id,
+
+                    name:"Super Admin",
+
+                    role:"SuperAdmin"
+
+                }
+
+            },
+
+
+
+            {
+
+                tenant:{
+
+                    tenantId:tenant._id,
+
+                    orgName:tenant.orgName,
+
+                    email:tenant.email
+
+                },
+
+
+                role:tenantAdminRole._id,
+
+
+                module:"requests",
+
+
+                actions:[
+
+                    "read",
+                    "approve",
+                    "reject",
+                    "manage"
+
+                ],
+
+
+                description:"Manage Requests",
+
+
+
+                createdBy:{
+
+                    userId:superAdmin._id,
+
+                    name:"Super Admin",
+
+                    role:"SuperAdmin"
+
+                }
+
+            },
+
+
+
+            {
+
+                tenant:{
+
+                    tenantId:tenant._id,
+
+                    orgName:tenant.orgName,
+
+                    email:tenant.email
+
+                },
+
+
+                role:tenantAdminRole._id,
+
+
+                module:"tasks",
+
+
+                actions:[
+
+                    "create",
+                    "read",
+                    "update",
+                    "delete"
+
+                ],
+
+
+                description:"Manage Tasks",
+
+
+
+                createdBy:{
+
+                    userId:superAdmin._id,
+
+                    name:"Super Admin",
+
+                    role:"SuperAdmin"
+
+                }
+
+            }
+
+
+        ]);
+
+
+
+        console.log("TenantAdmin Permissions Created");
+                
+       
+        // ===============================
+        // HR PERMISSIONS
+        // ===============================
+
+
+        await Permission.insertMany([
+
+
+            {
+
+                tenant:{
+
+                    tenantId:tenant._id,
+
+                    orgName:tenant.orgName,
+
+                    email:tenant.email
+
+                },
+
+
+                role:hrRole._id,
+
+
+                module:"users",
+
+
+                actions:[
+
+                    "create",
+                    "read",
+                    "update"
+
+                ],
+
+
+                description:"Manage Employees",
+
+
+
+                createdBy:{
+
+                    userId:tenantAdmin._id,
+
+                    name:"Tenant Admin",
+
+                    role:"TenantAdmin"
+
+                }
+
+            },
+
+
+
+            {
+
+                tenant:{
+
+                    tenantId:tenant._id,
+
+                    orgName:tenant.orgName,
+
+                    email:tenant.email
+
+                },
+
+
+                role:hrRole._id,
+
+
+                module:"departments",
+
+
+                actions:[
+
+                    "read",
+                    "update"
+
+                ],
+
+
+                description:"View and Update Departments",
+
+
+
+                createdBy:{
+
+                    userId:tenantAdmin._id,
+
+                    name:"Tenant Admin",
+
+                    role:"TenantAdmin"
+
+                }
+
+            },
+
+
+
+            {
+
+                tenant:{
+
+                    tenantId:tenant._id,
+
+                    orgName:tenant.orgName,
+
+                    email:tenant.email
+
+                },
+
+
+                role:hrRole._id,
+
+
+                module:"attendance",
+
+
+                actions:[
+
+                    "read",
+                    "update",
+                    "approve"
+
+                ],
+
+
+                description:"Manage Attendance",
+
+
+
+                createdBy:{
+
+                    userId:tenantAdmin._id,
+
+                    name:"Tenant Admin",
+
+                    role:"TenantAdmin"
+
+                }
+
+            },
+
+
+
+            {
+
+                tenant:{
+
+                    tenantId:tenant._id,
+
+                    orgName:tenant.orgName,
+
+                    email:tenant.email
+
+                },
+
+
+                role:hrRole._id,
+
+
+                module:"requests",
+
+
+                actions:[
+
+                    "read",
+                    "approve",
+                    "reject"
+
+                ],
+
+
+                description:"Approve Leave and Other Requests",
+
+
+
+                createdBy:{
+
+                    userId:tenantAdmin._id,
+
+                    name:"Tenant Admin",
+
+                    role:"TenantAdmin"
+
+                }
+
+            },
+
+
+
+            {
+
+                tenant:{
+
+                    tenantId:tenant._id,
+
+                    orgName:tenant.orgName,
+
+                    email:tenant.email
+
+                },
+
+
+                role:hrRole._id,
+
+
+                module:"tasks",
+
+
+                actions:[
+
+                    "read"
+
+                ],
+
+
+                description:"View Assigned Tasks",
+
+
+
+                createdBy:{
+
+                    userId:tenantAdmin._id,
+
+                    name:"Tenant Admin",
+
+                    role:"TenantAdmin"
+
+                }
+
+            }
+
+
+        ]);
+
+
+
+        console.log("HR Permissions Created");
+
+
+
+
+
+
+
+        // ===============================
+        // MANAGER PERMISSIONS
+        // ===============================
+
+
+        await Permission.insertMany([
+
+
+
+            {
+
+                tenant:{
+
+                    tenantId:tenant._id,
+
+                    orgName:tenant.orgName,
+
+                    email:tenant.email
+
+                },
+
+
+                role:managerRole._id,
+
+
+                module:"tasks",
+
+
+                actions:[
+
+                    "create",
+                    "read",
+                    "update"
+
+                ],
+
+
+                description:"Manage Team Tasks",
+
+
+
+                createdBy:{
+
+                    userId:tenantAdmin._id,
+
+                    name:"Tenant Admin",
+
+                    role:"TenantAdmin"
+
+                }
+
+            },
+
+
+
+            {
+
+                tenant:{
+
+                    tenantId:tenant._id,
+
+                    orgName:tenant.orgName,
+
+                    email:tenant.email
+
+                },
+
+
+                role:managerRole._id,
+
+
+                module:"requests",
+
+
+                actions:[
+
+                    "read",
+                    "approve",
+                    "reject"
+
+                ],
+
+
+                description:"Approve Team Requests",
+
+
+
+                createdBy:{
+
+                    userId:tenantAdmin._id,
+
+                    name:"Tenant Admin",
+
+                    role:"TenantAdmin"
+
+                }
+
+            },
+
+
+
+            {
+
+                tenant:{
+
+                    tenantId:tenant._id,
+
+                    orgName:tenant.orgName,
+
+                    email:tenant.email
+
+                },
+
+
+                role:managerRole._id,
+
+
+                module:"attendance",
+
+
+                actions:[
+
+                    "read"
+
+                ],
+
+
+                description:"View Team Attendance",
+
+
+
+                createdBy:{
+
+                    userId:tenantAdmin._id,
+
+                    name:"Tenant Admin",
+
+                    role:"TenantAdmin"
+
+                }
+
+            }
+
+
+
+        ]);
+
+
+
+        console.log("Manager Permissions Created");
+
+
+
+
+
+
+
+        // ===============================
+        // EMPLOYEE PERMISSIONS
+        // ===============================
+
+
+        await Permission.insertMany([
+
+
+
+            {
+
+                tenant:{
+
+                    tenantId:tenant._id,
+
+                    orgName:tenant.orgName,
+
+                    email:tenant.email
+
+                },
+
+
+                role:employeeRole._id,
+
+
+                module:"tasks",
+
+
+                actions:[
+
+                    "read",
+                    "update"
+
+                ],
+
+
+                description:"View and Update Own Tasks",
+
+
+
+                createdBy:{
+
+                    userId:manager._id,
+
+                    name:"Arun Kumar",
+
+                    role:"Manager"
+
+                }
+
+            },
+
+
+
+            {
+
+                tenant:{
+
+                    tenantId:tenant._id,
+
+                    orgName:tenant.orgName,
+
+                    email:tenant.email
+
+                },
+
+
+                role:employeeRole._id,
+
+
+                module:"requests",
+
+
+                actions:[
+
+                    "create",
+                    "read"
+
+                ],
+
+
+                description:"Create and View Own Requests",
+
+
+
+                createdBy:{
+
+                    userId:manager._id,
+
+                    name:"Arun Kumar",
+
+                    role:"Manager"
+
+                }
+
+            },
+
+
+
+            {
+
+                tenant:{
+
+                    tenantId:tenant._id,
+
+                    orgName:tenant.orgName,
+
+                    email:tenant.email
+
+                },
+
+
+                role:employeeRole._id,
+
+
+                module:"attendance",
+
+
+                actions:[
+
+                    "create",
+                    "read"
+
+                ],
+
+
+                description:"Mark and View Own Attendance",
+
+
+
+                createdBy:{
+
+                    userId:manager._id,
+
+                    name:"Arun Kumar",
+
+                    role:"Manager"
+
+                }
+
+            }
+
+
+
+        ]);
+
+
+
+        console.log("Employee Permissions Created");
+        console.log("Permissions Created");
+
+
+        /*
+        =================================
+        TASK
+        =================================
+        */
+
+
+        const task = await Task.create({
+
+            tenant:{
+                tenantId:tenant._id,
+                orgName:tenant.orgName,
+                email:tenant.email
+            },
+
+
+            title:"Develop Employee Dashboard",
+
+
+            description:
+            "Create employee dashboard module for HRMS system",
+
+
+
+            assignedBy:{
+
+                userId:manager._id,
+
+                name:"Arun Kumar",
+
+                role:"Manager"
+
+            },
+
+
+
+            assignedTo:{
+
+                userId:employee._id,
+
+                name:"Rahul Kumar",
+
+                role:"Employee"
+
+            },
+
+
+
+            timeline:{
+
+
+                assignedAt:new Date(),
+
+
+                dueDate:new Date(
+                    new Date().setDate(
+                        new Date().getDate()+7
+                    )
+                ),
+
+
+                submittedAt:null,
+
+
+                completedAt:null
+
+            },
+
+
+
+            priority:"High",
+
+
+            status:"In Progress",
+
+
+
+            completedBy:{
+
+                userId:null,
+
+                name:null,
+
+                role:null
+
+            },
+
+
+            isActive:true,
+
+            isDeleted:false
+
+
+        });
+
+
+        console.log("Task Created");
+        
+        /*
+        =================================
+        REQUEST
+        =================================
+        */
+
+
+        const request = await Request.create({
+
+            tenant:{
+                tenantId:tenant._id,
+                orgName:tenant.orgName,
+                email:tenant.email
+            },
+
+
+            requestedBy:{
+
+                userId:employee._id,
+
+                name:"Rahul Kumar",
+
+                role:"Employee"
+
+            },
+
+
+            requestType:"Leave",
+
+
+            leaveCategory:"Casual",
+
+
+            reason:"Family function",
+
+
+
+            approvalFlow:[
+
+                {
+
+                    level:1,
+
+                    approver:{
+
+                        userId:manager._id,
+
+                        name:"Arun Kumar",
+
+                        role:"Manager"
+
+                    },
+
+                    status:"Pending",
+
+                    actionAt:null,
+
+                    comment:""
+
+                }
+
+            ],
+
+
+
+            timeline:{
+
+
+                fromDate:new Date(
+                    new Date().setDate(
+                        new Date().getDate()+5
+                    )
+                ),
+
+
+                toDate:new Date(
+                    new Date().setDate(
+                        new Date().getDate()+6
+                    )
+                ),
+
+
+                requestedAt:new Date(),
+
+
+                completedAt:null
+
+
+            },
+
+
+            processedBy:{
+
+
+                userId:null,
+
+                name:null,
+
+                role:null
+
+            },
+
+
+
+            status:"Pending",
+
+
+            isActive:true,
+
+            isDeleted:false
+
+
+        });
+
 
         console.log("Request Created");
 
-        // ==========================
-        // TASK
-        // ==========================
+        /*
+        =================================
+        ATTENDANCE
+        =================================
+        */
 
-        await Task.create({
+        const attendance = await Attendance.create({
 
-            tenant: tenant._id,
+            tenant:{
+                tenantId:tenant._id,
+                orgName:tenant.orgName,
+                email:tenant.email
+            },
 
-            assignedTo: adminEmployee._id,
 
-            assignedBy: adminUser._id,
+            user:{
 
-            title: "Complete HRMS Backend",
+                userId:employee._id,
 
-            description: "Develop Authentication Module",
+                name:"Rahul Kumar",
 
-            priority: "High",
+                department:"Information Technology"
 
-            status: "In Progress",
+            },
 
-            dueDate: new Date("2026-08-05")
+
+            date:new Date(),
+
+
+            currentSession:"Logged Out",
+
+
+
+            checkIn:{
+
+                time:new Date(
+                    new Date().setHours(9,0,0,0)
+                ),
+
+                location:"Office"
+
+            },
+
+
+
+            breaks:[
+
+                {
+
+                    breakType:"Lunch Break",
+
+                    startTime:new Date(
+                        new Date().setHours(13,0,0,0)
+                    ),
+
+
+                    endTime:new Date(
+                        new Date().setHours(14,0,0,0)
+                    ),
+
+
+                    duration:1
+
+                }
+
+            ],
+
+
+
+
+            checkOut:{
+
+                time:new Date(
+                    new Date().setHours(18,0,0,0)
+                ),
+
+
+                location:"Office"
+
+            },
+
+
+
+
+            totalLoginHours:9,
+
+
+            totalBreakHours:1,
+
+
+            totalWorkingHours:8,
+
+
+
+            status:"Present",
+
+
+
+
+            createdBy:{
+
+
+                userId:employee._id,
+
+
+                name:"Rahul Kumar",
+
+
+                role:"Employee"
+
+
+            },
+            isActive:true,
+            isDeleted:false
+
 
         });
 
-        console.log("Task Created");
 
-        // ==========================
-        // NOTIFICATION
-        // ==========================
+        console.log("Attendance Created");
 
-        await Notification.create({
 
-            tenant: tenant._id,
 
-            receiver: adminUser._id,
 
-            title: "Welcome",
 
-            message: "Welcome to HRMS",
+        /*
+        =================================
+        NOTIFICATION
+        =================================
+        */
 
-            isRead: false
+
+        const notification = await Notification.create({
+
+
+            tenant:{
+
+                tenantId:tenant._id,
+
+                orgName:tenant.orgName,
+
+                email:tenant.email
+
+            },
+
+
+
+            sender:{
+
+
+                userId:manager._id,
+
+
+                name:"Arun Kumar",
+
+
+                role:"Manager"
+
+
+            },
+
+
+
+
+            recipient:{
+
+
+                userId:employee._id,
+
+
+                name:"Rahul Kumar",
+
+
+                role:"Employee"
+
+
+            },
+
+
+
+
+            title:"New Task Assigned",
+
+
+
+
+            message:
+            "A new development task has been assigned to you.",
+
+
+
+
+            type:"Task",
+
+
+
+
+            reference:{
+
+
+                module:"Task",
+
+
+                referenceId:task._id
+
+
+            },
+
+
+
+
+
+            isRead:false,
+
+
+
+
+
+            timeline:{
+
+
+                sentAt:new Date(),
+
+
+                readAt:null
+
+
+            },isActive:true,
+              isDeleted:false
+
+
 
         });
+
+
 
         console.log("Notification Created");
 
-        // ==========================
-        // AUDIT LOG
-        // ==========================
 
-        await AuditLog.create({
 
-            tenant: tenant._id,
 
-            user: adminUser._id,
 
-            action: "CREATE",
 
-            module: "System",
 
-            description: "Initial database seeded successfully",
+        /*
+        =================================
+        AUDIT LOG
+        =================================
+        */
 
-            ipAddress: "127.0.0.1",
 
-            device: "Seed Script"
+
+        const auditLog = await AuditLog.create({
+
+
+
+            tenant:{
+
+
+                tenantId:tenant._id,
+
+
+                orgName:tenant.orgName,
+
+
+                email:tenant.email
+
+
+            },
+
+
+
+
+
+            performedBy:{
+
+
+                userId:manager._id,
+
+
+                name:"Arun Kumar",
+
+
+                role:"Manager"
+
+
+            },
+
+
+
+
+
+            module:"Task",
+
+
+
+
+
+            action:"Create",
+
+
+
+            reference:{
+                module:"Task",
+                referenceId:task._id
+
+
+            },
+
+            description:
+            "Manager assigned a new task to the employee.",
+            ipAddress:"127.0.0.1",
+            device:"Seed Script"
+
+
+
 
         });
 
+
+
         console.log("Audit Log Created");
 
-        console.log("\n==========================================");
-        console.log("HRMS DATABASE SEEDED SUCCESSFULLY");
-        console.log("==========================================\n");
 
-        process.exit(0);
+
+
+
+
+
+        console.log("\n======================================");
+
+        console.log("HRMS Database Seeded Successfully");
+
+        console.log("======================================\n");
+
+
+
+
+
+
+        await mongoose.connection.close();
+
+
+
+        console.log("Database Connection Closed");
+
+
 
     }
 
     catch(error){
 
-        console.error("\nSeed Error");
+
+        console.error("Seeding Failed");
+
 
         console.error(error);
 
-        process.exit(1);
+
+
+        await mongoose.connection.close();
+
+
 
     }
 
+
+
 };
+
+
+
 
 seedDatabase();
