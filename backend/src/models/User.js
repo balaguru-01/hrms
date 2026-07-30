@@ -8,19 +8,19 @@ const userSchema = new mongoose.Schema(
         tenantId:{
             type:mongoose.Schema.Types.ObjectId,
             ref:"Tenant",
-            required:true,
+            // required:true,      //enterpriseAdmin
             index:true
         },
 
         orgName:{
             type:String,
-            required:true,
+            // required:true,    //enterpriseAdmin
             trim:true
         },
 
         email:{
             type:String,
-            required:true,
+            // required:true,         //enterpriseAdmin
             lowercase:true,
             trim:true
         }

@@ -387,7 +387,7 @@ const seedDatabase = async () => {
 
 
 
-        const superAdminRole = await Role.create({
+        const enterpriseAdminRole = await Role.create({
 
 
             tenant:{
@@ -401,7 +401,7 @@ const seedDatabase = async () => {
             },
 
 
-            name:"SuperAdmin",
+            name:"enterpriseAdmin",
 
 
             description:"System Super Administrator",
@@ -632,18 +632,18 @@ const seedDatabase = async () => {
         // ===============================
 
 
-        const superAdmin = await User.create({
+        const enterpriseAdmin = await User.create({
 
 
-            tenant:{
+            // tenant:{                    //enterpriseAdmin Don't need Tenant
 
-                tenantId:tenant._id,
+            //     tenantId:tenant._id,
 
-                orgName:tenant.orgName,
+            //     orgName:tenant.orgName,
 
-                email:tenant.email
+            //     email:tenant.email
 
-            },
+            // },
 
 
             firstName:"Super",
@@ -651,7 +651,7 @@ const seedDatabase = async () => {
             lastName:"Admin",
 
 
-            email:"superadmin@seosaph.com",
+            email:"enterpriseAdmin@seosaph.com",
 
 
             password:password,
@@ -661,7 +661,7 @@ const seedDatabase = async () => {
 
 
 
-            role:superAdminRole._id,
+            role:enterpriseAdminRole._id,
 
 
 
@@ -781,11 +781,11 @@ const seedDatabase = async () => {
 
             reportingTo:{
 
-                userId:superAdmin._id,
+                userId:enterpriseAdmin._id,
 
                 name:"Super Admin",
 
-                role:"SuperAdmin"
+                role:"enterpriseAdmin"
 
             },
 
@@ -793,11 +793,11 @@ const seedDatabase = async () => {
 
             createdBy:{
 
-                userId:superAdmin._id,
+                userId:enterpriseAdmin._id,
 
                 name:"Super Admin",
 
-                role:"SuperAdmin"
+                role:"enterpriseAdmin"
 
             },
 
@@ -1179,7 +1179,7 @@ const seedDatabase = async () => {
                 },
 
 
-                role:superAdminRole._id,
+                role:enterpriseAdminRole._id,
 
 
                 module:"users",
@@ -1205,11 +1205,11 @@ const seedDatabase = async () => {
 
                 createdBy:{
 
-                    userId:superAdmin._id,
+                    userId:enterpriseAdmin._id,
 
                     name:"Super Admin",
 
-                    role:"SuperAdmin"
+                    role:"enterpriseAdmin"
 
                 }
 
@@ -1230,7 +1230,7 @@ const seedDatabase = async () => {
                 },
 
 
-                role:superAdminRole._id,
+                role:enterpriseAdminRole._id,
 
 
                 module:"departments",
@@ -1253,11 +1253,11 @@ const seedDatabase = async () => {
 
                 createdBy:{
 
-                    userId:superAdmin._id,
+                    userId:enterpriseAdmin._id,
 
                     name:"Super Admin",
 
-                    role:"SuperAdmin"
+                    role:"enterpriseAdmin"
 
                 }
 
@@ -1278,7 +1278,7 @@ const seedDatabase = async () => {
                 },
 
 
-                role:superAdminRole._id,
+                role:enterpriseAdminRole._id,
 
 
                 module:"roles",
@@ -1301,11 +1301,11 @@ const seedDatabase = async () => {
 
                 createdBy:{
 
-                    userId:superAdmin._id,
+                    userId:enterpriseAdmin._id,
 
                     name:"Super Admin",
 
-                    role:"SuperAdmin"
+                    role:"enterpriseAdmin"
 
                 }
 
@@ -1326,7 +1326,7 @@ const seedDatabase = async () => {
                 },
 
 
-                role:superAdminRole._id,
+                role:enterpriseAdminRole._id,
 
 
                 module:"permissions",
@@ -1349,11 +1349,11 @@ const seedDatabase = async () => {
 
                 createdBy:{
 
-                    userId:superAdmin._id,
+                    userId:enterpriseAdmin._id,
 
                     name:"Super Admin",
 
-                    role:"SuperAdmin"
+                    role:"enterpriseAdmin"
 
                 }
 
@@ -1374,7 +1374,7 @@ const seedDatabase = async () => {
                 },
 
 
-                role:superAdminRole._id,
+                role:enterpriseAdminRole._id,
 
 
                 module:"attendance",
@@ -1398,11 +1398,11 @@ const seedDatabase = async () => {
 
                 createdBy:{
 
-                    userId:superAdmin._id,
+                    userId:enterpriseAdmin._id,
 
                     name:"Super Admin",
 
-                    role:"SuperAdmin"
+                    role:"enterpriseAdmin"
 
                 }
 
@@ -1423,7 +1423,7 @@ const seedDatabase = async () => {
                 },
 
 
-                role:superAdminRole._id,
+                role:enterpriseAdminRole._id,
 
 
                 module:"requests",
@@ -1448,11 +1448,11 @@ const seedDatabase = async () => {
 
                 createdBy:{
 
-                    userId:superAdmin._id,
+                    userId:enterpriseAdmin._id,
 
                     name:"Super Admin",
 
-                    role:"SuperAdmin"
+                    role:"enterpriseAdmin"
 
                 }
 
@@ -1473,7 +1473,7 @@ const seedDatabase = async () => {
                 },
 
 
-                role:superAdminRole._id,
+                role:enterpriseAdminRole._id,
 
 
                 module:"tasks",
@@ -1496,11 +1496,11 @@ const seedDatabase = async () => {
 
                 createdBy:{
 
-                    userId:superAdmin._id,
+                    userId:enterpriseAdmin._id,
 
                     name:"Super Admin",
 
-                    role:"SuperAdmin"
+                    role:"enterpriseAdmin"
 
                 }
 
@@ -1511,7 +1511,7 @@ const seedDatabase = async () => {
 
 
 
-        console.log("SuperAdmin Permissions Created");
+        console.log("enterpriseAdmin Permissions Created");
 
 
 
@@ -1562,11 +1562,11 @@ const seedDatabase = async () => {
 
                 createdBy:{
 
-                    userId:superAdmin._id,
+                    userId:enterpriseAdmin._id,
 
                     name:"Super Admin",
 
-                    role:"SuperAdmin"
+                    role:"enterpriseAdmin"
 
                 }
 
@@ -1609,11 +1609,11 @@ const seedDatabase = async () => {
 
                 createdBy:{
 
-                    userId:superAdmin._id,
+                    userId:enterpriseAdmin._id,
 
                     name:"Super Admin",
 
-                    role:"SuperAdmin"
+                    role:"enterpriseAdmin"
 
                 }
 
@@ -1655,11 +1655,11 @@ const seedDatabase = async () => {
 
                 createdBy:{
 
-                    userId:superAdmin._id,
+                    userId:enterpriseAdmin._id,
 
                     name:"Super Admin",
 
-                    role:"SuperAdmin"
+                    role:"enterpriseAdmin"
 
                 }
 
@@ -1702,11 +1702,11 @@ const seedDatabase = async () => {
 
                 createdBy:{
 
-                    userId:superAdmin._id,
+                    userId:enterpriseAdmin._id,
 
                     name:"Super Admin",
 
-                    role:"SuperAdmin"
+                    role:"enterpriseAdmin"
 
                 }
 
@@ -1749,11 +1749,11 @@ const seedDatabase = async () => {
 
                 createdBy:{
 
-                    userId:superAdmin._id,
+                    userId:enterpriseAdmin._id,
 
                     name:"Super Admin",
 
-                    role:"SuperAdmin"
+                    role:"enterpriseAdmin"
 
                 }
 
@@ -1796,11 +1796,11 @@ const seedDatabase = async () => {
 
                 createdBy:{
 
-                    userId:superAdmin._id,
+                    userId:enterpriseAdmin._id,
 
                     name:"Super Admin",
 
-                    role:"SuperAdmin"
+                    role:"enterpriseAdmin"
 
                 }
 
