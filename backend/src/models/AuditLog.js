@@ -10,19 +10,19 @@ const auditLogSchema = new mongoose.Schema(
         tenantId:{
             type:mongoose.Schema.Types.ObjectId,
             ref:"Tenant",
-            required:true,
-            index:true
+            // required:true,
+            // index:true
         },
 
         orgName:{
             type:String,
-            required:true,
+            // required:true,
             trim:true
         },
 
         email:{
             type:String,
-            required:true,
+            // required:true,
             lowercase:true,
             trim:true
         }
@@ -83,7 +83,8 @@ const auditLogSchema = new mongoose.Schema(
             "Reject",
             "Assign",
             "Submit",
-            "Export"
+            "Export",
+            "Invite"
         ],
 
         required:true
@@ -104,7 +105,7 @@ const auditLogSchema = new mongoose.Schema(
 
         referenceId:{
             type:mongoose.Schema.Types.ObjectId,
-            required:true
+            // required:true
         }
 
     },

@@ -83,38 +83,48 @@ const tenantSchema = new mongoose.Schema(
       },
     },
 
-    // Subscription Information
+    //Subscription details
     subscription: {
-      plan: {
-        type: String,
-        enum: ["Free", "Basic", "Premium", "Enterprise"],
-        default: "Free",
-      },
-
-      status: {
-        type: String,
-        enum: ["Trial", "Active", "Expired", "Suspended"],
-        default: "Trial",
-      },
-
-      startDate: {
-        type: Date,
-      },
-
-      endDate: {
-        type: Date,
-      },
+    plan: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Plan",
+        default: null
     },
+
+    status: {
+        type: String,
+        enum: ["Pending", "Active", "Expired", "Suspended","Rejected"],
+        default: "Pending"
+    },
+    rejectedReason: {
+        type: String,
+        default: null,
+        trim: true
+    },
+
+    startDate: {
+        type: Date,
+        default: null
+    },
+
+    endDate: {
+        type: Date,
+        default: null
+    }
+},
 
     employeeLimit: {
-      type: Number,
-      default: 10,
+        type: Number,
+        default: 10
     },
+
+    
 
     // Audit Information
     createdBy: {
       userId: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
       },
 
       name: {
@@ -128,7 +138,7 @@ const tenantSchema = new mongoose.Schema(
 
     isActive: {
       type: Boolean,
-      default: true,
+      default: false,
     },
 
     isDeleted: {

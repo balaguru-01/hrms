@@ -3,25 +3,21 @@ const mongoose = require("mongoose");
 
 const roleSchema = new mongoose.Schema(
 {
-    tenant:{
-        tenantId:{
-            type:mongoose.Schema.Types.ObjectId,
-            ref:"Tenant",
-            required:true,
-            index:true
+    tenant: {
+        tenantId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Tenant"
         },
 
-        orgName:{
-            type:String,
-            required:true,
-            trim:true
+        orgName: {
+            type: String,
+            trim: true
         },
 
-        email:{
-            type:String,
-            required:true,
-            lowercase:true,
-            trim:true
+        email: {
+            type: String,
+            lowercase: true,
+            trim: true
         }
     },
 
@@ -81,9 +77,9 @@ const roleSchema = new mongoose.Schema(
 });
 
 
-roleSchema.index({
-    "tenant.tenantId":1
-});
+// roleSchema.index({
+//     "tenant.tenantId":1
+// });
 
 
 roleSchema.index(

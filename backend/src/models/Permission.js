@@ -8,7 +8,7 @@ const permissionSchema = new mongoose.Schema(
             type:mongoose.Schema.Types.ObjectId,
             ref:"Tenant",
             required:true,
-            index:true
+            // index:true
         },
 
         orgName:{
@@ -100,9 +100,9 @@ const permissionSchema = new mongoose.Schema(
 });
 
 
-permissionSchema.index({
-    "tenant.tenantId":1
-});
+// permissionSchema.index({
+//     "tenant.tenantId":1
+// });
 
 
 permissionSchema.index(

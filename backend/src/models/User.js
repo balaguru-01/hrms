@@ -9,7 +9,7 @@ const userSchema = new mongoose.Schema(
             type:mongoose.Schema.Types.ObjectId,
             ref:"Tenant",
             // required:true,      //enterpriseAdmin
-            index:true
+            // index:true
         },
 
         orgName:{
@@ -166,13 +166,13 @@ const userSchema = new mongoose.Schema(
             "Suspended"
         ],
 
-        default:"Active"
+        default:"Inactive"
     },
 
 
     isActive:{
         type:Boolean,
-        default:true
+        default:false
     },
 
 
@@ -210,9 +210,9 @@ const userSchema = new mongoose.Schema(
 
 // Tenant isolation optimization
 
-userSchema.index({
-    "tenant.tenantId":1
-});
+// userSchema.index({
+//     "tenant.tenantId":1
+// });
 
 
 // Unique email inside tenant
