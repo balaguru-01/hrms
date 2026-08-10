@@ -1,233 +1,226 @@
-const mongoose = require("mongoose");
-const validator = require("validator");
+import mongoose from "mongoose";
+import validator from "validator";
 
 const userSchema = new mongoose.Schema(
-{
-    // Tenant Information
-    tenant:{
-        tenantId:{
-            type:mongoose.Schema.Types.ObjectId,
-            ref:"Tenant",
-            required:true,
-            index:true
+    {
+        // Tenant Information
+        tenant: {
+            tenantId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Tenant",
+            },
+
+            orgName: {
+                type: String,
+                trim: true,
+            },
+
+            email: {
+                type: String,
+                lowercase: true,
+                trim: true,
+            },
         },
 
-        orgName:{
-            type:String,
-            required:true,
-            trim:true
+        // Basic User Information
+        firstName: {
+            type: String,
+            required: true,
+            trim: true,
         },
 
-        email:{
-            type:String,
-            required:true,
-            lowercase:true,
-            trim:true
-        }
-    },
-
-
-    // Basic User Information
-    firstName:{
-        type:String,
-        required:true,
-        trim:true
-    },
-
-    lastName:{
-        type:String,
-        required:true,
-        trim:true
-    },
-
-    email:{
-        type:String,
-        required:true,
-        lowercase:true,
-        trim:true,
-
-        validate:[
-            validator.isEmail,
-            "Invalid Email"
-        ]
-    },
-
-
-    password:{
-        type:String,
-        required:true,
-        select:false
-    },
-
-
-    phone:{
-        type:String,
-        required:true,
-        trim:true
-    },
-
-
-    // Authorization
-    role:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Role",
-        required:true
-    },
-
-
-    // Job Information
-    designation:{
-        type:String,
-        required:true,
-        trim:true
-    },
-
-
-    department:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Department",
-        default:null
-    },
-
-
-    joiningDate:{
-        type:Date,
-        required:true
-    },
-
-
-    employmentType:{
-        type:String,
-        enum:[
-            "Full-Time",
-            "Part-Time",
-            "Intern",
-            "Contract"
-        ],
-        default:"Full-Time"
-    },
-
-
-    salary:{
-        type:Number,
-        default:0
-    },
-
-
-    // Reporting Hierarchy
-    reportingTo:{
-        userId:{
-            type:mongoose.Schema.Types.ObjectId,
-            ref:"User",
-            default:null
+        lastName: {
+            type: String,
+            required: true,
+            trim: true,
         },
 
-        name:{
-            type:String,
-            default:null
+        email: {
+            type: String,
+            required: true,
+            lowercase: true,
+            trim: true,
+            validate: [validator.isEmail, "Invalid Email"],
         },
 
-        role:{
-            type:String,
-            default:null
-        }
-    },
-
-
-    // Audit Information
-    createdBy:{
-        userId:{
-            type:mongoose.Schema.Types.ObjectId,
-            ref:"User",
-            default:null
+        password: {
+            type: String,
+            required: true,
+            select: false,
         },
 
-        name:{
-            type:String,
-            required:true
+        phone: {
+            type: String,
+            required: true,
+            trim: true,
         },
 
-        role:{
-            type:String,
-            required:true
-        }
+        // Authorization
+        role: {
+            roleId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Role",
+                required: true,
+            },
+
+            name: {
+                type: String,
+                required: true,
+                trim: true,
+            },
+        },
+
+        // Job Information
+        designation: {
+            type: String,
+            trim: true,
+            default: null,
+        },
+
+        department: {
+            departmentId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Department",
+                default: null,
+            },
+
+            name: {
+                type: String,
+                trim: true,
+                default: null,
+            },
+        },
+
+        joiningDate: {
+            type: Date,
+            default: null,
+        },
+
+        employmentType: {
+            type: String,
+            enum: [
+                "Full-Time",
+                "Part-Time",
+                "Intern",
+                "Contract",
+            ],
+            default: null,
+        },
+
+        salary: {
+            type: Number,
+            default: null,
+        },
+
+        // Reporting Hierarchy
+        reportingTo: {
+            userId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+                default: null,
+            },
+
+            name: {
+                type: String,
+                default: null,
+            },
+
+            role: {
+                type: String,
+                default: null,
+            },
+        },
+
+        // Audit Information
+        createdBy: {
+            userId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+                default: null,
+            },
+
+            name: {
+                type: String,
+                required: true,
+            },
+
+            role: {
+                type: String,
+                required: true,
+            },
+        },
+
+        updatedBy: {
+            userId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+                default: null,
+            },
+
+            name: {
+                type: String,
+                default: null,
+            },
+
+            role: {
+                type: String,
+                default: null,
+            },
+        },
+
+        // Account Management
+        status: {
+            type: String,
+            enum: [
+                "Active",
+                "Inactive",
+                "Resigned",
+                "Suspended",
+            ],
+            default: "Inactive",
+        },
+
+        isActive: {
+            type: Boolean,
+            default: false,
+        },
+
+        isDeleted: {
+            type: Boolean,
+            default: false,
+        },
+
+        // Authentication Tracking
+        lastLogin: {
+            type: Date,
+            default: null,
+        },
+
+        passwordChangedAt: {
+            type: Date,
+            default: null,
+        },
+
+        // Session Security
+        tokenVersion: {
+            type: Number,
+            default: 0,
+        },
     },
-
-
-    // Account Management
-
-    status:{
-        type:String,
-
-        enum:[
-            "Active",
-            "Inactive",
-            "Resigned",
-            "Suspended"
-        ],
-
-        default:"Active"
-    },
-
-
-    isActive:{
-        type:Boolean,
-        default:true
-    },
-
-
-    isDeleted:{
-        type:Boolean,
-        default:false
-    },
-
-
-    // Authentication Tracking
-
-    lastLogin:{
-        type:Date,
-        default:null
-    },
-
-
-    passwordChangedAt:{
-        type:Date,
-        default:null
-    },
-
-
-    // Session Security
-    tokenVersion:{
-        type:Number,
-        default:0
+    {
+        timestamps: true,
     }
-
-},
-{
-    timestamps:true
-});
-
-
-// Tenant isolation optimization
-
-userSchema.index({
-    "tenant.tenantId":1
-});
-
-
-// Unique email inside tenant
-
-userSchema.index(
-{
-    "tenant.tenantId":1,
-    email:1
-},
-{
-    unique:true
-});
-
-
-module.exports = mongoose.model(
-    "User",
-    userSchema
 );
+
+// Unique email inside each tenant
+userSchema.index(
+    {
+        "tenant.tenantId": 1,
+        email: 1,
+    },
+    {
+        unique: true,
+    }
+);
+
+export default mongoose.model("User", userSchema);

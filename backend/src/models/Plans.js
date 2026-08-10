@@ -1,34 +1,14 @@
 import mongoose from "mongoose";
 
-const roleSchema = new mongoose.Schema(
+const planSchema = new mongoose.Schema(
     {
-        // Tenant Information
-        tenant: {
-            tenantId: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "Tenant",
-                default: null,
-            },
-
-            orgName: {
-                type: String,
-                trim: true,
-                default: null,
-            },
-
-            email: {
-                type: String,
-                trim: true,
-                lowercase: true,
-                default: null,
-            },
-        },
-
-        // Role Information
+        // Plan Information
         name: {
             type: String,
             required: true,
+            unique: true,
             trim: true,
+            enum: ["Trial", "Basic", "Premium", "Enterprise"],
         },
 
         description: {
@@ -37,9 +17,28 @@ const roleSchema = new mongoose.Schema(
             trim: true,
         },
 
-        isSystemRole: {
-            type: Boolean,
-            default: false,
+        price: {
+            type: Number,
+            required: true,
+            min: 0,
+        },
+
+        employeeLimit: {
+            type: Number,
+            required: true,
+            min: 1,
+        },
+
+        duration: {
+            type: Number,
+            required: true,
+            min: 1,
+        },
+
+        durationType: {
+            type: String,
+            required: true,
+            enum: ["Days", "Months", "Years"],
         },
 
         // Audit Information
@@ -52,14 +51,12 @@ const roleSchema = new mongoose.Schema(
 
             name: {
                 type: String,
-                // required: true,
-                 default: null
+                default: null,
             },
 
             role: {
                 type: String,
-                // required: true,
-                 default: null
+                default: null,
             },
         },
 
@@ -81,7 +78,7 @@ const roleSchema = new mongoose.Schema(
             },
         },
 
-        // Account Management
+        // Plan Status
         isActive: {
             type: Boolean,
             default: true,
@@ -97,15 +94,4 @@ const roleSchema = new mongoose.Schema(
     }
 );
 
-// Unique role name inside each tenant
-roleSchema.index(
-    {
-        "tenant.tenantId": 1,
-        name: 1,
-    },
-    {
-        unique: true,
-    }
-);
-
-export default mongoose.model("Role", roleSchema);
+export default mongoose.model("Plan", planSchema);

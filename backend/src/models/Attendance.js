@@ -1,294 +1,250 @@
-const mongoose = require("mongoose");
-
+import mongoose from "mongoose";
 
 const attendanceSchema = new mongoose.Schema(
-{
+    {
+        // Tenant Information
+        tenant: {
+            tenantId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Tenant",
+                required: true,
+            },
 
-    // Tenant Information
+            orgName: {
+                type: String,
+                required: true,
+                trim: true,
+            },
 
-    tenant:{
-
-        tenantId:{
-            type:mongoose.Schema.Types.ObjectId,
-            ref:"Tenant",
-            required:true,
-            index:true
+            email: {
+                type: String,
+                required: true,
+                lowercase: true,
+                trim: true,
+            },
         },
 
+        // Employee Information
+        employee: {
+            userId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+                required: true,
+            },
 
-        orgName:{
-            type:String,
-            required:true,
-            trim:true
+            name: {
+                type: String,
+                required: true,
+                trim: true,
+            },
+
+            role: {
+                type: String,
+                required: true,
+            },
+
+            designation: {
+                type: String,
+                required: true,
+                trim: true,
+            },
+
+            department: {
+                departmentId: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: "Department",
+                    default: null,
+                },
+
+                name: {
+                    type: String,
+                    default: null,
+                    trim: true,
+                },
+            },
         },
 
-
-        email:{
-            type:String,
-            required:true,
-            lowercase:true,
-            trim:true
-        }
-
-    },
-
-
-
-    // Employee Information
-
-    user:{
-
-        userId:{
-            type:mongoose.Schema.Types.ObjectId,
-            ref:"User",
-            required:true,
-            index:true
+        // Attendance Date
+        attendanceDate: {
+            type: Date,
+            required: true,
         },
 
-
-        name:{
-            type:String,
-            required:true,
-            trim:true
+        // Attendance Source
+        attendanceSource: {
+            type: String,
+            enum: ["Web", "Mobile", "Admin", "Biometric"],
+            default: "Web",
         },
 
+        // Current Session
+        currentSession: {
+            type: String,
+            enum: [
+                "Logged Out",
+                "Logged In",
+                "On Break",
+            ],
+            default: "Logged Out",
+        },
 
-        department:{
-            type:String,
-            default:""
-        }
+        // Check In Details
+        checkIn: {
+            time: {
+                type: Date,
+                default: null,
+            },
 
-    },
+            location: {
+                type: String,
+                default: "",
+                trim: true,
+            },
+        },
 
+        // Break Tracking
+        breaks: [
+            {
+                breakType: {
+                    type: String,
+                    enum: [
+                        "Tea Break",
+                        "Lunch Break",
+                        "Personal Break",
+                        "Other",
+                    ],
+                    default: "Other",
+                },
 
+                startTime: {
+                    type: Date,
+                    default: null,
+                },
 
-    // Attendance Date
+                endTime: {
+                    type: Date,
+                    default: null,
+                },
 
-    date:{
-        type:Date,
-        required:true
-    },
-
-
-
-    // Current Session
-
-    currentSession:{
-
-        type:String,
-
-        enum:[
-            "Logged Out",
-            "Logged In",
-            "On Break"
+                duration: {
+                    type: Number,
+                    default: 0,
+                },
+            },
         ],
 
-        default:"Logged Out"
-
-    },
-
-
-
-    // Check In
-
-    checkIn:{
-
-        time:{
-            type:Date,
-            default:null
-        },
-
-
-        location:{
-            type:String,
-            default:""
-        }
-
-    },
-
-
-
-    // Break Tracking
-
-    breaks:[
-
-        {
-
-            breakType:{
-
-                type:String,
-
-                enum:[
-                    "Tea Break",
-                    "Lunch Break",
-                    "Personal Break",
-                    "Other"
-                ],
-
-                default:"Other"
-
+        // Check Out Details
+        checkOut: {
+            time: {
+                type: Date,
+                default: null,
             },
 
+            location: {
+                type: String,
+                default: "",
+                trim: true,
+            },
+        },
 
-            startTime:{
-                type:Date,
-                default:null
+        // Working Hours Calculation
+        totalLoginHours: {
+            type: Number,
+            default: 0,
+        },
+
+        totalBreakHours: {
+            type: Number,
+            default: 0,
+        },
+
+        totalWorkingHours: {
+            type: Number,
+            default: 0,
+        },
+
+        // Attendance Status
+        status: {
+            type: String,
+            enum: [
+                "Present",
+                "Absent",
+                "Leave",
+                "Half-Day",
+                "Holiday",
+            ],
+            default: "Present",
+        },
+
+        // Audit Information
+        createdBy: {
+            userId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+                default: null,
             },
 
-
-            endTime:{
-                type:Date,
-                default:null
+            name: {
+                type: String,
+                default: null,
             },
 
-
-            duration:{
-                type:Number,
-                default:0
-            }
-
-
-        }
-
-    ],
-
-
-
-    // Check Out
-
-    checkOut:{
-
-        time:{
-            type:Date,
-            default:null
+            role: {
+                type: String,
+                default: null,
+            },
         },
 
+        updatedBy: {
+            userId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+                default: null,
+            },
 
-        location:{
-            type:String,
-            default:""
-        }
+            name: {
+                type: String,
+                default: null,
+            },
 
-    },
-
-
-
-    // Working Calculation
-
-    totalLoginHours:{
-        type:Number,
-        default:0
-    },
-
-
-    totalBreakHours:{
-        type:Number,
-        default:0
-    },
-
-
-    totalWorkingHours:{
-        type:Number,
-        default:0
-    },
-
-
-
-    // Attendance Status
-
-    status:{
-
-        type:String,
-
-        enum:[
-            "Present",
-            "Absent",
-            "Leave",
-            "Half-Day",
-            "Holiday"
-        ],
-
-        default:"Present"
-
-    },
-
-
-
-    // Audit Information
-
-    createdBy:{
-
-        userId:{
-            type:mongoose.Schema.Types.ObjectId,
-            ref:"User",
-            default:null
+            role: {
+                type: String,
+                default: null,
+            },
         },
 
-
-        name:{
-            type:String,
-            default:null
+        // Account Status
+        isActive: {
+            type: Boolean,
+            default: true,
         },
 
-
-        role:{
-            type:String,
-            default:null
-        }
-
+        isDeleted: {
+            type: Boolean,
+            default: false,
+        },
     },
-
-
-
-    isActive:{
-        type:Boolean,
-        default:true
-    },
-
-
-    isDeleted:{
-        type:Boolean,
-        default:false
+    {
+        timestamps: true,
     }
+);
 
-
-},
-{
-    timestamps:true
-});
-
-
-
-// One attendance per employee per day
-
+// One attendance record per employee per day within a tenant
 attendanceSchema.index(
-{
-
-    "tenant.tenantId":1,
-
-    "user.userId":1,
-
-    date:1
-
-},
-{
-    unique:true
-});
-
-
+    {
+        "tenant.tenantId": 1,
+        "employee.userId": 1,
+        attendanceDate: 1,
+    },
+    {
+        unique: true,
+    }
+);
 
 // Employee attendance history
-
 attendanceSchema.index({
-
-    "user.userId":1,
-
-    date:-1
-
+    "employee.userId": 1,
+    attendanceDate: -1,
 });
 
-
-module.exports = mongoose.model(
-    "Attendance",
-    attendanceSchema
-);
+export default mongoose.model("Attendance", attendanceSchema);

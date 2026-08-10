@@ -1,186 +1,170 @@
-const mongoose = require("mongoose");
-
+import mongoose from "mongoose";
 
 const auditLogSchema = new mongoose.Schema(
-{
+    {
+        // Tenant Information
+        tenant: {
+            tenantId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Tenant",
+                default: null,
+            },
 
-    // Tenant Information
+            orgName: {
+                type: String,
+                default: null,
+                trim: true,
+            },
 
-    tenant:{
-        tenantId:{
-            type:mongoose.Schema.Types.ObjectId,
-            ref:"Tenant",
-            required:true,
-            index:true
+            email: {
+                type: String,
+                default: null,
+                lowercase: true,
+                trim: true,
+            },
         },
 
-        orgName:{
-            type:String,
-            required:true,
-            trim:true
+        // User Who Performed the Action
+        performedBy: {
+            userId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+                default: null,
+            },
+
+            name: {
+                type: String,
+                trim: true,
+                default: null,
+            },
+
+            role: {
+                type: String,
+                default: null,
+            },
+
+            designation: {
+                type: String,
+                default: null,
+                trim: true,
+            },
         },
 
-        email:{
-            type:String,
-            required:true,
-            lowercase:true,
-            trim:true
-        }
-    },
-
-
-
-    // User who performed the action
-
-    performedBy:{
-
-        userId:{
-            type:mongoose.Schema.Types.ObjectId,
-            ref:"User",
-            required:true
+        // Module Name
+        module: {
+            type: String,
+            required: true,
+            trim: true,
         },
 
-
-        name:{
-            type:String,
-            required:true
+        // Action Performed
+        action: {
+            type: String,
+            required: true,
+            enum: [
+                "Create",
+                "Read",
+                "Update",
+                "Delete",
+                "Login",
+                "Logout",
+                "Approve",
+                "Reject",
+                "Assign",
+                "Submit",
+                "Export",
+                "Invite",
+            ],
         },
 
+        // Related Record Information
+        relatedTo: {
+            module: {
+                type: String,
+                default: null,
+                trim: true,
+            },
 
-        role:{
-            type:String,
-            required:true
-        }
+            referenceId: {
+                type: mongoose.Schema.Types.ObjectId,
+                default: null,
+            },
 
-    },
-
-
-
-    // Module affected
-
-    module:{
-        type:String,
-        required:true,
-        trim:true
-    },
-
-
-
-    // Action performed
-
-    action:{
-
-        type:String,
-
-        enum:[
-            "Create",
-            "Read",
-            "Update",
-            "Delete",
-            "Login",
-            "Logout",
-            "Approve",
-            "Reject",
-            "Assign",
-            "Submit",
-            "Export"
-        ],
-
-        required:true
-
-    },
-
-
-
-    // Reference Record
-
-    reference:{
-
-        module:{
-            type:String,
-            default:null
+            title: {
+                type: String,
+                default: "",
+                trim: true,
+            },
         },
 
+        // Data Changes
+        changes: {
+            oldData: {
+                type: mongoose.Schema.Types.Mixed,
+                default: null,
+            },
 
-        referenceId:{
-            type:mongoose.Schema.Types.ObjectId,
-            required:true
-        }
+            newData: {
+                type: mongoose.Schema.Types.Mixed,
+                default: null,
+            },
+        },
 
+        // Activity Description
+        description: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+
+        // Request Information
+        ipAddress: {
+            type: String,
+            default: "",
+        },
+
+        userAgent: {
+            type: String,
+            default: "",
+        },
+
+        // Operation Status
+        status: {
+            type: String,
+            enum: ["Success", "Failed"],
+            default: "Success",
+        },
+
+        // Account Status
+        isActive: {
+            type: Boolean,
+            default: true,
+        },
+
+        isDeleted: {
+            type: Boolean,
+            default: false,
+        },
     },
-
-
-
-    // Description
-
-    description:{
-        type:String,
-        required:true,
-        trim:true
-    },
-
-
-
-    // Request Details
-
-    ipAddress:{
-        type:String,
-        default:""
-    },
-
-
-    device:{
-        type:String,
-        default:""
-    },
-
-
-    // Status
-
-    isActive:{
-        type:Boolean,
-        default:true
-    },
-
-
-    isDeleted:{
-        type:Boolean,
-        default:false
+    {
+        timestamps: true,
     }
-
-
-},
-{
-    timestamps:true
-});
-
-
-
-// Tenant activity lookup
-
-auditLogSchema.index({
-    "tenant.tenantId":1
-});
-
-
-
-// User activity history
-
-auditLogSchema.index({
-    "performedBy.userId":1
-});
-
-
-
-// Module action search
-
-auditLogSchema.index({
-    module:1,
-    action:1
-});
-
-
-module.exports = mongoose.model(
-    "AuditLog",
-    auditLogSchema
 );
+
+// Tenant Activity Lookup
+auditLogSchema.index({
+    "tenant.tenantId": 1,
+});
+
+// User Activity History
+auditLogSchema.index({
+    "performedBy.userId": 1,
+});
+
+// Module Action Search
+auditLogSchema.index({
+    module: 1,
+    action: 1,
+});
+
+export default mongoose.model("AuditLog", auditLogSchema);
