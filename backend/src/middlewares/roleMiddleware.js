@@ -1,8 +1,8 @@
 const roleMiddleware = (...allowedRoles) => {
     return (req, res, next) => {
         try {
-            if (!req.user || !req.user.role) {
-                const error = new Error("Not able to identify your role");
+            if (!req.user || !req.user.role || !req.user.role.name) {
+                const error = new Error("Unauthorized Access");
                 error.statusCode = 401;
                 return next(error);
             }
@@ -11,14 +11,14 @@ const roleMiddleware = (...allowedRoles) => {
                 role.toLowerCase()
             );
 
-            if (!normalizedRoles.includes(req.user.role.toLowerCase())) {
+            if (!normalizedRoles.includes(req.user.role.name.toLowerCase())) {
                 const error = new Error(
-                    `Sorry, ${req.user.role} cannot access this feature`
+                    `Unauthorized Access`
                 );
                 error.statusCode = 403;
                 return next(error);
             }
-
+            
             next();
         } catch (error) {
             error.statusCode = error.statusCode || 500;
