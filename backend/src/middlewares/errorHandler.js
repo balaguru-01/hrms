@@ -1,4 +1,13 @@
-const errorHandler = (err, req, res, next) => {
+import createErrorAuditLog from "../utils/createErrorAuditLog.js";
+
+const errorHandler = async (err, req, res, next) => {
+
+    if (err.auditDetails) {
+        await createErrorAuditLog({
+            req,
+            auditDetails: err.auditDetails,
+        });
+    }
 
     const statusCode = err.statusCode || 500;
 

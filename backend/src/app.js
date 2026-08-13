@@ -4,6 +4,8 @@ import cors from "cors";
 import errorHandler from "./middlewares/errorHandler.js";
 
 import authRoute from "../src/routes/authRoutes.js"
+import userRoute from "../src/routes/userRoutes.js"
+
 
 const app = express();
 
@@ -12,6 +14,8 @@ app.use(express.json());
 
 
 app.use("/tenanthub", authRoute);
+app.use("/users",userRoute);
+
 
 app.get("/", (req, res) => {
     res.json({
