@@ -9,7 +9,7 @@ import constants from "../config/constants.js";
 import generateToken from "../utils/tokenGenerator.js";
 import userInvitationEmail from "../utils/mailServices/userInvitationEmail.js";
 
-const emailRegex = /^[^\s@]+@[^\s@]+.[^\s@]+$/;
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const sendUserInvitationService = async ({
     email,
@@ -20,7 +20,7 @@ const sendUserInvitationService = async ({
 
     // Validate email
     if (!email || typeof email !== "string" || email.trim() === "") {
-        const error = new Error("Invalid field");
+        const error = new Error("Invalid data");
         error.statusCode = 400;
         error.auditReason = "Email is required";
         throw error;
@@ -29,7 +29,7 @@ const sendUserInvitationService = async ({
     const normalizedEmail = email.trim().toLowerCase();
 
     if (!emailRegex.test(normalizedEmail)) {
-        const error = new Error("Invalid field");
+        const error = new Error("Invalid data");
         error.statusCode = 400;
         error.auditReason = "Invalid email address";
         throw error;
@@ -37,14 +37,14 @@ const sendUserInvitationService = async ({
 
     // Validate roleId
     if (!roleId) {
-        const error = new Error("Invalid field");
+        const error = new Error("Invalid data");
         error.statusCode = 400;
         error.auditReason = "Role is required";
         throw error;
     }
 
     if (!mongoose.Types.ObjectId.isValid(roleId)) {
-        const error = new Error("Invalid field");
+        const error = new Error("Invalid data");
         error.statusCode = 400;
         error.auditReason = "Invalid role ID";
         throw error;
@@ -102,10 +102,9 @@ const sendUserInvitationService = async ({
 
     // Determine whether target role requires a tenant
     const tenantLevelRoles = [
+        constants.roles.tenantSuperAdmin,
         constants.roles.tenantAdmin,
-        constants.roles.hr,
-        constants.roles.manager,
-        constants.roles.employee,
+        constants.roles.tenantUser
     ];
 
     const requiresTenant = tenantLevelRoles.includes(
@@ -145,7 +144,7 @@ const sendUserInvitationService = async ({
         else {
 
             if (!orgName || orgName.trim() === "") {
-                const error = new Error("Invalid field");
+                const error = new Error("Invalid data");
                 error.statusCode = 400;
                 error.auditReason =
                     "Organization name is required for this role";

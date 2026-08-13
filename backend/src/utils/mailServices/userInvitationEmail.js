@@ -30,6 +30,8 @@ const userInvitationEmail = async (email, token) => {
             <p>
                 <a
                     href="${registrationLink}"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     style="
                         display: inline-block;
                         padding: 10px 20px;
