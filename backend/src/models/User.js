@@ -174,6 +174,7 @@ const userSchema = new mongoose.Schema(
             enum: [
                 "Active",
                 "Inactive",
+                "Pending",
                 "Resigned",
                 "Suspended",
             ],
@@ -212,15 +213,23 @@ const userSchema = new mongoose.Schema(
     }
 );
 
-// Unique email inside each tenant
-userSchema.index(
-    {
-        "tenant.tenantId": 1,
-        email: 1,
-    },
-    {
-        unique: true,
-    }
-);
+    // Unique email for every user
+    userSchema.index(
+        {
+            email: 1,
+        },
+        {
+            unique: true,
+        }
+    );
+    // Unique phone for every user
+    userSchema.index(
+        {
+            phone: 1,
+        },
+        {
+            unique: true,
+        }
+    );
 
 export default mongoose.model("User", userSchema);
