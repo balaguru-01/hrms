@@ -18,6 +18,14 @@
   }
   catch(error){
     error.statusCode = error.statusCode || 500;
+
+     error.auditDetails = {
+        module: "Authentication",
+        action: "Login",
+        reason: error.auditReason || error.message,
+    };
+
+
     return next(error)
   }
 

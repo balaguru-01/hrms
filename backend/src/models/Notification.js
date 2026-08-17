@@ -7,20 +7,17 @@ const notificationSchema = new mongoose.Schema(
             tenantId: {
                 type: mongoose.Schema.Types.ObjectId,
                 ref: "Tenant",
-                required: true,
             },
 
             orgName: {
                 type: String,
-                required: true,
                 trim: true,
             },
 
             email: {
                 type: String,
-                required: true,
                 lowercase: true,
-                trim: true,
+                trim:true,
             },
         },
 
@@ -29,23 +26,19 @@ const notificationSchema = new mongoose.Schema(
             userId: {
                 type: mongoose.Schema.Types.ObjectId,
                 ref: "User",
-                required: true,
             },
 
             name: {
                 type: String,
                 required: true,
-                trim: true,
             },
 
             role: {
                 type: String,
-                required: true,
             },
 
             designation: {
                 type: String,
-                required: true,
                 trim: true,
             },
         },
@@ -71,8 +64,8 @@ const notificationSchema = new mongoose.Schema(
 
             designation: {
                 type: String,
-                required: true,
                 trim: true,
+                default : null
             },
         },
 

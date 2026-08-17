@@ -55,6 +55,21 @@ const userSchema = new mongoose.Schema(
             trim: true,
         },
 
+        // User Location
+        location: {
+            type: String,
+            trim: true,
+            minlength: 2,
+            maxlength: 50,
+        },
+
+        // Profile Picture
+        profilePicture: {
+            type: String,
+            trim: true,
+            default: null,
+        },
+
         // Authorization
         role: {
             roleId: {

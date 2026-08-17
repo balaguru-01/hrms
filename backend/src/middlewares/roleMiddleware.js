@@ -1,7 +1,7 @@
 const roleMiddleware = (...allowedRoles) => {
     return (req, res, next) => {
         try {
-            if (!req.user || !req.user.role || !req.user.role.name) {
+            if (!req.user || !req.user.role) {
                 const error = new Error("Unauthorized Access");
                 error.statusCode = 401;
                 return next(error);
@@ -11,7 +11,7 @@ const roleMiddleware = (...allowedRoles) => {
                 role.toLowerCase()
             );
 
-            if (!normalizedRoles.includes(req.user.role.name.toLowerCase())) {
+            if (!normalizedRoles.includes(req.user.role.toLowerCase())) {
                 const error = new Error(
                     `Unauthorized Access`
                 );

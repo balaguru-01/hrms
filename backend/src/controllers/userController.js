@@ -7,6 +7,7 @@ export const sendUserInvitation = async (req, res, next) => {
             email,
             roleId,
             orgName = null,
+            invitedDesignation
         } = req.body;
 
         const invitedBy = {
@@ -18,6 +19,7 @@ export const sendUserInvitation = async (req, res, next) => {
             roleId,
             orgName,
             invitedBy,
+            invitedDesignation
         });
 
         res.status(200).json({
@@ -36,3 +38,45 @@ export const sendUserInvitation = async (req, res, next) => {
 };
 
 
+export const registerUser = async (req, res, next) => {
+    try {
+
+        const {
+            token,
+            firstName,
+            lastName,
+            email,
+            password,
+            phone,
+            location
+        } = req.body;
+
+
+        const user = await userRegistrationService({
+            token,
+            firstName,
+            lastName,
+            email,
+            password,
+            phone,
+            location
+        });
+
+
+        return res.status(201).json({
+            success: true,
+            message:
+                `Dear ${user.firstName} ${user.lastName}, your registration submitted successfully. Your account is pending for approval.`,
+
+        });
+
+    }
+    catch (error) {
+         error.auditDetails = {
+            module: "User",
+            action: "Create",
+            reason: error.auditReason || error.message,
+        };
+        next(error);
+    }
+};

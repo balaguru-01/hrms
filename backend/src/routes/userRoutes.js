@@ -8,6 +8,6 @@ const router = express.Router();
 
 
 router.post("/invite",authMiddleware,sendUserInvitation);
-router.post("/register",registerUser)
+router.post("/register",registerUser);
 
 export default router;
