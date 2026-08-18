@@ -16,6 +16,7 @@ const sendUserInvitationService = async ({
     roleId,
     orgName = null,
     invitedBy,
+    invitedDesignation
 }) => {
 
     // Validate email
@@ -47,6 +48,23 @@ const sendUserInvitationService = async ({
         const error = new Error("Invalid data");
         error.statusCode = 400;
         error.auditReason = "Invalid role ID";
+        throw error;
+    }
+
+    //Validate Designation
+
+    if(!invitedDesignation || typeof invitedDesignation !== "string" || invitedDesignation.trim() === ""){
+        const error = new Error("Invalid data");
+        error.statusCode = 400;
+        error.auditReason = "Designation is required";
+        throw error;
+    }
+
+    if (invitedDesignation.trim().length < 2 || invitedDesignation.trim().length > 100) {
+        const error = new Error("Invalid data");
+        error.statusCode = 400;
+        error.auditReason =
+            "Designation must contain at least 2 characters and should not exceed 100 characters";
         throw error;
     }
 
@@ -199,6 +217,8 @@ const sendUserInvitationService = async ({
             roleId: targetRole._id,
             name: targetRole.name,
         },
+
+        designation: invitedDesignation.trim(),
 
         ...(tenant && {
             tenant: {
