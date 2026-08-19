@@ -8,12 +8,10 @@ const baseURL =
   process.env.REACT_APP_API_BASE_URL;
 
 if (!baseURL) {
-  console.error(
+  throw new Error(
     "REACT_APP_API_BASE_URL is not configured in the .env file."
   );
 }
-
-console.log("API BASE URL:", baseURL);
 
 const api = axios.create({
   baseURL,
@@ -32,12 +30,6 @@ api.interceptors.request.use(
         `Bearer ${token}`;
     }
 
-    console.log(
-      "API Request:",
-      config.method?.toUpperCase(),
-      `${config.baseURL}${config.url}`
-    );
-
     return config;
   },
   (error) => {
@@ -52,12 +44,6 @@ api.interceptors.response.use(
   (error) => {
     const status = error?.response?.status;
     const token = getAccessToken();
-
-    console.error(
-      "API Response Error:",
-      status,
-      error?.response?.data
-    );
 
     if (status === 401 && token) {
       logout();

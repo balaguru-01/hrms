@@ -1,67 +1,33 @@
-const getTokenPayload = (token) => {
-  try {
-    if (!token || typeof token !== "string") {
-      return null;
-    }
-
-    const parts = token.split(".");
-
-    if (parts.length !== 3) {
-      return null;
-    }
-
-    const base64 = parts[1]
-      .replace(/-/g, "+")
-      .replace(/_/g, "/");
-
-    const paddedBase64 =
-      base64 +
-      "=".repeat((4 - (base64.length % 4)) % 4);
-
-    return JSON.parse(atob(paddedBase64));
-  } catch (error) {
-    console.error("Unable to decode JWT:", error);
-    return null;
-  }
-};
+import processToken from "./tokenProcessor";
 
 export const getAccessToken = () => {
   return localStorage.getItem("accessToken");
 };
 
 export const getStoredUser = () => {
-  try {
-    const user = localStorage.getItem("user");
+  const token = getAccessToken();
 
-    if (!user) {
-      return null;
-    }
-
-    return JSON.parse(user);
-  } catch (error) {
-    console.error("Unable to read stored user:", error);
+  if (!token) {
     return null;
   }
+
+  return processToken(token);
 };
 
 export const getUserRole = () => {
   const user = getStoredUser();
 
-  if (!user?.role) {
-    return null;
-  }
-
-  return String(user.role).trim().toLowerCase();
+  return user?.role || null;
 };
 
 export const isTokenExpired = (token) => {
-  const payload = getTokenPayload(token);
+  const user = processToken(token);
 
-  if (!payload?.exp) {
+  if (!user?.expiresAt) {
     return true;
   }
 
-  return Date.now() >= Number(payload.exp) * 1000;
+  return Date.now() >= user.expiresAt;
 };
 
 export const isAuthenticated = () => {
@@ -80,7 +46,6 @@ export const isAuthenticated = () => {
 
 export const logout = () => {
   localStorage.removeItem("accessToken");
-  localStorage.removeItem("user");
 };
 
 let expirationTimer = null;
@@ -91,14 +56,14 @@ export const startTokenExpirationTimer = (
 ) => {
   stopTokenExpirationTimer();
 
-  const payload = getTokenPayload(token);
+  const user = processToken(token);
 
-  if (!payload?.exp) {
+  if (!user?.expiresAt) {
     return;
   }
 
-  const expiresAt = Number(payload.exp) * 1000;
-  const remainingTime = expiresAt - Date.now();
+  const remainingTime =
+    user.expiresAt - Date.now();
 
   if (remainingTime <= 0) {
     onExpire?.();

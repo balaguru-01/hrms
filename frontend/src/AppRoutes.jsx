@@ -1,56 +1,28 @@
-import { Routes, Route } from "react-router-dom";
-
-/* =========================================================
-   AUTHENTICATION
-   ========================================================= */
+import { Route, Routes } from "react-router-dom";
 
 import ChooseLogin from "./pages/auth/ChooseLogin";
 import EnterpriseLogin from "./pages/auth/EnterpriseLogin";
-import TenantOrganization from "./pages/auth/TenantOrganization";
 import TenantLogin from "./pages/auth/TenantLogin";
-
-/* =========================================================
-   ERROR PAGES
-   ========================================================= */
+import TenantOrganization from "./pages/auth/TenantOrganization";
 
 import NotFound from "./pages/errors/NotFound";
 
-/* =========================================================
-   ROUTE GUARDS
-   ========================================================= */
+import ProtectedRoute from "./routes/ProtectedRoute";
+import PublicOnlyRoute from "./routes/PublicOnlyRoute";
 
-import ProtectedRoute from "./components/auth/ProtectedRoute";
-import PublicOnlyRoute from "./components/auth/PublicOnlyRoute";
-
-/* =========================================================
-   ENTERPRISE
-   ========================================================= */
-
-import PendingApprovals from "./pages/enterprise/PendingApprovals";
 import EnterpriseDashboard from "./pages/enterprise/EnterpriseDashboard";
+import PendingApprovals from "./pages/enterprise/PendingApprovals";
 import TenantManagement from "./pages/enterprise/TenantManagement";
-
-/* =========================================================
-   SUPER ADMIN
-   ========================================================= */
 
 import SuperAdminDashboard from "./pages/superadmin/SuperAdminDashboard";
 
 function AppRoutes() {
   return (
     <Routes>
-      {/* =====================================================
-          PUBLIC ROUTES
-          ===================================================== */}
-
       <Route
         path="/"
         element={<ChooseLogin />}
       />
-
-      {/* =====================================================
-          ENTERPRISE LOGIN
-          ===================================================== */}
 
       <Route element={<PublicOnlyRoute />}>
         <Route
@@ -58,10 +30,6 @@ function AppRoutes() {
           element={<EnterpriseLogin />}
         />
       </Route>
-
-      {/* =====================================================
-          TENANT AUTHENTICATION
-          ===================================================== */}
 
       <Route
         path="/tenant/organization"
@@ -72,10 +40,6 @@ function AppRoutes() {
         path="/tenant/login"
         element={<TenantLogin />}
       />
-
-      {/* =====================================================
-          ENTERPRISE PROTECTED ROUTES
-          ===================================================== */}
 
       <Route
         element={
@@ -100,10 +64,6 @@ function AppRoutes() {
         />
       </Route>
 
-      {/* =====================================================
-          SUPER ADMIN PROTECTED ROUTES
-          ===================================================== */}
-
       <Route
         element={
           <ProtectedRoute
@@ -116,10 +76,6 @@ function AppRoutes() {
           element={<SuperAdminDashboard />}
         />
       </Route>
-
-      {/* =====================================================
-          404 FALLBACK
-          ===================================================== */}
 
       <Route
         path="*"

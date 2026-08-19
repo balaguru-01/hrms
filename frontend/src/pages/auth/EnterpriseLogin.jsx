@@ -4,11 +4,11 @@ import { MdLock } from "react-icons/md";
 
 import Logo from "../../components/common/Logo";
 import Toast from "../../components/common/Toast";
+import BackButton from "../../components/common/BackButton";
 
 import AuthCard from "../../components/auth/AuthCard";
 import AuthHeader from "../../components/auth/AuthHeader";
 import AuthFooter from "../../components/auth/AuthFooter";
-import BackButton from "../../components/auth/BackButton";
 
 import DynamicForm from "../../components/form/DynamicForm";
 
@@ -17,146 +17,100 @@ import {
   enterpriseLoginDefaultValues,
 } from "../../config/forms/enterpriseLogin.config";
 
-import {
-  enterpriseLoginSchema,
-} from "../../schemas/auth/enterpriseLogin.schema";
+import { enterpriseLoginSchema } from "../../schemas/auth/enterpriseLogin.schema";
 
 import { loginEnterprise } from "../../api/authApi";
 import { startTokenExpirationTimer } from "../../utils/auth";
+import processToken from "../../utils/tokenProcessor";
 
 import authBg from "../../assets/images/auth-bg.jpg";
 
-const getTokenPayload = (token) => {
-  try {
-    if (
-      !token ||
-      typeof token !== "string"
-    ) {
-      return null;
-    }
-
-    const tokenParts = token.split(".");
-
-    if (tokenParts.length !== 3) {
-      return null;
-    }
-
-    const base64 = tokenParts[1]
-      .replace(/-/g, "+")
-      .replace(/_/g, "/");
-
-    const paddedBase64 =
-      base64 +
-      "=".repeat(
-        (4 - (base64.length % 4)) % 4
-      );
-
-    return JSON.parse(atob(paddedBase64));
-  } catch (error) {
-    console.error(
-      "Unable to decode authentication token:",
-      error
-    );
-
-    return null;
-  }
+const ROLE_DASHBOARD_ROUTES = {
+  enterpriseadmin: "/enterprise/dashboard",
+  superadmin: "/superadmin/dashboard",
 };
 
 const EnterpriseLogin = () => {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
-
-  const [error, setError] = useState("");
+  const [toast, setToast] = useState({
+    message: "",
+    type: "error",
+  });
 
   const handleLogin = async (formData) => {
     if (loading) {
       return;
     }
 
-    setError("");
+    setToast({
+      message: "",
+      type: "error",
+    });
 
-    const trimmedEmail =
-      formData.email.trim();
-
-    const password =
-      formData.password;
+    const trimmedEmail = formData.email.trim();
+    const password = formData.password;
 
     try {
       setLoading(true);
 
-      const response =
-        await loginEnterprise(
-          trimmedEmail,
-          password
-        );
+      const response = await loginEnterprise(
+        trimmedEmail,
+        password
+      );
 
       if (!response?.success) {
-        setError(
-          response?.message ||
-            "Unable to sign in. Please try again."
-        );
+        setToast({
+          message:
+            response?.message ||
+            "Unable to sign in. Please try again.",
+          type: "error",
+        });
 
         return;
       }
 
       if (!response?.token) {
-        setError(
-          "Login successful, but authentication token was not received."
-        );
+        setToast({
+          message:
+            "Login successful, but authentication token was not received.",
+          type: "error",
+        });
 
         return;
       }
 
-      const tokenPayload =
-        getTokenPayload(response.token);
+      const user = processToken(response.token);
 
-      if (!tokenPayload) {
-        setError(
-          "Authentication failed because the received token is invalid."
-        );
-
-        return;
-      }
-
-      if (
-        !tokenPayload.exp ||
-        Date.now() >=
-          Number(tokenPayload.exp) * 1000
-      ) {
-        setError(
-          "The authentication token has already expired."
-        );
+      if (!user) {
+        setToast({
+          message:
+            "Authentication failed because the received token is invalid.",
+          type: "error",
+        });
 
         return;
       }
 
-      if (!tokenPayload.role) {
-        setError(
-          "Login failed because your account role was not received."
-        );
+      if (Date.now() >= user.expiresAt) {
+        setToast({
+          message:
+            "The authentication token has already expired.",
+          type: "error",
+        });
 
         return;
       }
 
-      const normalizedRole =
-        String(tokenPayload.role)
-          .trim()
-          .toLowerCase();
+      const dashboardRoute =
+        ROLE_DASHBOARD_ROUTES[user.role];
 
-      const supportedRoles = [
-        "enterpriseadmin",
-        "superadmin",
-      ];
-
-      if (
-        !supportedRoles.includes(
-          normalizedRole
-        )
-      ) {
-        setError(
-          `Your account role "${tokenPayload.role}" is not configured in the frontend yet.`
-        );
+      if (!dashboardRoute) {
+        setToast({
+          message: `Your account role "${user.role}" is not configured in the frontend yet.`,
+          type: "error",
+        });
 
         return;
       }
@@ -166,124 +120,76 @@ const EnterpriseLogin = () => {
         response.token
       );
 
-      localStorage.setItem(
-        "user",
-        JSON.stringify({
-          userId:
-            tokenPayload.userId,
-          role:
-            tokenPayload.role,
-          firstName:
-            tokenPayload.firstName,
-          lastName:
-            tokenPayload.lastName,
-          email:
-            tokenPayload.email,
-          designation:
-            tokenPayload.designation,
-          tokenVersion:
-            tokenPayload.tokenVersion,
-        })
-      );
-
-      /*
-       * Start the token timer immediately.
-       *
-       * ProtectedRoute will start its own
-       * timer when the dashboard mounts.
-       */
       startTokenExpirationTimer(
         response.token
       );
 
-      if (
-        normalizedRole ===
-        "enterpriseadmin"
-      ) {
-        navigate(
-          "/enterprise/dashboard",
-          {
-            replace: true,
-          }
-        );
+      setToast({
+        message: "Signed in successfully.",
+        type: "success",
+      });
 
-        return;
-      }
-
-      if (
-        normalizedRole ===
-        "superadmin"
-      ) {
-        navigate(
-          "/superadmin/dashboard",
-          {
-            replace: true,
-          }
-        );
-      }
+      setTimeout(() => {
+        navigate(dashboardRoute, {
+          replace: true,
+        });
+      }, 800);
     } catch (error) {
-      console.error(
-        "========== LOGIN ERROR =========="
-      );
-
-      console.error(
-        "Full error:",
-        error
-      );
-
       const backendMessage =
         error?.response?.data?.message ||
         error?.response?.data?.error;
 
-      if (
-        error?.response?.status === 400
-      ) {
-        setError(
-          backendMessage ||
-            "Invalid login request."
-        );
+      const status = error?.response?.status;
+
+      if (status === 400) {
+        setToast({
+          message:
+            backendMessage ||
+            "Invalid login request.",
+          type: "error",
+        });
 
         return;
       }
 
-      if (
-        error?.response?.status === 401
-      ) {
-        setError(
-          backendMessage ||
-            "Invalid email or password."
-        );
+      if (status === 401) {
+        setToast({
+          message:
+            backendMessage ||
+            "Invalid email or password.",
+          type: "error",
+        });
 
         return;
       }
 
-      if (
-        error?.response?.status === 403
-      ) {
-        setError(
-          backendMessage ||
-            "You are not authorized to access this account."
-        );
+      if (status === 403) {
+        setToast({
+          message:
+            backendMessage ||
+            "You are not authorized to access this account.",
+          type: "error",
+        });
 
         return;
       }
 
-      if (
-        error?.response?.status === 404
-      ) {
-        setError(
-          "Login service was not found. Please check the backend API configuration."
-        );
+      if (status === 404) {
+        setToast({
+          message:
+            "Login service was not found. Please check the backend API configuration.",
+          type: "error",
+        });
 
         return;
       }
 
-      if (
-        error?.code === "ECONNABORTED"
-      ) {
-        setError(
-          "The server took too long to respond. Please try again."
-        );
+      if (error?.code === "ECONNABORTED") {
+        setToast({
+          message:
+            "The server took too long to respond. Please try again.",
+          type: "error",
+        });
 
         return;
       }
@@ -292,28 +198,26 @@ const EnterpriseLogin = () => {
         error?.code === "ERR_NETWORK" ||
         error?.message === "Network Error"
       ) {
-        setError(
-          "Unable to connect to the login server. Please make sure the backend is running."
-        );
+        setToast({
+          message:
+            "Unable to connect to the login server. Please make sure the backend is running.",
+          type: "error",
+        });
 
         return;
       }
 
-      setError(
-        backendMessage ||
-          "Unable to sign in. Please try again."
-      );
+      setToast({
+        message:
+          backendMessage ||
+          "Unable to sign in. Please try again.",
+        type: "error",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  /*
-   * Validation errors are intentionally shown
-   * through the reusable Toast component.
-   *
-   * Nothing is displayed underneath the fields.
-   */
   const handleValidationError = (
     validationErrors
   ) => {
@@ -323,14 +227,20 @@ const EnterpriseLogin = () => {
       )[0];
 
     if (firstError?.message) {
-      setError(firstError.message);
+      setToast({
+        message: firstError.message,
+        type: "error",
+      });
     }
   };
 
-  const handleForgotPassword = () => {
-    console.log(
-      "Forgot password flow will be integrated later."
-    );
+  const handleForgotPassword = () => {};
+
+  const handleToastClose = () => {
+    setToast({
+      message: "",
+      type: "error",
+    });
   };
 
   return (
@@ -341,8 +251,9 @@ const EnterpriseLogin = () => {
       }}
     >
       <Toast
-        message={error}
-        onClose={() => setError("")}
+        message={toast.message}
+        type={toast.type}
+        onClose={handleToastClose}
       />
 
       <div className="absolute left-8 top-6 z-10">
