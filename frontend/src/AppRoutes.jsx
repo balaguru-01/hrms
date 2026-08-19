@@ -16,50 +16,65 @@ import TenantManagement from "./pages/enterprise/TenantManagement";
 
 import SuperAdminDashboard from "./pages/superadmin/SuperAdminDashboard";
 
+import { ROLES } from "./utils/constants/roles";
+import { ROUTES } from "./utils/constants/routes";
+
 function AppRoutes() {
   return (
     <Routes>
       <Route
-        path="/"
+        path={ROUTES.HOME}
         element={<ChooseLogin />}
       />
 
-      <Route element={<PublicOnlyRoute />}>
+      <Route
+        element={
+          <PublicOnlyRoute />
+        }
+      >
         <Route
-          path="/enterprise/login"
+          path={ROUTES.ENTERPRISE_LOGIN}
           element={<EnterpriseLogin />}
         />
       </Route>
 
       <Route
-        path="/tenant/organization"
+        path={ROUTES.TENANT_ORGANIZATION}
         element={<TenantOrganization />}
       />
 
       <Route
-        path="/tenant/login"
+        path={ROUTES.TENANT_LOGIN}
         element={<TenantLogin />}
       />
 
       <Route
         element={
           <ProtectedRoute
-            allowedRoles={["enterpriseadmin"]}
+            allowedRoles={[
+              ROLES.ENTERPRISE_ADMIN,
+            ]}
           />
         }
       >
         <Route
-          path="/enterprise/dashboard"
+          path={
+            ROUTES.ENTERPRISE_DASHBOARD
+          }
           element={<EnterpriseDashboard />}
         />
 
         <Route
-          path="/enterprise/tenant-management"
+          path={
+            ROUTES.ENTERPRISE_TENANT_MANAGEMENT
+          }
           element={<TenantManagement />}
         />
 
         <Route
-          path="/enterprise/pending-approvals"
+          path={
+            ROUTES.ENTERPRISE_PENDING_APPROVALS
+          }
           element={<PendingApprovals />}
         />
       </Route>
@@ -67,12 +82,16 @@ function AppRoutes() {
       <Route
         element={
           <ProtectedRoute
-            allowedRoles={["superadmin"]}
+            allowedRoles={[
+              ROLES.SUPER_ADMIN,
+            ]}
           />
         }
       >
         <Route
-          path="/superadmin/dashboard"
+          path={
+            ROUTES.SUPER_ADMIN_DASHBOARD
+          }
           element={<SuperAdminDashboard />}
         />
       </Route>

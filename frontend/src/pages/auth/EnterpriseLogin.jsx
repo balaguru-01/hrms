@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { MdLock } from "react-icons/md";
 
 import Logo from "../../components/common/Logo";
-import Toast from "../../components/common/Toast";
 import BackButton from "../../components/common/BackButton";
 
 import AuthCard from "../../components/auth/AuthCard";
@@ -22,32 +21,35 @@ import { enterpriseLoginSchema } from "../../schemas/auth/enterpriseLogin.schema
 import { loginEnterprise } from "../../api/authApi";
 import { startTokenExpirationTimer } from "../../utils/auth";
 import processToken from "../../utils/tokenProcessor";
+import { useToast } from "../../context/ToastContext";
+
+import {
+  ROLES,
+  SUPPORTED_ENTERPRISE_ROLES,
+} from "../../utils/constants/roles";
+
+import { ROUTES } from "../../utils/constants/routes";
 
 import authBg from "../../assets/images/auth-bg.jpg";
 
 const ROLE_DASHBOARD_ROUTES = {
-  enterpriseadmin: "/enterprise/dashboard",
-  superadmin: "/superadmin/dashboard",
+  [ROLES.ENTERPRISE_ADMIN]:
+    ROUTES.ENTERPRISE_DASHBOARD,
+
+  [ROLES.SUPER_ADMIN]:
+    ROUTES.SUPER_ADMIN_DASHBOARD,
 };
 
 const EnterpriseLogin = () => {
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const [loading, setLoading] = useState(false);
-  const [toast, setToast] = useState({
-    message: "",
-    type: "error",
-  });
 
   const handleLogin = async (formData) => {
     if (loading) {
       return;
     }
-
-    setToast({
-      message: "",
-      type: "error",
-    });
 
     const trimmedEmail = formData.email.trim();
     const password = formData.password;
@@ -61,7 +63,7 @@ const EnterpriseLogin = () => {
       );
 
       if (!response?.success) {
-        setToast({
+        showToast({
           message:
             response?.message ||
             "Unable to sign in. Please try again.",
@@ -72,7 +74,7 @@ const EnterpriseLogin = () => {
       }
 
       if (!response?.token) {
-        setToast({
+        showToast({
           message:
             "Login successful, but authentication token was not received.",
           type: "error",
@@ -84,7 +86,7 @@ const EnterpriseLogin = () => {
       const user = processToken(response.token);
 
       if (!user) {
-        setToast({
+        showToast({
           message:
             "Authentication failed because the received token is invalid.",
           type: "error",
@@ -94,7 +96,7 @@ const EnterpriseLogin = () => {
       }
 
       if (Date.now() >= user.expiresAt) {
-        setToast({
+        showToast({
           message:
             "The authentication token has already expired.",
           type: "error",
@@ -106,8 +108,13 @@ const EnterpriseLogin = () => {
       const dashboardRoute =
         ROLE_DASHBOARD_ROUTES[user.role];
 
-      if (!dashboardRoute) {
-        setToast({
+      if (
+        !dashboardRoute ||
+        !SUPPORTED_ENTERPRISE_ROLES.includes(
+          user.role
+        )
+      ) {
+        showToast({
           message: `Your account role "${user.role}" is not configured in the frontend yet.`,
           type: "error",
         });
@@ -124,25 +131,26 @@ const EnterpriseLogin = () => {
         response.token
       );
 
-      setToast({
+      showToast({
         message: "Signed in successfully.",
         type: "success",
+        title: "Login Successful",
+        duration: 5000,
       });
 
-      setTimeout(() => {
-        navigate(dashboardRoute, {
-          replace: true,
-        });
-      }, 800);
+      navigate(dashboardRoute, {
+        replace: true,
+      });
     } catch (error) {
       const backendMessage =
         error?.response?.data?.message ||
         error?.response?.data?.error;
 
-      const status = error?.response?.status;
+      const status =
+        error?.response?.status;
 
       if (status === 400) {
-        setToast({
+        showToast({
           message:
             backendMessage ||
             "Invalid login request.",
@@ -153,7 +161,7 @@ const EnterpriseLogin = () => {
       }
 
       if (status === 401) {
-        setToast({
+        showToast({
           message:
             backendMessage ||
             "Invalid email or password.",
@@ -164,7 +172,7 @@ const EnterpriseLogin = () => {
       }
 
       if (status === 403) {
-        setToast({
+        showToast({
           message:
             backendMessage ||
             "You are not authorized to access this account.",
@@ -175,7 +183,7 @@ const EnterpriseLogin = () => {
       }
 
       if (status === 404) {
-        setToast({
+        showToast({
           message:
             "Login service was not found. Please check the backend API configuration.",
           type: "error",
@@ -184,8 +192,11 @@ const EnterpriseLogin = () => {
         return;
       }
 
-      if (error?.code === "ECONNABORTED") {
-        setToast({
+      if (
+        error?.code ===
+        "ECONNABORTED"
+      ) {
+        showToast({
           message:
             "The server took too long to respond. Please try again.",
           type: "error",
@@ -198,7 +209,7 @@ const EnterpriseLogin = () => {
         error?.code === "ERR_NETWORK" ||
         error?.message === "Network Error"
       ) {
-        setToast({
+        showToast({
           message:
             "Unable to connect to the login server. Please make sure the backend is running.",
           type: "error",
@@ -207,7 +218,7 @@ const EnterpriseLogin = () => {
         return;
       }
 
-      setToast({
+      showToast({
         message:
           backendMessage ||
           "Unable to sign in. Please try again.",
@@ -227,7 +238,7 @@ const EnterpriseLogin = () => {
       )[0];
 
     if (firstError?.message) {
-      setToast({
+      showToast({
         message: firstError.message,
         type: "error",
       });
@@ -236,13 +247,6 @@ const EnterpriseLogin = () => {
 
   const handleForgotPassword = () => {};
 
-  const handleToastClose = () => {
-    setToast({
-      message: "",
-      type: "error",
-    });
-  };
-
   return (
     <div
       className="h-screen overflow-hidden bg-cover bg-center bg-no-repeat"
@@ -250,12 +254,6 @@ const EnterpriseLogin = () => {
         backgroundImage: `url(${authBg})`,
       }}
     >
-      <Toast
-        message={toast.message}
-        type={toast.type}
-        onClose={handleToastClose}
-      />
-
       <div className="absolute left-8 top-6 z-10">
         <Logo className="h-12 w-auto" />
       </div>
@@ -263,7 +261,7 @@ const EnterpriseLogin = () => {
       <div className="flex h-screen items-center justify-center px-6">
         <AuthCard>
           <BackButton
-            to="/"
+            to={ROUTES.HOME}
             text="Back"
           />
 

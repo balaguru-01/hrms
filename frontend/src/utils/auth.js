@@ -1,5 +1,9 @@
 import processToken from "./tokenProcessor";
 
+import {
+  SESSION_EXPIRY_WARNING_TIME,
+} from "./constants/session";
+
 export const getAccessToken = () => {
   return localStorage.getItem("accessToken");
 };
@@ -49,6 +53,48 @@ export const logout = () => {
 };
 
 let expirationTimer = null;
+let expirationWarningTimer = null;
+
+export const startTokenExpirationWarningTimer = (
+  token,
+  onWarning
+) => {
+  stopTokenExpirationWarningTimer();
+
+  const user = processToken(token);
+
+  if (!user?.expiresAt) {
+    return;
+  }
+
+  const remainingTime =
+    user.expiresAt - Date.now();
+
+  if (remainingTime <= 0) {
+    return;
+  }
+
+  const warningDelay =
+    remainingTime -
+    SESSION_EXPIRY_WARNING_TIME;
+
+  if (warningDelay <= 0) {
+    onWarning?.();
+    return;
+  }
+
+  expirationWarningTimer = setTimeout(() => {
+    expirationWarningTimer = null;
+    onWarning?.();
+  }, warningDelay);
+};
+
+export const stopTokenExpirationWarningTimer = () => {
+  if (expirationWarningTimer) {
+    clearTimeout(expirationWarningTimer);
+    expirationWarningTimer = null;
+  }
+};
 
 export const startTokenExpirationTimer = (
   token,
@@ -66,12 +112,14 @@ export const startTokenExpirationTimer = (
     user.expiresAt - Date.now();
 
   if (remainingTime <= 0) {
+    stopTokenExpirationWarningTimer();
     onExpire?.();
     return;
   }
 
   expirationTimer = setTimeout(() => {
     expirationTimer = null;
+    stopTokenExpirationWarningTimer();
     onExpire?.();
   }, remainingTime);
 };
