@@ -6,7 +6,9 @@ frontend/node_modules/
 # Environment Files
 .env
 backend/.env
+backend/package-lock.json
 frontend/.env
+frontend/package-lock.json
 
 # Logs
 logs/
