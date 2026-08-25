@@ -74,6 +74,7 @@ const auditLogSchema = new mongoose.Schema(
                 "Submit",
                 "Export",
                 "Invite",
+                "Fetch"
             ],
         },
 
@@ -165,6 +166,11 @@ auditLogSchema.index({
 auditLogSchema.index({
     module: 1,
     action: 1,
+});
+
+// Audit Log Cleanup Lookup
+auditLogSchema.index({
+    createdAt: 1,
 });
 
 export default mongoose.model("AuditLog", auditLogSchema);

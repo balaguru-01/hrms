@@ -224,7 +224,7 @@ const userRegistrationService = async ({
 
     // Hash password
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password.trim(), 10);
 
     //  Start transaction
     
