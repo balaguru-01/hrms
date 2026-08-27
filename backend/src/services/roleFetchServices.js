@@ -3,6 +3,8 @@ import Role from "../models/Role.js";
 
 const fetchRoles = async (roleName, scope) => {
 
+    try{
+
     const {
         roles,
         scopes,
@@ -69,6 +71,10 @@ const fetchRoles = async (roleName, scope) => {
         .lean();
 
     return roleDetails;
+    }
+    catch(error){
+        throw error;
+    }
 };
 
 export default fetchRoles;

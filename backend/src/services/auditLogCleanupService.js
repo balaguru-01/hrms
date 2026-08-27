@@ -20,24 +20,16 @@ const deleteOldAuditLogs = async () => {
             cutoffDate.getDate() - retentionDays
         );
 
-        const result = await AuditLog.deleteMany({
+        await AuditLog.deleteMany({
             createdAt: {
                 $lt: cutoffDate,
             },
         });
 
-        console.log(
-            `[AuditLog Cleanup] Deleted ${result.deletedCount} logs older than ${retentionDays} days.`
-        );
 
-        return result.deletedCount;
-    } catch (error) {
-        
-        console.error(
-            "[AuditLog Cleanup] Failed:",
-            error.message
-        );
-
+    } 
+    catch (error) {
+                
         throw error;
     }
 };
