@@ -16,6 +16,8 @@ import "./models/Notification.js";
 import "./models/AuditLog.js";
 import "./models/Plans.js";
 
+import startAuditLogCleanupJob from "../src/jobs/auditLogCleanupJob.js";
+
 const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
@@ -25,6 +27,9 @@ const startServer = async () => {
         app.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);
         });
+
+        startAuditLogCleanupJob();
+        
     } catch (error) {
         console.error("Failed to start server:", error);
         process.exit(1);

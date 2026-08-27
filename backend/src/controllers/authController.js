@@ -5,13 +5,14 @@
 
   try{
 
-    const{email,password} = req.body
+    const{email,password} = req.body;
+    
     const result = await loginService({
-    email,
-    password,
-    ipAddress: req.ip,
-    userAgent: req.get("user-agent")
-})
+        email : email.toLowerCase().trim(),
+        password : password.trim(),
+        ipAddress: req.ip,
+        userAgent: req.get("user-agent")
+    })
 
         return res.status(200).json(result)
 
