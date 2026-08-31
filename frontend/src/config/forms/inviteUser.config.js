@@ -1,3 +1,5 @@
+import RoleSelectionField from "../../components/enterprise-user/RoleSelectionField";
+
 export const inviteUserFields = [
   {
     name: "email",
@@ -14,6 +16,13 @@ export const inviteUserFields = [
     placeholder: "e.g. Operations Manager",
     autoComplete: "off",
     required: true,
+  },
+  {
+    name: "roleId",
+    type: "custom",
+    label: "Select Role",
+    required: true,
+    component: RoleSelectionField,
   },
 ];
 

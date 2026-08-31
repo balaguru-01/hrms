@@ -1,8 +1,14 @@
 import api from "./axios";
 
-export const getAllowedRoles = async (scope) => {
+import {
+  USER_ENDPOINTS,
+} from "../endpoints/userEndpoints";
+
+export const getAllowedRoles = async (
+  scope
+) => {
   const response = await api.get(
-    "/users/roles",
+    USER_ENDPOINTS.ROLES,
     {
       params: {
         scope,
@@ -19,7 +25,7 @@ export const sendUserInvitation = async ({
   invitedDesignation,
 }) => {
   const response = await api.post(
-    "/users/invite",
+    USER_ENDPOINTS.INVITE,
     {
       email,
       roleId,
@@ -41,7 +47,7 @@ export const completeUserRegistration =
     location,
   }) => {
     const response = await api.post(
-      "/users/register",
+      USER_ENDPOINTS.REGISTER,
       {
         token,
         firstName,

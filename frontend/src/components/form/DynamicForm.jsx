@@ -1,4 +1,7 @@
-import { useForm, useWatch } from "react-hook-form";
+import {
+  useForm,
+  useWatch,
+} from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import FormField from "./FormField";
@@ -134,6 +137,8 @@ const DynamicForm = ({
               registration={register(
                 field.name
               )}
+              control={control}
+              formLoading={isFormLoading}
             />
           </div>
         ))}
