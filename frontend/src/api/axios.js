@@ -1,4 +1,5 @@
 import axios from "axios";
+
 import {
   getAccessToken,
   logout,
@@ -25,7 +26,7 @@ api.interceptors.request.use(
   (config) => {
     const token = getAccessToken();
 
-    if (token) {
+    if (token && !config.skipAuth) {
       config.headers.Authorization =
         `Bearer ${token}`;
     }
@@ -42,13 +43,20 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    const status = error?.response?.status;
-    const token = getAccessToken();
+    const status =
+      error?.response?.status;
 
-    if (status === 401 && token) {
+    const token = getAccessToken();
+    const skipAuth =
+      error?.config?.skipAuth;
+
+    if (
+      status === 401 &&
+      token &&
+      !skipAuth
+    ) {
       logout();
       window.location.replace("/");
-      return Promise.reject(error);
     }
 
     return Promise.reject(error);

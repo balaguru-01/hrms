@@ -19,6 +19,11 @@ const DynamicForm = ({
   forgotPassword = false,
   forgotPasswordText = "Forgot password?",
   onForgotPassword,
+
+  disableSubmitUntilFilled = true,
+  twoColumnLayout = false,
+
+  submitButtonFullWidth = true,
 }) => {
   const {
     control,
@@ -41,10 +46,6 @@ const DynamicForm = ({
     shouldFocusError: false,
   });
 
-  /*
-   * Watch all fields so the submit button can be
-   * enabled/disabled without triggering validation.
-   */
   const fieldValues = useWatch({
     control,
   });
@@ -68,19 +69,20 @@ const DynamicForm = ({
     loading || isSubmitting;
 
   const isSubmitDisabled =
-    !isFormFilled ||
+    (disableSubmitUntilFilled &&
+      !isFormFilled) ||
     isFormLoading;
+
+  const hasOddNumberOfFields =
+    fields.length % 2 !== 0;
 
   const handleValidSubmit = async (
     data
   ) => {
     try {
       await onSubmit?.(data);
-    } catch (error) {
-      console.error(
-        "Form submission failed:",
-        error
-      );
+    } catch {
+      return;
     }
   };
 
@@ -106,41 +108,65 @@ const DynamicForm = ({
         handleValidSubmit,
         handleInvalidSubmit
       )}
-    //   noValidate
       autoComplete="off"
       className={`dynamic-form ${className}`}
     >
-      <div className="space-y-4">
-        {fields.map((field) => (
-          <FormField
+      <div
+        className={
+          twoColumnLayout
+            ? "grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2"
+            : "space-y-4"
+        }
+      >
+        {fields.map((field, index) => (
+          <div
             key={field.name}
-            field={field}
-            registration={register(
-              field.name
-            )}
-          />
-        ))}
-
-        {forgotPassword && (
-          <div className="flex items-center justify-end text-sm">
-            <button
-              type="button"
-              onClick={
-                handleForgotPassword
-              }
-              disabled={isFormLoading}
-              className="text-green-700 transition hover:underline disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {forgotPasswordText}
-            </button>
+            className={
+              twoColumnLayout &&
+              hasOddNumberOfFields &&
+              index === 0
+                ? "sm:col-span-2"
+                : ""
+            }
+          >
+            <FormField
+              field={field}
+              registration={register(
+                field.name
+              )}
+            />
           </div>
-        )}
+        ))}
+      </div>
 
+      {forgotPassword && (
+        <div className="mt-4 flex items-center justify-end text-sm">
+          <button
+            type="button"
+            onClick={
+              handleForgotPassword
+            }
+            disabled={isFormLoading}
+            className="text-green-700 transition hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {forgotPasswordText}
+          </button>
+        </div>
+      )}
+
+      <div className="mt-6 flex justify-center">
         <FormButton
           type="submit"
           loading={isFormLoading}
           disabled={isSubmitDisabled}
-          fullWidth
+          fullWidth={
+            submitButtonFullWidth
+          }
+          className={
+            submitButtonFullWidth
+              ? ""
+              : "w-fit px-8 py-2.5 text-sm"
+          }
         >
           {isFormLoading
             ? loadingText

@@ -7,3 +7,8 @@ export const SUPPORTED_ENTERPRISE_ROLES = [
   ROLES.ENTERPRISE_ADMIN,
   ROLES.SUPER_ADMIN,
 ];
+
+export const ROLE_SCOPE = {
+  ENTERPRISE: "enterprise",
+  TENANT: "tenant",
+};

@@ -69,7 +69,7 @@ const ChooseLogin = () => {
 
               <AuthHeader
                 title="Welcome"
-                subtitle="Choose how you want to sign in."
+                subtitle="Choose how you want to sign in"
               />
 
               <div className="space-y-6">

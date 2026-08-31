@@ -9,6 +9,9 @@ export const loginEnterprise = async (
     {
       email,
       password,
+    },
+    {
+      skipAuth: true,
     }
   );
 

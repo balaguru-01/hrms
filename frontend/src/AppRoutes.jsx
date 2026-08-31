@@ -4,6 +4,7 @@ import ChooseLogin from "./pages/auth/ChooseLogin";
 import EnterpriseLogin from "./pages/auth/EnterpriseLogin";
 import TenantLogin from "./pages/auth/TenantLogin";
 import TenantOrganization from "./pages/auth/TenantOrganization";
+import UserRegistration from "./pages/auth/UserRegistration";
 
 import NotFound from "./pages/errors/NotFound";
 
@@ -28,15 +29,18 @@ function AppRoutes() {
       />
 
       <Route
-        element={
-          <PublicOnlyRoute />
-        }
+        element={<PublicOnlyRoute />}
       >
         <Route
           path={ROUTES.ENTERPRISE_LOGIN}
           element={<EnterpriseLogin />}
         />
       </Route>
+
+      <Route
+        path={ROUTES.USER_REGISTER}
+        element={<UserRegistration />}
+      />
 
       <Route
         path={ROUTES.TENANT_ORGANIZATION}
