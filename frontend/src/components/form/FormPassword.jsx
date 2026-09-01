@@ -20,7 +20,6 @@ const FormPassword = ({
     label,
     placeholder = "Enter your password",
     disabled = false,
-    autoComplete = "new-password",
     inputClassName = "",
   } = field;
 
@@ -51,7 +50,6 @@ const FormPassword = ({
           }
           name={name}
           placeholder={placeholder}
-          autoComplete={autoComplete}
           disabled={disabled}
           {...registration}
           className={`w-full rounded-xl border border-gray-300 ${inputClassName || "py-3"} pl-12 pr-12 outline-none transition-all duration-200 focus:border-green-600 focus:ring-2 focus:ring-green-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 [&::-ms-reveal]:hidden [&::-ms-clear]:hidden`}

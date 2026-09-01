@@ -1,12 +1,13 @@
 import api from "./axios";
-import { ENTERPRISE_ADMIN_ENDPOINTS } from "../endpoints/enterpriseAdminEndpoints";
+
+import { AUTH_ENDPOINTS } from "../endpoints/endpoints";
 
 export const loginEnterprise = async (
   email,
   password
 ) => {
   const response = await api.post(
-    ENTERPRISE_ADMIN_ENDPOINTS.LOGIN,
+    AUTH_ENDPOINTS.ENTERPRISE_LOGIN,
     {
       email,
       password,

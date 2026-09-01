@@ -1,8 +1,6 @@
 import api from "./axios";
 
-import {
-  USER_ENDPOINTS,
-} from "../endpoints/userEndpoints";
+import { USER_ENDPOINTS } from "../endpoints/endpoints";
 
 export const getAllowedRoles = async (
   scope
