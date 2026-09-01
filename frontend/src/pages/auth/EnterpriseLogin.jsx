@@ -132,7 +132,9 @@ const EnterpriseLogin = () => {
       );
 
       showToast({
-        message: "Signed in successfully.",
+        message:
+          response?.message ||
+          "Welcome Back!",
         type: "success",
         title: "Login Successful",
         duration: 5000,
@@ -286,7 +288,7 @@ const EnterpriseLogin = () => {
               handleValidationError
             }
             loading={loading}
-            submitText="Sign In"
+            submitText="LOGIN"
             loadingText="Signing In..."
             mode="onSubmit"
             forgotPassword

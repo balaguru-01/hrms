@@ -4,18 +4,13 @@ export const enterpriseLoginSchema = z.object({
   email: z
     .string()
     .trim()
-    .min(
-      1,
-      "Please enter your email address."
-    )
-    .email(
-      "Please enter a valid email address."
-    ),
+    .max(100, "Email address is too long."),
 
   password: z
     .string()
-    .min(
-      1,
-      "Please enter your password."
+    .trim()
+    .max(
+      80,
+      "Password cannot exceed 80 characters."
     ),
 });
