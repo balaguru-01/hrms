@@ -9,10 +9,6 @@ export const enterpriseLoginSchema = z.object({
   password: z
     .string()
     .trim()
-    // .min(
-    //   8,
-    //   "Password must contain at least 8 characters."
-    // )
     .max(
       80,
       "Password cannot exceed 80 characters."
