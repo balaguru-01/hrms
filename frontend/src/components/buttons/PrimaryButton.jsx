@@ -4,6 +4,7 @@ const PrimaryButton = ({
   type = "button",
   disabled = false,
   loading = false,
+  icon = null,
 }) => {
   return (
     <button
@@ -31,8 +32,7 @@ const PrimaryButton = ({
         gap-3
       "
     >
-      {loading && (
-
+      {loading ? (
         <div
           className="
             h-5
@@ -44,11 +44,15 @@ const PrimaryButton = ({
             animate-spin
           "
         />
-
+      ) : (
+        icon && (
+          <span className="flex items-center text-lg">
+            {icon}
+          </span>
+        )
       )}
 
       {text}
-
     </button>
   );
 };

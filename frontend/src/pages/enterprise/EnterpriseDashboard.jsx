@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import DashboardCards from "../../components/dashboard/DashboardCards";
-import AddAdminUserButton from "../../components/buttons/AddAdminUserButton";
+import PrimaryButton from "../../components/buttons/PrimaryButton";
 import InviteUserForm from "../../components/enterprise-user/InviteUserForm";
+
+import { MdPersonAdd } from "react-icons/md";
 
 import { sendUserInvitation } from "../../api/enterpriseUserApi";
 
@@ -146,9 +148,13 @@ const EnterpriseDashboard = () => {
             </p>
 
             <div className="w-full sm:w-auto sm:shrink-0">
-              <AddAdminUserButton
-                onClick={handleAddAdminUser}
-              />
+              <div className="sm:w-48">
+                <PrimaryButton
+                  text="Invite User"
+                  icon={<MdPersonAdd />}
+                  onClick={handleAddAdminUser}
+                />
+              </div>
             </div>
           </div>
         </div>

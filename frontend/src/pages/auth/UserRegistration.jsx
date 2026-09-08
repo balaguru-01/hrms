@@ -16,7 +16,7 @@ import AuthHeader from "../../components/auth/AuthHeader";
 import AuthFooter from "../../components/auth/AuthFooter";
 
 import DynamicForm from "../../components/form/DynamicForm";
-import { MdOutlineHourglassDisabled, MdHourglassTop, MdOutlineHourglassBottom } from "react-icons/md";
+import { MdHourglassTop } from "react-icons/md";
 
 import {
   userRegistrationFields,

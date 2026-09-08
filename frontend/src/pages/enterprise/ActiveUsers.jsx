@@ -1,10 +1,18 @@
-import { useState } from "react";
+import {
+  useCallback,
+  useMemo,
+  useState,
+} from "react";
 import { useNavigate } from "react-router-dom";
 
 import DashboardLayout from "../../components/layout/DashboardLayout";
-import UserList from "../../components/enterprise-user/UserList";
-import UserDetailsModal from "../../components/enterprise-user/UserDetailsModal";
-import ConfirmationModal from "../../components/common/ConfirmationModal";
+
+import DynamicTable from "../../components/tables/DynamicTable";
+import DynamicPagination from "../../components/tables/DynamicPagination";
+import DynamicTableActions from "../../components/tables/DynamicTableActions";
+
+import DynamicDetailsModal from "../../components/Modals/DynamicDetailsModal";
+import DynamicConfirmationModal from "../../components/Modals/DynamicConfirmationModal";
 
 import { useEnterpriseUsers } from "../../context/EnterpriseUserContext";
 import { useToast } from "../../context/ToastContext";
@@ -31,55 +39,90 @@ const ActiveUsers = () => {
   const [selectedUser, setSelectedUser] =
     useState(null);
 
-  const [removeUserTarget, setRemoveUserTarget] =
+  const [confirmation, setConfirmation] =
     useState(null);
 
-  const [inactiveUser, setInactiveUser] =
-    useState(null);
+  const handleViewUser = useCallback(
+    (user) => {
+      setSelectedUser(user);
+    },
+    []
+  );
 
-  const handleViewUser = (user) => {
-    setSelectedUser(user);
+  const handleRemoveUser = useCallback(
+    (user) => {
+      setConfirmation({
+        type: "remove",
+        user,
+        title: "Remove User",
+        description: `Are you sure you want to remove ${user.firstName} ${user.lastName}?`,
+        confirmLabel: "Remove User",
+      });
+    },
+    []
+  );
+
+  const handleMakeInactive = useCallback(
+    (user) => {
+      setConfirmation({
+        type: "inactive",
+        user,
+        title: "Make User Inactive",
+        description: `Are you sure you want to make ${user.firstName} ${user.lastName} inactive?`,
+        confirmLabel: "Make Inactive",
+      });
+    },
+    []
+  );
+
+  const handleConfirmAction = () => {
+    if (!confirmation?.user) {
+      return;
+    }
+
+    const {
+      type,
+      user,
+    } = confirmation;
+
+    const fullName =
+      `${user?.firstName || ""} ${
+        user?.lastName || ""
+      }`.trim() || "User";
+
+    if (type === "remove") {
+      removeUser(user.id);
+
+      showToast(
+        `${fullName} has been removed.`,
+        "success"
+      );
+    }
+
+    if (type === "inactive") {
+      makeInactiveUser(user.id);
+
+      showToast(
+        `${fullName} has been made inactive.`,
+        "success"
+      );
+    }
+
+    setConfirmation(null);
+    setSelectedUser(null);
   };
 
-  const handleRemoveUser = (user) => {
-    setRemoveUserTarget(user);
-  };
-
-  const handleMakeInactive = (user) => {
-    setInactiveUser(user);
-  };
-
-  const confirmRemoveUser = () => {
-    if (!removeUserTarget) return;
-
-    removeUser(removeUserTarget.id);
-
-    showToast(
-      `${removeUserTarget.firstName} ${removeUserTarget.lastName} has been removed.`,
-      "success"
-    );
-
-    setRemoveUserTarget(null);
-  };
-
-  const confirmMakeInactive = () => {
-    if (!inactiveUser) return;
-
-    makeInactiveUser(inactiveUser.id);
-
-    showToast(
-      `${inactiveUser.firstName} ${inactiveUser.lastName} has been made inactive.`,
-      "success"
-    );
-
-    setInactiveUser(null);
+  const handleCancelConfirmation = () => {
+    setConfirmation(null);
   };
 
   const handlePageChange = (page) => {
     if (
       page < 1 ||
-      page > activeUsersPagination.totalPages ||
-      page === activeUsersPagination.currentPage
+      page >
+        activeUsersPagination.totalPages ||
+      page ===
+        activeUsersPagination.currentPage
     ) {
       return;
     }
@@ -109,30 +152,240 @@ const ActiveUsers = () => {
     );
   };
 
+  const columns = useMemo(
+    () => [
+      {
+        key: "user",
+        header: "User",
+        width: "30%",
+
+        render: (user) => {
+          const fullName =
+            `${user?.firstName || ""} ${
+              user?.lastName || ""
+            }`.trim();
+
+          return (
+            <div className="flex min-w-0 items-center gap-3">
+              {/* User Information */}
+
+              <button
+                type="button"
+                onClick={() =>
+                  handleViewUser(user)
+                }
+                className="
+                  flex
+                  min-w-0
+                  items-center
+                  gap-3
+                  text-left
+                "
+              >
+                <div
+                  className="
+                    flex
+                    h-10
+                    w-10
+                    shrink-0
+                    items-center
+                    justify-center
+                    rounded-full
+                    bg-green-100
+                    font-semibold
+                    text-green-700
+                  "
+                >
+                  {user?.firstName
+                    ?.charAt(0)
+                    .toUpperCase() || "U"}
+                </div>
+
+                <div className="min-w-0">
+                  <p
+                    className="
+                      truncate
+                      text-sm
+                      font-semibold
+                      text-gray-900
+                    "
+                  >
+                    {fullName ||
+                      "Unknown User"}
+                  </p>
+
+                  <p
+                    className="
+                      truncate
+                      text-xs
+                      text-gray-500
+                    "
+                  >
+                    {user?.designation ||
+                      "—"}
+                  </p>
+                </div>
+              </button>
+            </div>
+          );
+        },
+      },
+
+      {
+        key: "email",
+        header: "Email",
+        width: "27%",
+        accessor: "email",
+        cellClassName:
+          "text-gray-600",
+      },
+
+      {
+        key: "role",
+        header: "Role",
+        width: "18%",
+        accessor: "role",
+        cellClassName:
+          "text-gray-700",
+      },
+
+      {
+        key: "status",
+        header: "Status",
+        width: "15%",
+        headerClassName:
+          "text-center",
+        cellClassName:
+          "text-center",
+
+        render: () => (
+          <span
+            className="
+              inline-flex
+              rounded-full
+              bg-green-50
+              px-3
+              py-1
+              text-xs
+              font-medium
+              text-green-700
+            "
+          >
+            Active
+          </span>
+        ),
+      },
+
+      {
+        key: "actions",
+        header: "Quick Actions",
+        width: "150px",
+        headerClassName:
+          "text-center",
+        cellClassName:
+          "text-center",
+        stopRowClick: true,
+
+        render: (user) => (
+          <DynamicTableActions
+            row={user}
+            actions={[
+              {
+                type: "remove",
+                label: "Remove User",
+                onClick:
+                  handleRemoveUser,
+              },
+              {
+                type: "inactive",
+                label: "Make Inactive",
+                onClick:
+                  handleMakeInactive,
+              },
+            ]}
+            buttonLabel={`Quick actions for ${
+              user?.fullName ||
+              `${user?.firstName || ""} ${
+                user?.lastName || ""
+              }`.trim() ||
+              "user"
+            }`}
+          />
+        ),
+      },
+    ],
+    [
+      handleViewUser,
+      handleRemoveUser,
+      handleMakeInactive,
+    ]
+  );
+
+  const userDetailFields = [
+    {
+      key: "email",
+      label: "Email",
+      breakAll: true,
+    },
+
+    {
+      key: "role",
+      label: "Role",
+    },
+
+    {
+      key: "designation",
+      label: "Designation",
+    },
+
+    {
+      key: "phone",
+      label: "Phone",
+    },
+
+    {
+      key: "location",
+      label: "Location",
+    },
+
+    {
+      key: "status",
+      label: "Status",
+      capitalize: true,
+    },
+
+    {
+      key: "joinedAt",
+      label: "Joined At",
+      type: "date",
+      show: (user) =>
+        Boolean(user?.joinedAt),
+    },
+
+    {
+      key: "registeredAt",
+      label: "Registered At",
+      type: "date",
+      show: (user) =>
+        Boolean(user?.registeredAt),
+    },
+  ];
+
   const currentPage =
-    activeUsersPagination.currentPage;
+    activeUsersPagination?.currentPage ||
+    1;
 
   const totalPages =
-    activeUsersPagination.totalPages;
+    activeUsersPagination?.totalPages ||
+    1;
 
   const totalUsers =
-    activeUsersPagination.totalUsers;
+    activeUsersPagination?.totalUsers ||
+    0;
 
   const pageSize =
-    activeUsersPagination.pageSize;
-
-  const startItem =
-    totalUsers === 0
-      ? 0
-      : (currentPage - 1) * pageSize + 1;
-
-  const endItem =
-    totalUsers === 0
-      ? 0
-      : Math.min(
-          currentPage * pageSize,
-          totalUsers
-        );
+    activeUsersPagination?.pageSize ||
+    10;
 
   return (
     <DashboardLayout
@@ -140,8 +393,16 @@ const ActiveUsers = () => {
       subtitle="View and manage users currently working under your enterprise."
     >
       <div className="space-y-5">
-        {/* Header */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div
+          className="
+            flex
+            flex-col
+            gap-3
+            sm:flex-row
+            sm:items-center
+            sm:justify-between
+          "
+        >
           <div>
             <h2 className="text-lg font-semibold text-gray-900">
               Active Users
@@ -149,196 +410,100 @@ const ActiveUsers = () => {
 
             <p className="mt-1 text-sm text-gray-500">
               {totalUsers} active user
-              {totalUsers !== 1 ? "s" : ""}
+              {totalUsers !== 1
+                ? "s"
+                : ""}
             </p>
           </div>
 
           <button
             type="button"
-            onClick={() => navigate(-1)}
-            className="self-start rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+            onClick={() =>
+              navigate(-1)
+            }
+            className="
+              self-start
+              rounded-xl
+              border
+              border-gray-300
+              px-4
+              py-2
+              text-sm
+              font-medium
+              text-gray-700
+              transition
+              hover:bg-gray-50
+            "
           >
             Back
           </button>
         </div>
 
-        {/* User List */}
-        <UserList
-          users={activeUsers}
-          onUserClick={handleViewUser}
-          actions={[
-            {
-              type: "remove",
-              label: "Remove User",
-              onClick: handleRemoveUser,
-            },
-            {
-              type: "inactive",
-              label: "Make Inactive",
-              onClick: handleMakeInactive,
-            },
-          ]}
+        <DynamicTable
+          columns={columns}
+          data={activeUsers}
+          rowKey="id"
+          minWidth="900px"
+          className="overflow-visible"
           emptyTitle="No Active Users"
           emptyDescription="There are currently no active users under your enterprise."
         />
 
-        {/* Pagination */}
-        {totalUsers > 0 && (
-          <div className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-            {/* Result Count + Rows Per Page */}
-            <div className="flex flex-wrap items-center gap-4">
-              {/* Rows Per Page */}
-              <div className="flex items-center gap-2">
-                <label
-                  htmlFor="active-users-rows-per-page"
-                  className="text-sm text-gray-500"
-                >
-                  Rows per page:
-                </label>
-
-                <select
-                  id="active-users-rows-per-page"
-                  value={pageSize}
-                  onChange={(event) =>
-                    handlePageSizeChange(
-                      Number(
-                        event.target.value
-                      )
-                    )
-                  }
-                  className="
-                    rounded-lg
-                    border
-                    border-gray-300
-                    bg-white
-                    px-2.5
-                    py-1.5
-                    text-sm
-                    font-medium
-                    text-gray-700
-                    outline-none
-                    transition
-                    focus:border-green-500
-                    focus:ring-1
-                    focus:ring-green-500
-                  "
-                >
-                  {PAGE_SIZE_OPTIONS.map(
-                    (option) => (
-                      <option
-                        key={option}
-                        value={option}
-                      >
-                        {option}
-                      </option>
-                    )
-                  )}
-                </select>
-              </div>
-
-              {/* Result Count */}
-              <p className="text-sm text-gray-500">
-                Showing{" "}
-                <span className="font-medium text-gray-700">
-                  {startItem}
-                </span>{" "}
-                to{" "}
-                <span className="font-medium text-gray-700">
-                  {endItem}
-                </span>{" "}
-                of{" "}
-                <span className="font-medium text-gray-700">
-                  {totalUsers}
-                </span>{" "}
-                active users
-              </p>
-            </div>
-
-            {/* Pagination Controls */}
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                disabled={currentPage === 1}
-                onClick={() =>
-                  handlePageChange(
-                    currentPage - 1
-                  )
-                }
-                className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Previous
-              </button>
-
-              <span className="px-2 text-sm text-gray-600">
-                Page{" "}
-                <span className="font-semibold text-gray-900">
-                  {currentPage}
-                </span>{" "}
-                of{" "}
-                <span className="font-semibold text-gray-900">
-                  {Math.max(
-                    totalPages,
-                    1
-                  )}
-                </span>
-              </span>
-
-              <button
-                type="button"
-                disabled={
-                  currentPage >= totalPages
-                }
-                onClick={() =>
-                  handlePageChange(
-                    currentPage + 1
-                  )
-                }
-                className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        )}
+        <DynamicPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={totalUsers}
+          pageSize={pageSize}
+          pageSizeOptions={
+            PAGE_SIZE_OPTIONS
+          }
+          onPageChange={
+            handlePageChange
+          }
+          onPageSizeChange={
+            handlePageSizeChange
+          }
+          itemLabel="active users"
+        />
       </div>
 
-      {/* User Details */}
-      <UserDetailsModal
+      <DynamicDetailsModal
         open={Boolean(selectedUser)}
-        user={selectedUser}
-        onClose={() => setSelectedUser(null)}
-      />
-
-      {/* Remove User Confirmation */}
-      <ConfirmationModal
-        isOpen={Boolean(removeUserTarget)}
-        title="Remove User"
-        message={
-          removeUserTarget
-            ? `Are you sure you want to remove ${removeUserTarget.firstName} ${removeUserTarget.lastName}?`
-            : ""
+        title="User Details"
+        subtitle="Review user's account information"
+        data={selectedUser}
+        fields={userDetailFields}
+        avatar={
+          selectedUser?.firstName
+            ?.charAt(0)
+            .toUpperCase() || "U"
         }
-        confirmText="Remove User"
-        cancelText="Cancel"
-        onConfirm={confirmRemoveUser}
-        onCancel={() =>
-          setRemoveUserTarget(null)
+        onClose={() =>
+          setSelectedUser(null)
         }
       />
 
-      {/* Make Inactive Confirmation */}
-      <ConfirmationModal
-        isOpen={Boolean(inactiveUser)}
-        title="Make User Inactive"
-        message={
-          inactiveUser
-            ? `Are you sure you want to make ${inactiveUser.firstName} ${inactiveUser.lastName} inactive?`
-            : ""
+      <DynamicConfirmationModal
+        open={Boolean(confirmation)}
+        title={
+          confirmation?.title ||
+          "Confirm Action"
         }
-        confirmText="Make Inactive"
-        cancelText="Cancel"
-        onConfirm={confirmMakeInactive}
-        onCancel={() => setInactiveUser(null)}
+        description={
+          confirmation?.description ||
+          ""
+        }
+        confirmLabel={
+          confirmation?.confirmLabel ||
+          "Confirm"
+        }
+        cancelLabel="Cancel"
+        onConfirm={
+          handleConfirmAction
+        }
+        onCancel={
+          handleCancelConfirmation
+        }
       />
     </DashboardLayout>
   );

@@ -1,17 +1,18 @@
-import { createPortal } from "react-dom";
-import { useEffect, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 
 import {
   MdCancel,
-  MdChevronLeft,
-  MdChevronRight,
-  MdMoreVert,
-  MdSend,
 } from "react-icons/md";
 
+import { FaPaperPlane } from "react-icons/fa";
+
 import DashboardLayout from "../../components/layout/DashboardLayout";
-import InvitationDetailsModal from "../../components/enterprise-user/InvitationDetailsModal";
-import ConfirmationModal from "../../components/common/ConfirmationModal";
+
+import DynamicTable from "../../components/tables/DynamicTable";
+import DynamicPagination from "../../components/tables/DynamicPagination";
+import DynamicTableActions from "../../components/tables/DynamicTableActions";
+import DynamicDetailsModal from "../../components/Modals/DynamicDetailsModal";
+import DynamicConfirmationModal from "../../components/Modals/DynamicConfirmationModal";
 
 import { useEnterpriseUsers } from "../../context/EnterpriseUserContext";
 import { useToast } from "../../context/ToastContext";
@@ -23,49 +24,58 @@ const InvitationsSent = () => {
     sentInvitations,
     sentInvitationsPagination,
     fetchSentInvitations,
+    cancelInvitation: cancelInvitationFromContext,
   } = useEnterpriseUsers();
 
   const { showToast } = useToast();
 
-  const [invitations, setInvitations] = useState([]);
-  const [selectedInvitation, setSelectedInvitation] = useState(null);
-
-  const [cancelInvitationTarget, setCancelInvitationTarget] =
+  const [selectedInvitation, setSelectedInvitation] =
     useState(null);
 
-  const [resendInvitationTarget, setResendInvitationTarget] =
-    useState(null);
+  const [
+    cancelInvitationTarget,
+    setCancelInvitationTarget,
+  ] = useState(null);
 
-  const [cancelOpen, setCancelOpen] = useState(false);
-  const [resendOpen, setResendOpen] = useState(false);
+  const [
+    resendInvitationTarget,
+    setResendInvitationTarget,
+  ] = useState(null);
 
-  const [openMenuId, setOpenMenuId] = useState(null);
+  const [cancelOpen, setCancelOpen] =
+    useState(false);
 
-  const [menuPosition, setMenuPosition] = useState({
-    top: 0,
-    left: 0,
-  });
+  const [resendOpen, setResendOpen] =
+    useState(false);
 
-  const menuRef = useRef(null);
-
-  useEffect(() => {
-    const formattedInvitations =
-      (sentInvitations || []).map((invitation) => {
+  const invitations = useMemo(() => {
+    return (sentInvitations || []).map(
+      (invitation) => {
         const isExpired =
           !invitation.invitationExpiresAt ||
-          new Date(invitation.invitationExpiresAt) <= new Date();
+          new Date(
+            invitation.invitationExpiresAt
+          ) <= new Date();
 
         let invitedAt = "—";
 
-        if (invitation.invitationSentAt) {
-          const date = new Date(invitation.invitationSentAt);
-
-          const day = String(date.getDate()).padStart(2, "0");
-          const month = String(date.getMonth() + 1).padStart(
-            2,
-            "0"
+        if (
+          invitation.invitationSentAt
+        ) {
+          const date = new Date(
+            invitation.invitationSentAt
           );
-          const year = date.getFullYear();
+
+          const day = String(
+            date.getDate()
+          ).padStart(2, "0");
+
+          const month = String(
+            date.getMonth() + 1
+          ).padStart(2, "0");
+
+          const year =
+            date.getFullYear();
 
           invitedAt = `${day}/${month}/${year}`;
         }
@@ -76,16 +86,17 @@ const InvitationsSent = () => {
           invitedAt,
           isExpired,
         };
-      });
-
-    setInvitations(formattedInvitations);
+      }
+    );
   }, [sentInvitations]);
 
   const handlePageChange = (page) => {
     if (
       page < 1 ||
-      page > sentInvitationsPagination.totalPages ||
-      page === sentInvitationsPagination.currentPage
+      page >
+        sentInvitationsPagination.totalPages ||
+      page ===
+        sentInvitationsPagination.currentPage
     ) {
       return;
     }
@@ -96,179 +107,344 @@ const InvitationsSent = () => {
     );
   };
 
-  const handlePageSizeChange = (newPageSize) => {
+  const handlePageSizeChange = (
+    newPageSize
+  ) => {
     if (
-      !PAGE_SIZE_OPTIONS.includes(newPageSize) ||
-      newPageSize === sentInvitationsPagination.pageSize
+      !PAGE_SIZE_OPTIONS.includes(
+        newPageSize
+      ) ||
+      newPageSize ===
+        sentInvitationsPagination.pageSize
     ) {
       return;
     }
 
-    fetchSentInvitations(1, newPageSize);
+    fetchSentInvitations(
+      1,
+      newPageSize
+    );
   };
 
-  const handleQuickActionMenu = (event, invitationId) => {
-    if (openMenuId === invitationId) {
-      setOpenMenuId(null);
-      return;
-    }
-
-    const buttonRect =
-      event.currentTarget.getBoundingClientRect();
-
-    const menuWidth = 208;
-    const menuHeight = 90;
-    const spacing = 4;
-    const viewportPadding = 8;
-
-    let left = buttonRect.right - menuWidth;
-    let top = buttonRect.bottom + spacing;
-
-    if (
-      left + menuWidth >
-      window.innerWidth - viewportPadding
-    ) {
-      left =
-        window.innerWidth -
-        menuWidth -
-        viewportPadding;
-    }
-
-    if (left < viewportPadding) {
-      left = viewportPadding;
-    }
-
-    if (
-      top + menuHeight >
-      window.innerHeight - viewportPadding
-    ) {
-      top =
-        buttonRect.top -
-        menuHeight -
-        spacing;
-    }
-
-    setMenuPosition({
-      top,
-      left,
-    });
-
-    setOpenMenuId(invitationId);
+  const handleViewInvitation = (
+    invitation
+  ) => {
+    setSelectedInvitation(
+      invitation
+    );
   };
 
-  const handleResendInvitation = (invitation) => {
-    setResendInvitationTarget(invitation);
-    setOpenMenuId(null);
+  const handleResendInvitation = (
+    invitation
+  ) => {
+    setResendInvitationTarget(
+      invitation
+    );
+
     setResendOpen(true);
   };
 
-  const handleCancelInvitation = (invitation) => {
-    setCancelInvitationTarget(invitation);
-    setOpenMenuId(null);
+  const handleCancelInvitation = (
+    invitation
+  ) => {
+    setCancelInvitationTarget(
+      invitation
+    );
+
     setCancelOpen(true);
   };
 
-  const handleConfirmCancelInvitation = async () => {
-    if (!cancelInvitationTarget) return;
+  const handleConfirmCancelInvitation =
+    async () => {
+      if (!cancelInvitationTarget) {
+        return;
+      }
 
-    try {
-      const cancelledInvitationId =
-        cancelInvitationTarget.id;
+      try {
+        const cancelledInvitationId =
+          cancelInvitationTarget.id;
 
-      setInvitations((currentInvitations) =>
-        currentInvitations.filter(
-          (invitation) =>
-            invitation.id !== cancelledInvitationId
-        )
-      );
+        if (
+          typeof cancelInvitationFromContext ===
+          "function"
+        ) {
+          cancelInvitationFromContext(
+            cancelledInvitationId
+          );
+        }
 
-      showToast(
-        "Invitation cancelled successfully.",
-        "success"
-      );
+        showToast(
+          "Invitation cancelled successfully.",
+          "success"
+        );
 
-      setCancelOpen(false);
-      setCancelInvitationTarget(null);
-    } catch (error) {
-      console.error(
-        "Unable to cancel invitation:",
-        error
-      );
+        setCancelOpen(false);
+        setCancelInvitationTarget(
+          null
+        );
+      } catch (error) {
+        console.error(
+          "Unable to cancel invitation:",
+          error
+        );
 
-      showToast(
-        "Unable to cancel invitation.",
-        "error"
-      );
-    }
-  };
+        showToast(
+          "Unable to cancel invitation.",
+          "error"
+        );
+      }
+    };
 
-  const handleConfirmResendInvitation = async () => {
-    if (!resendInvitationTarget) return;
+  const handleConfirmResendInvitation =
+    async () => {
+      if (!resendInvitationTarget) {
+        return;
+      }
 
-    try {
-      /*
-       * Resend invitation API call will be connected here.
-       */
+      try {
+        /*
+         * Resend invitation API call will be
+         * connected here.
+         */
 
-      showToast(
-        "Invitation resend will be processed.",
-        "success"
-      );
+        showToast(
+          "Invitation resend will be processed.",
+          "success"
+        );
 
-      setResendOpen(false);
-      setResendInvitationTarget(null);
+        setResendOpen(false);
+        setResendInvitationTarget(
+          null
+        );
 
-      await fetchSentInvitations(
-        sentInvitationsPagination.currentPage,
-        sentInvitationsPagination.pageSize
-      );
-    } catch (error) {
-      console.error(
-        "Unable to resend invitation:",
-        error
-      );
+        await fetchSentInvitations(
+          sentInvitationsPagination.currentPage,
+          sentInvitationsPagination.pageSize
+        );
+      } catch (error) {
+        console.error(
+          "Unable to resend invitation:",
+          error
+        );
 
-      showToast(
-        "Unable to resend invitation.",
-        "error"
-      );
-    }
-  };
+        showToast(
+          "Unable to resend invitation.",
+          "error"
+        );
+      }
+    };
 
   const handleCloseCancelModal = () => {
     setCancelOpen(false);
-    setCancelInvitationTarget(null);
+    setCancelInvitationTarget(
+      null
+    );
   };
 
   const handleCloseResendModal = () => {
     setResendOpen(false);
-    setResendInvitationTarget(null);
+    setResendInvitationTarget(
+      null
+    );
   };
 
+  const columns = useMemo(
+    () => [
+      {
+        key: "email",
+        header: "Email",
+        width: "24%",
+        accessor: "email",
+        cellClassName:
+          "text-gray-600",
+      },
+
+      {
+        key: "role",
+        header: "Role",
+        width: "17%",
+        accessor: (invitation) =>
+          invitation?.roleName ||
+          invitation?.role ||
+          "—",
+        cellClassName:
+          "text-gray-600",
+      },
+
+      {
+        key: "designation",
+        header: "Designation",
+        width: "18%",
+        accessor: (invitation) =>
+          invitation?.designation ||
+          invitation?.invitedDesignation ||
+          "—",
+        cellClassName:
+          "text-gray-600",
+      },
+
+      {
+        key: "invitedAt",
+        header: "Invited At",
+        width: "17%",
+        accessor: "invitedAt",
+        cellClassName:
+          "text-gray-600",
+      },
+
+      {
+        key: "status",
+        header: "Status",
+        width: "14%",
+        headerClassName:
+          "text-center",
+        cellClassName:
+          "text-center",
+        stopRowClick: true,
+
+        render: (invitation) => (
+          <span
+            className={`
+              inline-flex
+              rounded-full
+              px-3
+              py-1
+              text-xs
+              font-medium
+              ${
+                invitation?.isExpired
+                  ? "bg-red-100 text-red-700"
+                  : "bg-green-100 text-green-700"
+              }
+            `}
+          >
+            {invitation?.isExpired
+              ? "Expired"
+              : "Active"}
+          </span>
+        ),
+      },
+
+      {
+        key: "actions",
+        header: "Quick Actions",
+        width: "150px",
+        headerClassName:
+          "text-center",
+        cellClassName:
+          "text-center",
+        stopRowClick: true,
+
+        render: (invitation) => (
+          <DynamicTableActions
+            row={invitation}
+            actions={[
+              {
+                type: "resend",
+                label: "Resend Invitation",
+                icon: FaPaperPlane,
+                className:
+                  "text-green-600 hover:bg-green-50",
+                onClick:
+                  handleResendInvitation,
+              },
+              {
+                type: "cancel",
+                label: "Cancel Invitation",
+                icon: MdCancel,
+                className:
+                  "text-red-600 hover:bg-red-50",
+                onClick:
+                  handleCancelInvitation,
+              },
+            ]}
+            buttonLabel={`Quick actions for ${
+              invitation?.email ||
+              "invitation"
+            }`}
+          />
+        ),
+      },
+    ],
+    []
+  );
+
+  const invitationDetailFields = [
+    {
+      key: "email",
+      label: "Email",
+      breakAll: true,
+    },
+
+    {
+      key: "roleName",
+      label: "Role",
+      getValue: (invitation) =>
+        invitation?.roleName ||
+        invitation?.role ||
+        "—",
+    },
+
+    {
+      key: "designation",
+      label: "Designation",
+      getValue: (invitation) =>
+        invitation?.designation ||
+        invitation?.invitedDesignation ||
+        "—",
+    },
+
+    {
+      key: "invitedAt",
+      label: "Invited At",
+    },
+
+    {
+      key: "invitationSentAt",
+      label: "Invitation Sent At",
+      type: "date",
+      show: (invitation) =>
+        Boolean(
+          invitation?.invitationSentAt
+        ),
+    },
+
+    {
+      key: "invitationExpiresAt",
+      label: "Invitation Expires At",
+      type: "date",
+      show: (invitation) =>
+        Boolean(
+          invitation?.invitationExpiresAt
+        ),
+    },
+
+    {
+      key: "status",
+      label: "Status",
+      getValue: (invitation) =>
+        invitation?.isExpired
+          ? "Expired"
+          : "Active",
+      capitalize: true,
+    },
+  ];
+
   const currentPage =
-    sentInvitationsPagination?.currentPage || 1;
+    sentInvitationsPagination
+      ?.currentPage || 1;
 
   const totalPages =
-    sentInvitationsPagination?.totalPages || 1;
+    sentInvitationsPagination
+      ?.totalPages || 1;
 
   const totalInvitations =
-    sentInvitationsPagination?.totalInvitations || 0;
+    sentInvitationsPagination
+      ?.totalInvitations || 0;
 
   const pageSize =
-    sentInvitationsPagination?.pageSize || 10;
-
-  const startItem =
-    totalInvitations === 0
-      ? 0
-      : (currentPage - 1) * pageSize + 1;
-
-  const endItem =
-    totalInvitations === 0
-      ? 0
-      : Math.min(
-          currentPage * pageSize,
-          totalInvitations
-        );
+    sentInvitationsPagination
+      ?.pageSize || 10;
 
   return (
     <DashboardLayout>
@@ -280,343 +456,99 @@ const InvitationsSent = () => {
           </h1>
 
           <p className="mt-1 text-sm text-gray-500">
-            View and manage invitations sent to users.
+            View and manage invitations sent
+            to users.
           </p>
         </div>
 
-        {/* Table + Pagination */}
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-          {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[950px]">
-              <thead>
-                <tr className="border-b border-gray-200 bg-gray-50">
-                  {/* Email */}
-                  <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Email
-                  </th>
+        {/* Table */}
+        <DynamicTable
+          columns={columns}
+          data={invitations}
+          rowKey="id"
+          minWidth="950px"
+          className="overflow-visible"
+          emptyTitle="No invitations sent"
+          emptyDescription="Invitations you send will appear here."
+          emptyIcon={FaPaperPlane}
+          onRowClick={
+            handleViewInvitation
+          }
+        />
 
-                  {/* Role */}
-                  <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    <div className="border-l border-gray-200 pl-5">
-                      Role
-                    </div>
-                  </th>
-
-                  {/* Designation */}
-                  <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    <div className="border-l border-gray-200 pl-5">
-                      Designation
-                    </div>
-                  </th>
-
-                  {/* Invited At */}
-                  <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    <div className="border-l border-gray-200 pl-5">
-                      Invited At
-                    </div>
-                  </th>
-
-                  {/* Status */}
-                  <th className="px-5 py-4 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    <div className="relative flex items-center justify-center before:absolute before:left-0 before:h-5 before:border-l before:border-gray-200 pl-8">
-                      Status
-                    </div>
-                  </th>
-
-                  {/* Quick Action */}
-                  <th className="px-5 py-4 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    <div className="flex items-center justify-center border-l border-gray-200">
-                      Quick Action
-                    </div>
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody className="divide-y divide-gray-100">
-                {invitations.length > 0 ? (
-                  invitations.map((invitation) => (
-                    <tr
-                      key={invitation.id}
-                      onClick={() =>
-                        setSelectedInvitation(invitation)
-                      }
-                      className="cursor-pointer transition-colors hover:bg-gray-50"
-                    >
-                      {/* Email */}
-                      <td className="px-5 py-4 text-sm text-gray-600">
-                        {invitation.email || "—"}
-                      </td>
-
-                      {/* Role */}
-                      <td className="px-5 py-4 text-sm text-gray-600">
-                        <div className="border-l border-gray-200 pl-5">
-                          {invitation.roleName ||
-                            invitation.role ||
-                            "—"}
-                        </div>
-                      </td>
-
-                      {/* Designation */}
-                      <td className="px-5 py-4 text-sm text-gray-600">
-                        <div className="border-l border-gray-200 pl-5">
-                          {invitation.designation ||
-                            invitation.invitedDesignation ||
-                            "—"}
-                        </div>
-                      </td>
-
-                      {/* Invited At */}
-                      <td className="px-5 py-4 text-sm text-gray-600">
-                        <div className="border-l border-gray-200 pl-5">
-                          {invitation.invitedAt}
-                        </div>
-                      </td>
-
-                      {/* Status */}
-                      <td
-                        className="px-5 py-4 text-center"
-                        onClick={(event) =>
-                          event.stopPropagation()
-                        }
-                      >
-                        <div className="relative flex items-center justify-center before:absolute before:left-0 before:h-6 before:border-l before:border-gray-200 pl-8">
-                          <span
-                            className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
-                              invitation.isExpired
-                                ? "bg-red-100 text-red-700"
-                                : "bg-green-100 text-green-700"
-                            }`}
-                          >
-                            {invitation.isExpired
-                              ? "Expired"
-                              : "Active"}
-                          </span>
-                        </div>
-                      </td>
-
-                      {/* Quick Action */}
-                      <td
-                        className="px-5 py-4"
-                        onClick={(event) =>
-                          event.stopPropagation()
-                        }
-                      >
-                        <div className="relative flex items-center justify-center border-l border-gray-200">
-                          <button
-                            type="button"
-                            onClick={(event) =>
-                              handleQuickActionMenu(
-                                event,
-                                invitation.id
-                              )
-                            }
-                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
-                            aria-label="Quick actions"
-                          >
-                            <MdMoreVert size={20} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="px-5 py-12 text-center"
-                    >
-                      <div className="flex flex-col items-center justify-center">
-                        <MdSend
-                          size={42}
-                          className="mb-3 text-gray-300"
-                        />
-
-                        <p className="text-sm font-medium text-gray-600">
-                          No invitations sent
-                        </p>
-
-                        <p className="mt-1 text-xs text-gray-400">
-                          Invitations you send will appear
-                          here.
-                        </p>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          <div className="border-t border-gray-200 px-5 py-4">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-
-            <div className="flex items-center gap-4">
-              {/* Rows Per Page */}
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <span>Rows per page:</span>
-
-                <select
-                  value={pageSize}
-                  onChange={(event) =>
-                    handlePageSizeChange(
-                      Number(event.target.value)
-                    )
-                  }
-                  className="rounded-md border border-gray-300 bg-white px-2 py-1.5 text-sm outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-300"
-                >
-                  {PAGE_SIZE_OPTIONS.map((option) => (
-                    <option
-                      key={option}
-                      value={option}
-                    >
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Showing Count */}
-              <div className="text-sm text-gray-500">
-                Showing {startItem} to {endItem} of{" "}
-                {totalInvitations} users
-              </div>
-
-              </div>
-
-
-              {/* Page Navigation */}
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() =>
-                    handlePageChange(currentPage - 1)
-                  }
-                  disabled={currentPage === 1}
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
-                  aria-label="Previous page"
-                >
-                  <MdChevronLeft size={20} />
-                </button>
-
-                <span className="px-2 text-sm text-gray-600">
-                  Page {currentPage} of {totalPages}
-                </span>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    handlePageChange(currentPage + 1)
-                  }
-                  disabled={currentPage === totalPages}
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
-                  aria-label="Next page"
-                >
-                  <MdChevronRight size={20} />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Pagination */}
+        <DynamicPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={totalInvitations}
+          pageSize={pageSize}
+          pageSizeOptions={
+            PAGE_SIZE_OPTIONS
+          }
+          onPageChange={handlePageChange}
+          onPageSizeChange={
+            handlePageSizeChange
+          }
+          itemLabel="users"
+        />
       </div>
 
-      {/* Quick Action Menu Overlay */}
-      {openMenuId &&
-        createPortal(
-          <>
-            <button
-              type="button"
-              onClick={() => setOpenMenuId(null)}
-              className="fixed inset-0 z-10 cursor-default"
-              aria-label="Close quick actions"
-            />
-
-            <div
-              ref={menuRef}
-              className="fixed z-20 w-52 rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
-              style={{
-                top: menuPosition.top,
-                left: menuPosition.left,
-              }}
-            >
-              {(() => {
-                const invitation = invitations.find(
-                  (item) => item.id === openMenuId
-                );
-
-                if (!invitation) return null;
-
-                return (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleResendInvitation(
-                          invitation
-                        )
-                      }
-                      className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-green-600 transition-colors hover:bg-green-50"
-                    >
-                      <MdSend size={18} />
-                      <span>Resend Invitation</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleCancelInvitation(
-                          invitation
-                        )
-                      }
-                      className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-red-600 transition-colors hover:bg-red-50"
-                    >
-                      <MdCancel size={18} />
-                      <span>Cancel Invitation</span>
-                    </button>
-                  </>
-                );
-              })()}
-            </div>
-          </>,
-          document.body
-        )}
-
       {/* Invitation Details Modal */}
-      <InvitationDetailsModal
-        open={Boolean(selectedInvitation)}
-        invitation={selectedInvitation}
-        onClose={() => setSelectedInvitation(null)}
+      <DynamicDetailsModal
+        open={Boolean(
+          selectedInvitation
+        )}
+        title="Invitation Details"
+        subtitle="View invitation information"
+        data={selectedInvitation}
+        fields={invitationDetailFields}
+        onClose={() =>
+          setSelectedInvitation(
+            null
+          )
+        }
       />
 
       {/* Cancel Invitation Confirmation */}
-      <ConfirmationModal
-        isOpen={cancelOpen}
-        onCancel={handleCloseCancelModal}
-        onConfirm={handleConfirmCancelInvitation}
+      <DynamicConfirmationModal
+        open={cancelOpen}
+        onCancel={
+          handleCloseCancelModal
+        }
+        onConfirm={
+          handleConfirmCancelInvitation
+        }
         title="Cancel Invitation"
-        message={
+        description={
           cancelInvitationTarget
             ? `Are you sure you want to cancel the invitation sent to ${cancelInvitationTarget.email}?`
             : "Are you sure you want to cancel this invitation?"
         }
-        confirmText="Cancel Invitation"
-        cancelText="Keep Invitation"
+        confirmLabel="Cancel Invitation"
+        cancelLabel="Keep Invitation"
+        icon={<MdCancel />}
+        iconClassName="text-red-600"
       />
 
       {/* Resend Invitation Confirmation */}
-      <ConfirmationModal
-        isOpen={resendOpen}
-        onCancel={handleCloseResendModal}
-        onConfirm={handleConfirmResendInvitation}
+      <DynamicConfirmationModal
+        open={resendOpen}
+        onCancel={
+          handleCloseResendModal
+        }
+        onConfirm={
+          handleConfirmResendInvitation
+        }
         title="Resend Invitation"
-        message={
+        description={
           resendInvitationTarget
             ? `Are you sure you want to resend the invitation to ${resendInvitationTarget.email}?`
             : "Are you sure you want to resend this invitation?"
         }
-        confirmText="Resend Invitation"
-        cancelText="Cancel"
+        confirmLabel="Resend Invitation"
+        cancelLabel="Cancel"
+        icon={<FaPaperPlane />}
+        iconClassName="text-green-600"
       />
     </DashboardLayout>
   );

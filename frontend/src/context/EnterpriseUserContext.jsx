@@ -128,6 +128,23 @@ export const EnterpriseUserProvider = ({
   const PAGE_SIZE = 10;
 
   /*
+   * Calculate total pages from a total
+   * item count and page size.
+   */
+  const calculateTotalPages = useCallback(
+    (totalItems, pageSize) => {
+      if (totalItems <= 0) {
+        return 0;
+      }
+
+      return Math.ceil(
+        totalItems / pageSize
+      );
+    },
+    []
+  );
+
+  /*
    * Normalize backend user data so
    * existing frontend components can
    * continue using the same structure.
@@ -575,9 +592,9 @@ export const EnterpriseUserProvider = ({
    * Refresh dashboard statistics
    */
   const refreshDashboardStats =
-    async () => {
+    useCallback(async () => {
       await fetchDashboardStats();
-    };
+    }, [fetchDashboardStats]);
 
   /*
    * Add invitation
@@ -585,211 +602,421 @@ export const EnterpriseUserProvider = ({
    * Kept temporarily for the existing
    * invitation UI.
    */
-  const addInvitation = ({
-    email,
-    role,
-    designation,
-  }) => {
-    const invitation = {
-      id: `inv-${Date.now()}`,
+  const addInvitation = useCallback(
+    ({
       email,
       role,
       designation,
-      invitedAt:
-        new Date().toLocaleString(
-          "en-IN",
-          {
-            dateStyle: "medium",
-            timeStyle: "short",
-          }
-        ),
-      expiresAt:
-        new Date(
-          Date.now() +
-            24 *
-              60 *
-              60 *
-              1000
-        ).toLocaleString(
-          "en-IN",
-          {
-            dateStyle: "medium",
-            timeStyle: "short",
-          }
-        ),
-      status: "sent",
-    };
+    }) => {
+      const invitation = {
+        id: `inv-${Date.now()}`,
+        email,
+        role,
+        designation,
+        invitedAt:
+          new Date().toLocaleString(
+            "en-IN",
+            {
+              dateStyle: "medium",
+              timeStyle: "short",
+            }
+          ),
+        expiresAt:
+          new Date(
+            Date.now() +
+              24 *
+                60 *
+                60 *
+                1000
+          ).toLocaleString(
+            "en-IN",
+            {
+              dateStyle: "medium",
+              timeStyle: "short",
+            }
+          ),
+        status: "sent",
+      };
 
-    setInvitations(
-      (previous) => [
-        invitation,
-        ...previous,
-      ]
-    );
-  };
+      setInvitations(
+        (previous) => [
+          invitation,
+          ...previous,
+        ]
+      );
+
+      setSentInvitationsPagination(
+        (previous) => {
+          const totalInvitations =
+            previous.totalInvitations +
+            1;
+
+          return {
+            ...previous,
+            totalInvitations,
+            totalPages:
+              calculateTotalPages(
+                totalInvitations,
+                previous.pageSize
+              ),
+          };
+        }
+      );
+
+      setDashboardStats(
+        (previous) => ({
+          ...previous,
+          invitationsSent:
+            previous.invitationsSent +
+            1,
+        })
+      );
+    },
+    [calculateTotalPages]
+  );
 
   /*
    * Cancel invitation
    */
-  const cancelInvitation = (
-    invitationId
-  ) => {
-    setInvitations(
-      (previous) =>
-        previous.filter(
-          (invitation) =>
-            invitation.id !==
-            invitationId
-        )
-    );
-  };
-
-  /*
-   * Approve user
-   *
-   * API integration will be connected
-   * later. For now this keeps the
-   * existing frontend behaviour.
-   */
-  const approveUser = (
-    userId
-  ) => {
-    setPendingApprovals(
-      (previous) => {
-        const user =
-          previous.find(
-            (item) =>
-              item.id ===
-              userId
+  const cancelInvitation =
+    useCallback(
+      (invitationId) => {
+        const invitationExists =
+          invitations.some(
+            (invitation) =>
+              invitation.id ===
+              invitationId
           );
 
-        if (!user) {
-          return previous;
+        if (!invitationExists) {
+          return;
         }
 
-        const approvedUser = {
-          ...user,
-          status: "active",
-          joinedAt:
-            new Date().toLocaleDateString(
-              "en-IN",
-              {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-              }
-            ),
-        };
-
-        setActiveUsers(
-          (current) => [
-            approvedUser,
-            ...current,
-          ]
+        setInvitations(
+          (previous) =>
+            previous.filter(
+              (invitation) =>
+                invitation.id !==
+                invitationId
+            )
         );
 
-        return previous.filter(
-          (item) =>
-            item.id !== userId
+        setSentInvitationsPagination(
+          (previous) => {
+            const totalInvitations =
+              Math.max(
+                0,
+                previous.totalInvitations -
+                  1
+              );
+
+            return {
+              ...previous,
+              totalInvitations,
+              totalPages:
+                calculateTotalPages(
+                  totalInvitations,
+                  previous.pageSize
+                ),
+            };
+          }
         );
-      }
+
+        setDashboardStats(
+          (previous) => ({
+            ...previous,
+            invitationsSent:
+              Math.max(
+                0,
+                previous.invitationsSent -
+                  1
+              ),
+          })
+        );
+      },
+      [
+        invitations,
+        calculateTotalPages,
+      ]
     );
-  };
 
-  /*
-   * Reject user
-   *
-   * API integration will be connected
-   * later. For now this keeps the
-   * existing frontend behaviour.
-   */
-  const rejectUser = (
-    userId,
-    rejectionReason =
-      "Registration request was rejected."
-  ) => {
-    setPendingApprovals(
-      (previous) => {
-        const user =
-          previous.find(
+  
+  const approveUser = useCallback(
+    (userId) => {
+      const user =
+        pendingApprovals.find(
+          (item) =>
+            item.id === userId
+        );
+
+      if (!user) {
+        return;
+      }
+
+      const approvedUser = {
+        ...user,
+        status: "active",
+        joinedAt:
+          new Date().toLocaleDateString(
+            "en-IN",
+            {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            }
+          ),
+      };
+
+      setPendingApprovals(
+        (previous) =>
+          previous.filter(
             (item) =>
-              item.id ===
-              userId
-          );
+              item.id !== userId
+          )
+      );
 
-        if (!user) {
-          return previous;
+      setActiveUsers(
+        (previous) => [
+          approvedUser,
+          ...previous,
+        ]
+      );
+
+      setPendingApprovalsPagination(
+        (previous) => {
+          const totalUsers =
+            Math.max(
+              0,
+              previous.totalUsers - 1
+            );
+
+          return {
+            ...previous,
+            totalUsers,
+            totalPages:
+              calculateTotalPages(
+                totalUsers,
+                previous.pageSize
+              ),
+          };
         }
+      );
 
-        const rejectedUser = {
-          ...user,
-          status: "rejected",
-          rejectedAt:
-            new Date().toLocaleString(
-              "en-IN",
-              {
-                dateStyle:
-                  "medium",
-                timeStyle:
-                  "short",
-              }
+      setActiveUsersPagination(
+        (previous) => {
+          const totalUsers =
+            previous.totalUsers + 1;
+
+          return {
+            ...previous,
+            totalUsers,
+            totalPages:
+              calculateTotalPages(
+                totalUsers,
+                previous.pageSize
+              ),
+          };
+        }
+      );
+
+      setDashboardStats(
+        (previous) => ({
+          ...previous,
+          activeUsers:
+            previous.activeUsers +
+            1,
+          pendingApprovals:
+            Math.max(
+              0,
+              previous.pendingApprovals -
+                1
             ),
-          rejectionReason,
-        };
+        })
+      );
+    },
+    [
+      pendingApprovals,
+      calculateTotalPages,
+    ]
+  );
 
-        setRejectedRequests(
-          (current) => [
-            rejectedUser,
-            ...current,
-          ]
-        );
-
-        return previous.filter(
+  
+  const rejectUser = useCallback(
+    (
+      userId,
+      rejectionReason =
+        "Registration request was rejected."
+    ) => {
+      const user =
+        pendingApprovals.find(
           (item) =>
-            item.id !== userId
+            item.id === userId
         );
-      }
-    );
-  };
 
-  /*
-   * Remove active user
-   *
-   * API integration will be connected
-   * later.
-   */
-  const removeUser = (
-    userId
-  ) => {
-    setActiveUsers(
-      (previous) =>
-        previous.filter(
+      if (!user) {
+        return;
+      }
+
+      const rejectedUser = {
+        ...user,
+        status: "rejected",
+        rejectedAt:
+          new Date().toLocaleString(
+            "en-IN",
+            {
+              dateStyle:
+                "medium",
+              timeStyle:
+                "short",
+            }
+          ),
+        rejectionReason,
+      };
+
+      setPendingApprovals(
+        (previous) =>
+          previous.filter(
+            (item) =>
+              item.id !== userId
+          )
+      );
+
+      setRejectedRequests(
+        (previous) => [
+          rejectedUser,
+          ...previous,
+        ]
+      );
+
+      setPendingApprovalsPagination(
+        (previous) => {
+          const totalUsers =
+            Math.max(
+              0,
+              previous.totalUsers - 1
+            );
+
+          return {
+            ...previous,
+            totalUsers,
+            totalPages:
+              calculateTotalPages(
+                totalUsers,
+                previous.pageSize
+              ),
+          };
+        }
+      );
+
+      setRejectedRequestsPagination(
+        (previous) => {
+          const totalUsers =
+            previous.totalUsers + 1;
+
+          return {
+            ...previous,
+            totalUsers,
+            totalPages:
+              calculateTotalPages(
+                totalUsers,
+                previous.pageSize
+              ),
+          };
+        }
+      );
+
+      setDashboardStats(
+        (previous) => ({
+          ...previous,
+          pendingApprovals:
+            Math.max(
+              0,
+              previous.pendingApprovals -
+                1
+            ),
+          rejectedRequests:
+            previous.rejectedRequests +
+            1,
+        })
+      );
+    },
+    [
+      pendingApprovals,
+      calculateTotalPages,
+    ]
+  );
+
+  
+  const removeUser = useCallback(
+    (userId) => {
+      const userExists =
+        activeUsers.some(
           (user) =>
-            user.id !== userId
-        )
-    );
-  };
+            user.id === userId
+        );
 
-  /*
-   * Make user inactive
-   *
-   * API integration will be connected
-   * later.
-   */
-  const makeInactiveUser = (
-    userId
-  ) => {
-    setActiveUsers(
-      (previous) => {
+      if (!userExists) {
+        return;
+      }
+
+      setActiveUsers(
+        (previous) =>
+          previous.filter(
+            (user) =>
+              user.id !== userId
+          )
+      );
+
+      setActiveUsersPagination(
+        (previous) => {
+          const totalUsers =
+            Math.max(
+              0,
+              previous.totalUsers - 1
+            );
+
+          return {
+            ...previous,
+            totalUsers,
+            totalPages:
+              calculateTotalPages(
+                totalUsers,
+                previous.pageSize
+              ),
+          };
+        }
+      );
+
+      setDashboardStats(
+        (previous) => ({
+          ...previous,
+          activeUsers:
+            Math.max(
+              0,
+              previous.activeUsers -
+                1
+            ),
+        })
+      );
+    },
+    [
+      activeUsers,
+      calculateTotalPages,
+    ]
+  );
+
+ 
+  const makeInactiveUser =
+    useCallback(
+      (userId) => {
         const user =
-          previous.find(
+          activeUsers.find(
             (item) =>
-              item.id ===
-              userId
+              item.id === userId
           );
 
         if (!user) {
-          return previous;
+          return;
         }
 
         const inactiveUser = {
@@ -797,20 +1024,58 @@ export const EnterpriseUserProvider = ({
           status: "inactive",
         };
 
+        setActiveUsers(
+          (previous) =>
+            previous.filter(
+              (item) =>
+                item.id !== userId
+            )
+        );
+
         setInactiveUsers(
-          (current) => [
+          (previous) => [
             inactiveUser,
-            ...current,
+            ...previous,
           ]
         );
 
-        return previous.filter(
-          (item) =>
-            item.id !== userId
+        setActiveUsersPagination(
+          (previous) => {
+            const totalUsers =
+              Math.max(
+                0,
+                previous.totalUsers - 1
+              );
+
+            return {
+              ...previous,
+              totalUsers,
+              totalPages:
+                calculateTotalPages(
+                  totalUsers,
+                  previous.pageSize
+                ),
+            };
+          }
         );
-      }
+
+        setDashboardStats(
+          (previous) => ({
+            ...previous,
+            activeUsers:
+              Math.max(
+                0,
+                previous.activeUsers -
+                  1
+              ),
+          })
+        );
+      },
+      [
+        activeUsers,
+        calculateTotalPages,
+      ]
     );
-  };
 
   /*
    * Dashboard statistics
@@ -853,7 +1118,8 @@ export const EnterpriseUserProvider = ({
      * Expose the same state using the
      * name expected by InvitationsSent.
      */
-    sentInvitations: invitations,
+    sentInvitations:
+      invitations,
 
     pendingApprovals,
     rejectedRequests,
