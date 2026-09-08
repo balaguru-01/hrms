@@ -16,6 +16,7 @@ import AuthHeader from "../../components/auth/AuthHeader";
 import AuthFooter from "../../components/auth/AuthFooter";
 
 import DynamicForm from "../../components/form/DynamicForm";
+import { MdOutlineHourglassDisabled, MdHourglassTop, MdOutlineHourglassBottom } from "react-icons/md";
 
 import {
   userRegistrationFields,
@@ -330,9 +331,10 @@ const UserRegistration = () => {
             </p>
 
             <AuthFooter
-              text="Your registration is securely under review."
-              className="mt-4"
-            />
+                text="Your registration is securely under review."
+                className="mt-4"
+                icon={MdHourglassTop}
+              />
           </AuthCard>
         </div>
       </div>

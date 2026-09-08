@@ -5,6 +5,7 @@ import {
 import { MdClose } from "react-icons/md";
 
 import DynamicForm from "../form/DynamicForm";
+import SecondaryButton from "../buttons/SecondaryButton";
 
 import {
   inviteUserFields,
@@ -134,19 +135,17 @@ const InviteUserForm = ({
             }
             twoColumnLayout={false}
             submitButtonFullWidth={false}
+            secondaryAction={
+              <SecondaryButton
+                type="button"
+                onClick={onCancel}
+                disabled={loading}
+              >
+                Cancel
+              </SecondaryButton>
+            }
             className="invite-user-form"
           />
-
-          <div className="mt-[-57px] flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={onCancel}
-              disabled={loading}
-              className="min-w-[100px] rounded-xl border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Cancel
-            </button>
-          </div>
         </div>
       </div>
     </div>

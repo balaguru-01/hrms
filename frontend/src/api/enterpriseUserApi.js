@@ -59,3 +59,41 @@ export const completeUserRegistration =
 
     return response.data;
   };
+
+export const getUsers = async ({
+  scope,
+  status,
+  page = 1,
+  limit = 10,
+}) => {
+  const response = await api.get(
+    USER_ENDPOINTS.USERS,
+    {
+      params: {
+        scope,
+        page,
+        limit,
+        ...(status && { status }),
+      },
+    }
+  );
+
+  return response.data;
+};
+
+export const getSentInvitations = async ({
+  page = 1,
+  limit = 10,
+} = {}) => {
+  const response = await api.get(
+    USER_ENDPOINTS.INVITATIONS,
+    {
+      params: {
+        page,
+        limit,
+      },
+    }
+  );
+
+  return response.data;
+};

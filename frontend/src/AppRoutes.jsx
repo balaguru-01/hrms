@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, Outlet } from "react-router-dom";
 
 import ChooseLogin from "./pages/auth/ChooseLogin";
 import EnterpriseLogin from "./pages/auth/EnterpriseLogin";
@@ -15,14 +15,32 @@ import EnterpriseDashboard from "./pages/enterprise/EnterpriseDashboard";
 import PendingApprovals from "./pages/enterprise/PendingApprovals";
 import TenantManagement from "./pages/enterprise/TenantManagement";
 
+import Users from "./pages/enterprise/Users";
+import ActiveUsers from "./pages/enterprise/ActiveUsers";
+import InvitationsSent from "./pages/enterprise/InvitationsSent";
+import EnterpriseUserPendingApprovals from "./pages/enterprise/EnterpriseUserPendingApprovals";
+import RejectedRequests from "./pages/enterprise/RejectedRequests";
+
 import SuperAdminDashboard from "./pages/superadmin/SuperAdminDashboard";
+
+import { EnterpriseUserProvider } from "./context/EnterpriseUserContext";
 
 import { ROLES } from "./utils/constants/roles";
 import { ROUTES } from "./utils/constants/routes";
 
+const EnterpriseUserLayout = () => {
+  return (
+    <EnterpriseUserProvider>
+      <Outlet />
+    </EnterpriseUserProvider>
+  );
+};
+
 function AppRoutes() {
   return (
     <Routes>
+      {/* Public routes */}
+
       <Route
         path={ROUTES.HOME}
         element={<ChooseLogin />}
@@ -52,6 +70,8 @@ function AppRoutes() {
         element={<TenantLogin />}
       />
 
+      {/* Enterprise Admin routes */}
+
       <Route
         element={
           <ProtectedRoute
@@ -61,27 +81,70 @@ function AppRoutes() {
           />
         }
       >
-        <Route
-          path={
-            ROUTES.ENTERPRISE_DASHBOARD
-          }
-          element={<EnterpriseDashboard />}
-        />
+        <Route element={<EnterpriseUserLayout />}>
+          <Route
+            path={
+              ROUTES.ENTERPRISE_DASHBOARD
+            }
+            element={<EnterpriseDashboard />}
+          />
 
-        <Route
-          path={
-            ROUTES.ENTERPRISE_TENANT_MANAGEMENT
-          }
-          element={<TenantManagement />}
-        />
+          <Route
+            path={
+              ROUTES.ENTERPRISE_TENANT_MANAGEMENT
+            }
+            element={<TenantManagement />}
+          />
 
-        <Route
-          path={
-            ROUTES.ENTERPRISE_PENDING_APPROVALS
-          }
-          element={<PendingApprovals />}
-        />
+          <Route
+            path={ROUTES.ENTERPRISE_USERS}
+            element={<Users />}
+          />
+
+          {/* Existing tenant approval page */}
+
+          <Route
+            path={
+              ROUTES.ENTERPRISE_PENDING_APPROVALS
+            }
+            element={<PendingApprovals />}
+          />
+
+          {/* Enterprise user pages */}
+
+          <Route
+            path={
+              ROUTES.ENTERPRISE_ACTIVE_USERS
+            }
+            element={<ActiveUsers />}
+          />
+
+          <Route
+            path={
+              ROUTES.ENTERPRISE_INVITATIONS
+            }
+            element={<InvitationsSent />}
+          />
+
+          <Route
+            path={
+              ROUTES.ENTERPRISE_USER_PENDING_APPROVALS
+            }
+            element={
+              <EnterpriseUserPendingApprovals />
+            }
+          />
+
+          <Route
+            path={
+              ROUTES.ENTERPRISE_REJECTED_REQUESTS
+            }
+            element={<RejectedRequests />}
+          />
+        </Route>
       </Route>
+
+      {/* Super Admin routes */}
 
       <Route
         element={
@@ -99,6 +162,8 @@ function AppRoutes() {
           element={<SuperAdminDashboard />}
         />
       </Route>
+
+      {/* Fallback */}
 
       <Route
         path="*"

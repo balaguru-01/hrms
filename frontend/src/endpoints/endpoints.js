@@ -4,6 +4,8 @@ export const AUTH_ENDPOINTS = {
 
 export const USER_ENDPOINTS = {
   ROLES: "/users/roles",
+  USERS: "/users",
   INVITE: "/users/invite",
   REGISTER: "/users/register",
+  INVITATIONS: "/users/invitations"
 };

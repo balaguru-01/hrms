@@ -27,6 +27,8 @@ const DynamicForm = ({
   twoColumnLayout = false,
 
   submitButtonFullWidth = true,
+  
+  secondaryAction = null,
 }) => {
   const {
     control,
@@ -105,6 +107,9 @@ const DynamicForm = ({
     onForgotPassword?.();
   };
 
+  const hasSecondaryAction =
+    Boolean(secondaryAction);
+
   return (
     <form
       onSubmit={handleSubmit(
@@ -159,18 +164,30 @@ const DynamicForm = ({
         </div>
       )}
 
-      <div className="mt-6 flex justify-center">
+      <div
+        className={
+          hasSecondaryAction
+            ? "mt-6 flex items-center justify-end gap-3"
+            : "mt-6 flex justify-center"
+        }
+      >
+        {secondaryAction}
+
         <FormButton
           type="submit"
           loading={isFormLoading}
           disabled={isSubmitDisabled}
           fullWidth={
-            submitButtonFullWidth
+            hasSecondaryAction
+              ? false
+              : submitButtonFullWidth
           }
           className={
-            submitButtonFullWidth
-              ? ""
-              : "w-fit px-8 py-2.5 text-sm"
+            hasSecondaryAction
+              ? "w-fit px-8 py-2.5 text-sm"
+              : submitButtonFullWidth
+                ? ""
+                : "w-fit px-8 py-2.5 text-sm"
           }
         >
           {isFormLoading

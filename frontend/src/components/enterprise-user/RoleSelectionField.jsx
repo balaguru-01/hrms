@@ -4,6 +4,10 @@ import {
   useState,
 } from "react";
 
+import {
+  useWatch,
+} from "react-hook-form";
+
 import RoleSelectionDropdown from "./RoleSelectionDropdown";
 
 import {
@@ -36,6 +40,7 @@ const formatRoleName = (
 const RoleSelectionField = ({
   field,
   registration,
+  control,
   formLoading = false,
 }) => {
   const { showToast } =
@@ -58,7 +63,10 @@ const RoleSelectionField = ({
     useRef(null);
 
   const selectedRoleId =
-    registration?.value;
+    useWatch({
+      control,
+      name: field.name,
+    });
 
   const selectedRole =
     roles.find(
