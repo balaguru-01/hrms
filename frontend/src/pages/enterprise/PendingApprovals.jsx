@@ -4,6 +4,11 @@ import {
   useState,
 } from "react";
 
+import {
+  MdCheck,
+  MdDelete,
+} from "react-icons/md";
+
 import DashboardLayout from "../../components/layout/DashboardLayout";
 
 import DynamicTable from "../../components/tables/DynamicTable";
@@ -22,6 +27,22 @@ const PAGE_SIZE_OPTIONS = [
   30,
   50,
 ];
+
+const CONFIRMATION_CONFIG = {
+  approve: {
+    icon: <MdCheck />,
+    iconClassName: "text-green-600",
+    confirmClassName:
+      "bg-green-600 hover:bg-green-700",
+  },
+
+  reject: {
+    icon: <MdDelete />,
+    iconClassName: "text-red-600",
+    confirmClassName:
+      "bg-red-600 hover:bg-red-700",
+  },
+};
 
 const PendingApprovals = () => {
   const { showToast } = useToast();
@@ -48,11 +69,7 @@ const PendingApprovals = () => {
   const [rejectReason, setRejectReason] =
     useState("");
 
-  /*
-   * Filter the currently loaded pending users
-   * using the existing search and status filter
-   * behaviour.
-   */
+  
   const filteredRequests = useMemo(() => {
     const normalizedSearch =
       search.trim().toLowerCase();
@@ -127,6 +144,8 @@ const PendingApprovals = () => {
         title: "Approve User",
         description: `Are you sure you want to approve ${request.firstName} ${request.lastName}?`,
         confirmLabel: "Approve User",
+        confirmationConfig:
+          CONFIRMATION_CONFIG.approve,
       });
     },
     []
@@ -146,6 +165,8 @@ const PendingApprovals = () => {
         title: "Reject User",
         description: `Are you sure you want to reject ${request.firstName} ${request.lastName}?`,
         confirmLabel: "Reject User",
+        confirmationConfig:
+          CONFIRMATION_CONFIG.reject,
       });
     },
     []
@@ -204,7 +225,7 @@ const PendingApprovals = () => {
     ]);
 
   /*
-   * Backend pagination.
+   * pagination.
    */
   const handlePageChange = useCallback(
     (page) => {
@@ -230,8 +251,7 @@ const PendingApprovals = () => {
   );
 
   /*
-   * Change backend page size and
-   * restart from page one.
+   * Changes page size 
    */
   const handlePageSizeChange =
     useCallback(
@@ -669,7 +689,7 @@ const PendingApprovals = () => {
           emptyDescription="All user registration requests have been reviewed."
         />
 
-        {/* Backend Pagination */}
+        {/*Pagination */}
         <DynamicPagination
           currentPage={currentPage}
           totalPages={totalPages}
@@ -721,6 +741,19 @@ const PendingApprovals = () => {
           "Confirm"
         }
         cancelLabel="Cancel"
+
+        
+        icon={
+          confirmation?.confirmationConfig?.icon
+        }
+        iconClassName={
+          confirmation?.confirmationConfig
+            ?.iconClassName
+        }
+        confirmClassName={
+          confirmation?.confirmationConfig
+            ?.confirmClassName
+        }
 
         /*
          * Show rejection reason only

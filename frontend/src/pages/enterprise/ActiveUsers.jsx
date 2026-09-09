@@ -4,6 +4,10 @@ import {
   useState,
 } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  MdDelete,
+  MdBlock,
+} from "react-icons/md";
 
 import DashboardLayout from "../../components/layout/DashboardLayout";
 
@@ -23,6 +27,29 @@ const PAGE_SIZE_OPTIONS = [
   30,
   50,
 ];
+
+/*
+ * Confirmation visual configuration.
+ *
+ * The page owns the action's visual meaning.
+ * DynamicConfirmationModal only renders the
+ * configuration it receives.
+ */
+const CONFIRMATION_CONFIG = {
+  remove: {
+    icon: <MdDelete />,
+    iconClassName: "text-red-600",
+    confirmClassName:
+      "bg-red-600 hover:bg-red-700",
+  },
+
+  inactive: {
+    icon: <MdBlock />,
+    iconClassName: "text-yellow-600",
+    confirmClassName:
+      "bg-yellow-500 hover:bg-yellow-600",
+  },
+};
 
 const ActiveUsers = () => {
   const navigate = useNavigate();
@@ -57,6 +84,9 @@ const ActiveUsers = () => {
         title: "Remove User",
         description: `Are you sure you want to remove ${user.firstName} ${user.lastName}?`,
         confirmLabel: "Remove User",
+
+        confirmationConfig:
+          CONFIRMATION_CONFIG.remove,
       });
     },
     []
@@ -70,6 +100,9 @@ const ActiveUsers = () => {
         title: "Make User Inactive",
         description: `Are you sure you want to make ${user.firstName} ${user.lastName} inactive?`,
         confirmLabel: "Make Inactive",
+
+        confirmationConfig:
+          CONFIRMATION_CONFIG.inactive,
       });
     },
     []
@@ -498,6 +531,20 @@ const ActiveUsers = () => {
           "Confirm"
         }
         cancelLabel="Cancel"
+        icon={
+          confirmation
+            ?.confirmationConfig?.icon
+        }
+        iconClassName={
+          confirmation
+            ?.confirmationConfig
+            ?.iconClassName
+        }
+        confirmClassName={
+          confirmation
+            ?.confirmationConfig
+            ?.confirmClassName
+        }
         onConfirm={
           handleConfirmAction
         }

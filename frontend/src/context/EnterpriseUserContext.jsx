@@ -12,14 +12,6 @@ import {
   getUsers,
 } from "../api/enterpriseUserApi";
 
-/*
- * Temporary mock data
- *
- * These are kept for invitation-related UI
- * and fallback/action compatibility.
- *
- * User lists are now fetched from the backend.
- */
 const initialActiveUsers = [];
 
 const initialInvitations = [];
@@ -61,9 +53,6 @@ export const EnterpriseUserProvider = ({
   /*
    * Pagination information for each
    * user status.
-   *
-   * The backend handles the actual
-   * pagination using page + limit.
    */
   const [
     activeUsersPagination,
@@ -95,10 +84,7 @@ export const EnterpriseUserProvider = ({
     totalPages: 0,
   });
 
-  /*
-   * Pagination information for
-   * sent invitations.
-   */
+  
   const [
     sentInvitationsPagination,
     setSentInvitationsPagination,
@@ -144,11 +130,6 @@ export const EnterpriseUserProvider = ({
     []
   );
 
-  /*
-   * Normalize backend user data so
-   * existing frontend components can
-   * continue using the same structure.
-   */
   const normalizeUser = useCallback(
     (user) => {
       if (!user) {
@@ -216,14 +197,7 @@ export const EnterpriseUserProvider = ({
   );
 
   /*
-   * Fetch users for a specific status
-   * and page.
-   *
-   * This function is reusable by:
-   * - Active Users
-   * - Pending Users
-   * - Rejected Users
-   * - All Users
+   * Fetch users
    */
   const fetchUsersByStatus =
     useCallback(
@@ -410,8 +384,6 @@ export const EnterpriseUserProvider = ({
   /*
    * Fetch Sent Invitations
    *
-   * Backend handles pagination using
-   * page + limit.
    */
   const fetchSentInvitations =
     useCallback(
@@ -477,13 +449,6 @@ export const EnterpriseUserProvider = ({
   /*
    * Fetch dashboard statistics.
    *
-   * IMPORTANT:
-   * We cannot calculate these values
-   * using users.length anymore because
-   * the backend returns only one page.
-   *
-   * Instead, each status request returns
-   * totalUsers from the backend.
    */
   const fetchDashboardStats =
     useCallback(
@@ -597,10 +562,7 @@ export const EnterpriseUserProvider = ({
     }, [fetchDashboardStats]);
 
   /*
-   * Add invitation
-   *
-   * Kept temporarily for the existing
-   * invitation UI.
+   * invitation Details
    */
   const addInvitation = useCallback(
     ({
@@ -1103,20 +1065,10 @@ export const EnterpriseUserProvider = ({
      */
     activeUsers,
 
-    /*
-     * Existing invitation state
-     *
-     * Keep this unchanged for existing
-     * components that already use
-     * `invitations`.
-     */
     invitations,
 
     /*
      * Sent invitation state
-     *
-     * Expose the same state using the
-     * name expected by InvitationsSent.
      */
     sentInvitations:
       invitations,

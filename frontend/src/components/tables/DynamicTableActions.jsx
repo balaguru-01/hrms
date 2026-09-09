@@ -211,12 +211,7 @@ const DynamicTableActions = ({
     action?.onClick?.(row);
   };
 
-  /*
-   * No actions available.
-   *
-   * We still render the three-dot button so
-   * the table layout remains unchanged.
-   */
+  
   if (quickActions.length === 0) {
     return null;
   }

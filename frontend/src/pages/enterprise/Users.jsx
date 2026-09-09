@@ -7,6 +7,11 @@ import {
 import { useSearchParams } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { FaEye } from "react-icons/fa";
+import {
+  MdCheck,
+  MdDelete,
+  MdBlock,
+} from "react-icons/md";
 
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import DynamicTable from "../../components/tables/DynamicTable";
@@ -40,6 +45,36 @@ const PAGE_SIZE_OPTIONS = [
   30,
   50,
 ];
+
+const CONFIRMATION_CONFIG = {
+  approve: {
+    icon: <MdCheck />,
+    iconClassName: "text-green-600",
+    confirmClassName:
+      "bg-green-600 hover:bg-green-700",
+  },
+
+  reject: {
+    icon: <MdDelete />,
+    iconClassName: "text-red-600",
+    confirmClassName:
+      "bg-red-600 hover:bg-red-700",
+  },
+
+  remove: {
+    icon: <MdDelete />,
+    iconClassName: "text-red-600",
+    confirmClassName:
+      "bg-red-600 hover:bg-red-700",
+  },
+
+  inactive: {
+    icon: <MdBlock />,
+    iconClassName: "text-yellow-600",
+    confirmClassName:
+      "bg-yellow-500 hover:bg-yellow-600",
+  },
+};
 
 const Users = () => {
   const [searchParams, setSearchParams] =
@@ -76,6 +111,9 @@ const Users = () => {
   const [confirmation, setConfirmation] =
     useState(null);
 
+  const [rejectionReason, setRejectionReason] =
+    useState("");
+
   /*
    * Current status filter from URL.
    */
@@ -97,9 +135,7 @@ const Users = () => {
       : 1;
 
   /*
-   * Logged-in user ID.
-   *
-   * This is used to prevent the current user's
+   * To prevent the current user's
    * own Quick Actions from being displayed.
    */
   const loggedInUserId = useMemo(() => {
@@ -128,8 +164,7 @@ const Users = () => {
   }, []);
 
   /*
-   * Normalize API users into the shape
-   * required by the reusable table.
+   * Normalize using reusable table.
    */
   const normalizeUser = useCallback(
     (user) => {
@@ -291,10 +326,7 @@ const Users = () => {
     ]
   );
 
-  /*
-   * Fetch whenever the selected status,
-   * page, or page size changes.
-   */
+  
   useEffect(() => {
     fetchUsers(
       activeStatus,
@@ -306,9 +338,7 @@ const Users = () => {
     fetchUsers,
   ]);
 
-  /*
-   * Status tab change.
-   */
+  
   const handleStatusChange = (
     status
   ) => {
@@ -385,6 +415,9 @@ const Users = () => {
       description: `Are you sure you want to approve ${user.firstName} ${user.lastName}?`,
 
       confirmLabel: "Approve User",
+
+      confirmationConfig:
+        CONFIRMATION_CONFIG.approve,
     });
   };
 
@@ -394,6 +427,8 @@ const Users = () => {
   const handleRejectUser = (
     user
   ) => {
+    setRejectionReason("");
+
     setConfirmation({
       type: "reject",
       user,
@@ -403,6 +438,9 @@ const Users = () => {
       description: `Are you sure you want to reject ${user.firstName} ${user.lastName}?`,
 
       confirmLabel: "Reject User",
+
+      confirmationConfig:
+        CONFIRMATION_CONFIG.reject,
     });
   };
 
@@ -421,6 +459,9 @@ const Users = () => {
       description: `Are you sure you want to remove ${user.firstName} ${user.lastName}?`,
 
       confirmLabel: "Remove User",
+
+      confirmationConfig:
+        CONFIRMATION_CONFIG.remove,
     });
   };
 
@@ -439,6 +480,9 @@ const Users = () => {
       description: `Are you sure you want to make ${user.firstName} ${user.lastName} inactive?`,
 
       confirmLabel: "Make Inactive",
+
+      confirmationConfig:
+        CONFIRMATION_CONFIG.inactive,
     });
   };
 
@@ -489,7 +533,6 @@ const Users = () => {
   /*
    * Confirm the selected action.
    *
-   * IMPORTANT:
    * The action is awaited first.
    * The table is refreshed only after the
    * action successfully completes.
@@ -521,7 +564,9 @@ const Users = () => {
 
         if (type === "reject") {
           await rejectUser(
-            user.id
+            user.id,
+            rejectionReason.trim() ||
+              "Registration request was rejected."
           );
 
           showToast(
@@ -558,11 +603,9 @@ const Users = () => {
         }
 
         setConfirmation(null);
+        setRejectionReason("");
 
-        /*
-         * Refresh the current table after
-         * the backend action succeeds.
-         */
+        
         await fetchUsers(
           activeStatus,
           currentPage
@@ -1108,12 +1151,48 @@ const Users = () => {
           "Confirm"
         }
         cancelLabel="Cancel"
+        icon={
+          confirmation
+            ?.confirmationConfig?.icon
+        }
+        iconClassName={
+          confirmation
+            ?.confirmationConfig
+            ?.iconClassName
+        }
+        confirmClassName={
+          confirmation
+            ?.confirmationConfig
+            ?.confirmClassName
+        }
+
+        /*
+         * Show rejection reason only
+         * when rejecting a user.
+         */
+        showInput={
+          confirmation?.type ===
+          "reject"
+        }
+        inputLabel="Rejection Reason"
+        inputValue={rejectionReason}
+        inputPlaceholder="Enter the reason for rejecting this user..."
+        onInputChange={
+          setRejectionReason
+        }
+        inputRequired={
+          confirmation?.type ===
+          "reject"
+        }
+
         onConfirm={
           handleConfirmAction
         }
-        onCancel={() =>
-          setConfirmation(null)
-        }
+
+        onCancel={() => {
+          setConfirmation(null);
+          setRejectionReason("");
+        }}
       />
     </DashboardLayout>
   );

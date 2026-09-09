@@ -1,9 +1,3 @@
-import {
-  MdCheck,
-  MdDelete,
-  MdBlock,
-} from "react-icons/md";
-
 const DynamicConfirmationModal = ({
   open = false,
 
@@ -15,10 +9,10 @@ const DynamicConfirmationModal = ({
 
   onConfirm,
   onCancel,
-
   icon,
-  iconClassName,
-  confirmClassName,
+  iconClassName = "text-gray-500",
+  confirmClassName =
+    "bg-green-600 hover:bg-green-700",
 
   // Optional input support
   showInput = false,
@@ -32,66 +26,6 @@ const DynamicConfirmationModal = ({
   if (!open) {
     return null;
   }
-
-  /*
-   * Determine the action from the title
-   * and confirmation label when an icon
-   * or button color is not explicitly supplied.
-   */
-  const actionText =
-    `${title} ${confirmLabel}`.toLowerCase();
-
-  const isApprove =
-    actionText.includes("approve");
-
-  const isInactive =
-    actionText.includes("inactive");
-
-  const isDanger =
-    actionText.includes("reject") ||
-    actionText.includes("remove") ||
-    actionText.includes("delete") ||
-    actionText.includes("cancel");
-
-  /*
-   * Explicitly supplied icon takes priority.
-   */
-  const resolvedIcon =
-    icon ??
-    (isApprove ? (
-      <MdCheck />
-    ) : isInactive ? (
-      <MdBlock />
-    ) : isDanger ? (
-      <MdDelete />
-    ) : null);
-
-  /*
-   * Explicitly supplied icon color takes priority.
-   */
-  const resolvedIconClassName =
-    iconClassName ??
-    (isApprove
-      ? "text-green-600"
-      : isInactive
-      ? "text-yellow-600"
-      : isDanger
-      ? "text-red-600"
-      : "text-gray-500");
-
-  /*
-   * Explicitly supplied confirmation button
-   * color takes priority.
-   */
-  const resolvedConfirmClassName =
-    confirmClassName ??
-    (isApprove
-      ? "bg-green-600 hover:bg-green-700"
-      : isInactive
-      ? "bg-yellow-500 hover:bg-yellow-600"
-      : isDanger
-      ? "bg-red-600 hover:bg-red-700"
-      : "bg-green-600 hover:bg-green-700");
 
   const handleConfirm = () => {
     if (
@@ -141,17 +75,17 @@ const DynamicConfirmationModal = ({
         {/* Title */}
 
         <div className="flex items-center gap-2.5">
-          {resolvedIcon && (
+          {icon && (
             <span
               className={`
                 flex
                 shrink-0
                 items-center
                 text-xl
-                ${resolvedIconClassName}
+                ${iconClassName}
               `}
             >
-              {resolvedIcon}
+              {icon}
             </span>
           )}
 
@@ -318,7 +252,7 @@ const DynamicConfirmationModal = ({
               transition
               disabled:cursor-not-allowed
               disabled:opacity-50
-              ${resolvedConfirmClassName}
+              ${confirmClassName}
             `}
           >
             {confirmLabel}

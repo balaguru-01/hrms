@@ -19,6 +19,22 @@ import { useToast } from "../../context/ToastContext";
 
 const PAGE_SIZE_OPTIONS = [10, 20, 30, 50];
 
+const CONFIRMATION_CONFIG = {
+  cancel: {
+    icon: <MdCancel />,
+    iconClassName: "text-red-600",
+    confirmClassName:
+      "bg-red-600 hover:bg-red-700",
+  },
+
+  resend: {
+    icon: <FaPaperPlane />,
+    iconClassName: "text-green-600",
+    confirmClassName:
+      "bg-green-600 hover:bg-green-700",
+  },
+};
+
 const InvitationsSent = () => {
   const {
     sentInvitations,
@@ -202,10 +218,6 @@ const InvitationsSent = () => {
       }
 
       try {
-        /*
-         * Resend invitation API call will be
-         * connected here.
-         */
 
         showToast(
           "Invitation resend will be processed.",
@@ -526,8 +538,15 @@ const InvitationsSent = () => {
         }
         confirmLabel="Cancel Invitation"
         cancelLabel="Keep Invitation"
-        icon={<MdCancel />}
-        iconClassName="text-red-600"
+        icon={
+          CONFIRMATION_CONFIG.cancel.icon
+        }
+        iconClassName={
+          CONFIRMATION_CONFIG.cancel.iconClassName
+        }
+        confirmClassName={
+          CONFIRMATION_CONFIG.cancel.confirmClassName
+        }
       />
 
       {/* Resend Invitation Confirmation */}
@@ -547,8 +566,15 @@ const InvitationsSent = () => {
         }
         confirmLabel="Resend Invitation"
         cancelLabel="Cancel"
-        icon={<FaPaperPlane />}
-        iconClassName="text-green-600"
+        icon={
+          CONFIRMATION_CONFIG.resend.icon
+        }
+        iconClassName={
+          CONFIRMATION_CONFIG.resend.iconClassName
+        }
+        confirmClassName={
+          CONFIRMATION_CONFIG.resend.confirmClassName
+        }
       />
     </DashboardLayout>
   );
