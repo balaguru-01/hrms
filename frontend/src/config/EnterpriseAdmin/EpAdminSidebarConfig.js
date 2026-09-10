@@ -6,7 +6,6 @@ import {
   MdBusiness,
   MdDashboard,
   MdNotifications,
-  MdPendingActions,
   MdPeople,
   MdPerson,
   MdSettings,
@@ -25,12 +24,6 @@ export const enterpriseMenuItems = [
     title: "Tenant Management",
     icon: MdBusiness,
     path: ROUTES.ENTERPRISE_TENANT_MANAGEMENT,
-  },
-
-  {
-    title: "Pending Approvals",
-    icon: MdPendingActions,
-    path: ROUTES.ENTERPRISE_USER_PENDING_APPROVALS,
   },
 
   {

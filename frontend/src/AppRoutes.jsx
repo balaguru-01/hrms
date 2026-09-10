@@ -12,14 +12,10 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import PublicOnlyRoute from "./routes/PublicOnlyRoute";
 
 import EnterpriseDashboard from "./pages/enterprise/EnterpriseDashboard";
-import PendingApprovals from "./pages/enterprise/PendingApprovals";
 import TenantManagement from "./pages/enterprise/TenantManagement";
 
 import Users from "./pages/enterprise/Users";
-import ActiveUsers from "./pages/enterprise/ActiveUsers";
 import InvitationsSent from "./pages/enterprise/InvitationsSent";
-import EnterpriseUserPendingApprovals from "./pages/enterprise/EnterpriseUserPendingApprovals";
-import RejectedRequests from "./pages/enterprise/RejectedRequests";
 
 import SuperAdminDashboard from "./pages/superadmin/SuperAdminDashboard";
 
@@ -101,45 +97,12 @@ function AppRoutes() {
             element={<Users />}
           />
 
-          {/* Existing tenant approval page */}
-
-          <Route
-            path={
-              ROUTES.ENTERPRISE_PENDING_APPROVALS
-            }
-            element={<PendingApprovals />}
-          />
-
-          {/* Enterprise user pages */}
-
-          <Route
-            path={
-              ROUTES.ENTERPRISE_ACTIVE_USERS
-            }
-            element={<ActiveUsers />}
-          />
 
           <Route
             path={
               ROUTES.ENTERPRISE_INVITATIONS
             }
             element={<InvitationsSent />}
-          />
-
-          <Route
-            path={
-              ROUTES.ENTERPRISE_USER_PENDING_APPROVALS
-            }
-            element={
-              <EnterpriseUserPendingApprovals />
-            }
-          />
-
-          <Route
-            path={
-              ROUTES.ENTERPRISE_REJECTED_REQUESTS
-            }
-            element={<RejectedRequests />}
           />
         </Route>
       </Route>
