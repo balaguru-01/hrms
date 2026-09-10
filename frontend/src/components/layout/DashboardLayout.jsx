@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import Sidebar from "../sidebar/Sidebar";
-import TopNavbar from "../navbar/TopNavbar";
+import CommonNavbar from "../navbar/CommonNavbar";
 
 const SIDEBAR_STORAGE_KEY =
   "tenanthub_sidebar_collapsed";
@@ -10,6 +10,8 @@ const DashboardLayout = ({
   children,
   title,
   subtitle,
+  menuItems,
+  profilePath = "/enterprise/profile",
 }) => {
   const [collapsed, setCollapsed] = useState(() => {
     const savedState =
@@ -37,20 +39,29 @@ const DashboardLayout = ({
     });
   };
 
+  const resolvedMenuItems = Array.isArray(
+    menuItems
+  )
+    ? menuItems
+    : [];
+
   return (
     <div className="fixed inset-0 flex h-screen w-screen overflow-hidden bg-gray-100">
       {/* Sidebar */}
       <Sidebar
         collapsed={collapsed}
         setCollapsed={handleSidebarToggle}
+        menuItems={resolvedMenuItems}
       />
 
       {/* Right side of dashboard */}
       <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
 
-        {/* Fixed Top Navbar */}
+        {/* Fixed Common Navbar */}
         <div className="absolute inset-x-0 top-0 z-50 h-20">
-          <TopNavbar />
+          <CommonNavbar
+            profilePath={profilePath}
+          />
         </div>
 
         {/* Scrollable Main Content */}

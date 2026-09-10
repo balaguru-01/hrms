@@ -8,6 +8,7 @@ export const userRegistrationFields = [
     required: true,
     fullWidth: true,
   },
+
   {
     name: "firstName",
     type: "text",
@@ -15,6 +16,7 @@ export const userRegistrationFields = [
     placeholder: "Enter first name",
     required: true,
   },
+
   {
     name: "lastName",
     type: "text",
@@ -22,6 +24,7 @@ export const userRegistrationFields = [
     placeholder: "Enter last name",
     required: true,
   },
+
   {
     name: "password",
     type: "password",
@@ -29,6 +32,7 @@ export const userRegistrationFields = [
     placeholder: "Create a password",
     required: true,
   },
+
   {
     name: "confirmPassword",
     type: "password",
@@ -36,6 +40,7 @@ export const userRegistrationFields = [
     placeholder: "Re-enter your password",
     required: true,
   },
+
   {
     name: "phone",
     type: "tel",
@@ -43,6 +48,7 @@ export const userRegistrationFields = [
     placeholder: "Enter phone number",
     required: true,
   },
+
   {
     name: "location",
     type: "text",

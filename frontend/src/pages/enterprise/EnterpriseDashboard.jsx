@@ -15,6 +15,14 @@ import { useEnterpriseUsers } from "../../context/EnterpriseUserContext";
 
 import { ROUTES } from "../../utils/constants/routes";
 
+import {
+  enterpriseDashboardRecentActivities,
+} from "../../config/EnterpriseAdmin/EpAdminDashboardConfig";
+
+import {
+  enterpriseMenuItems,
+} from "../../config/EnterpriseAdmin/EpAdminSidebarConfig";
+
 const EnterpriseDashboard = () => {
   const navigate = useNavigate();
 
@@ -74,11 +82,6 @@ const EnterpriseDashboard = () => {
           formData.designation.trim(),
       });
 
-      /*
-       * Refresh dashboard statistics after
-       * the invitation has been successfully
-       * created in the backend.
-       */
       await refreshDashboardStats();
 
       setIsInviteFormOpen(false);
@@ -109,6 +112,8 @@ const EnterpriseDashboard = () => {
     <DashboardLayout
       title="Enterprise Dashboard"
       subtitle="Welcome back ! Here's an overview of your TenantHub platform."
+      menuItems={enterpriseMenuItems}
+      profilePath="/enterprise/profile"
     >
       <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
         <h2 className="text-xl font-semibold text-gray-900">
@@ -173,57 +178,31 @@ const EnterpriseDashboard = () => {
         </h2>
 
         <div className="mt-4 space-y-3">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h3 className="text-sm font-medium text-gray-800">
-                New User Registered
-              </h3>
+          {enterpriseDashboardRecentActivities.map(
+            (activity, index) => (
+              <div key={activity.title}>
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-800">
+                      {activity.title}
+                    </h3>
 
-              <p className="text-xs text-gray-500">
-                A new user completed registration.
-              </p>
-            </div>
+                    <p className="text-xs text-gray-500">
+                      {activity.description}
+                    </p>
+                  </div>
 
-            <span className="shrink-0 text-xs text-gray-400">
-              5 mins ago
-            </span>
-          </div>
+                  <span className="shrink-0 text-xs text-gray-400">
+                    {activity.time}
+                  </span>
+                </div>
 
-          <hr />
-
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h3 className="text-sm font-medium text-gray-800">
-                Invitation Accepted
-              </h3>
-
-              <p className="text-xs text-gray-500">
-                An invited user completed registration.
-              </p>
-            </div>
-
-            <span className="shrink-0 text-xs text-gray-400">
-              30 mins ago
-            </span>
-          </div>
-
-          <hr />
-
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h3 className="text-sm font-medium text-gray-800">
-                User Approval Pending
-              </h3>
-
-              <p className="text-xs text-gray-500">
-                A registration request is waiting for approval.
-              </p>
-            </div>
-
-            <span className="shrink-0 text-xs text-gray-400">
-              Today
-            </span>
-          </div>
+                {index <
+                  enterpriseDashboardRecentActivities.length -
+                    1 && <hr />}
+              </div>
+            )
+          )}
         </div>
       </div>
     </DashboardLayout>

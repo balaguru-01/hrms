@@ -12,7 +12,7 @@ import {
   MdSettings,
 } from "react-icons/md";
 
-import { ROUTES } from "../utils/constants/routes";
+import { ROUTES } from "../../utils/constants/routes";
 
 export const enterpriseMenuItems = [
   {
@@ -24,15 +24,13 @@ export const enterpriseMenuItems = [
   {
     title: "Tenant Management",
     icon: MdBusiness,
-    path:
-      ROUTES.ENTERPRISE_TENANT_MANAGEMENT,
+    path: ROUTES.ENTERPRISE_TENANT_MANAGEMENT,
   },
 
   {
     title: "Pending Approvals",
     icon: MdPendingActions,
-    path:
-      ROUTES.ENTERPRISE_USER_PENDING_APPROVALS,
+    path: ROUTES.ENTERPRISE_USER_PENDING_APPROVALS,
   },
 
   {

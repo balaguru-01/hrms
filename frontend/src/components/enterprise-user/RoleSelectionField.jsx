@@ -4,10 +4,6 @@ import {
   useState,
 } from "react";
 
-import {
-  useWatch,
-} from "react-hook-form";
-
 import RoleSelectionDropdown from "./RoleSelectionDropdown";
 
 import {
@@ -40,7 +36,6 @@ const formatRoleName = (
 const RoleSelectionField = ({
   field,
   registration,
-  control,
   formLoading = false,
 }) => {
   const { showToast } =
@@ -48,6 +43,11 @@ const RoleSelectionField = ({
 
   const [roles, setRoles] =
     useState([]);
+
+  const [
+    selectedRole,
+    setSelectedRole,
+  ] = useState(null);
 
   const [
     loadingRoles,
@@ -61,18 +61,6 @@ const RoleSelectionField = ({
 
   const roleSelectorRef =
     useRef(null);
-
-  const selectedRoleId =
-    useWatch({
-      control,
-      name: field.name,
-    });
-
-  const selectedRole =
-    roles.find(
-      (role) =>
-        role._id === selectedRoleId
-    );
 
   useEffect(() => {
     const handleClickOutside = (
@@ -184,6 +172,8 @@ const RoleSelectionField = ({
   const handleRoleSelect = (
     role
   ) => {
+    setSelectedRole(role);
+
     registration?.onChange?.({
       target: {
         name: field.name,

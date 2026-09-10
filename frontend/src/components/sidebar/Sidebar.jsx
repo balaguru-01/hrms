@@ -1,12 +1,12 @@
 import { MdMenu } from "react-icons/md";
+import { NavLink } from "react-router-dom";
 
 import Logo from "../common/Logo";
-import SidebarItem from "./SidebarItem";
-import { enterpriseMenuItems } from "../../config/enterpriseMenuConfig";
 
 const Sidebar = ({
   collapsed,
   setCollapsed,
+  menuItems = [],
 }) => {
   return (
     <aside
@@ -37,13 +37,43 @@ const Sidebar = ({
 
       <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-6">
         <div className="space-y-2">
-          {enterpriseMenuItems.map((item) => (
-            <SidebarItem
-              key={item.title}
-              {...item}
-              collapsed={collapsed}
-            />
-          ))}
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+
+            return (
+              <NavLink
+                key={item.title}
+                to={item.path}
+                end
+                title={
+                  collapsed
+                    ? item.title
+                    : undefined
+                }
+                className={({ isActive }) =>
+                  `flex items-center rounded-xl font-medium transition-all duration-300 ${
+                    collapsed
+                      ? "h-14 justify-center"
+                      : "gap-4 px-4 py-3"
+                  } ${
+                    isActive
+                      ? "bg-green-600 text-white shadow-lg"
+                      : "text-gray-600 hover:bg-green-50 hover:text-green-700"
+                  }`
+                }
+              >
+                <span className="flex items-center justify-center text-2xl">
+                  <Icon />
+                </span>
+
+                {!collapsed && (
+                  <span className="text-[15px]">
+                    {item.title}
+                  </span>
+                )}
+              </NavLink>
+            );
+          })}
         </div>
       </nav>
 

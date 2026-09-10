@@ -24,6 +24,10 @@ import { getUsers } from "../../api/enterpriseUserApi";
 import { useEnterpriseUsers } from "../../context/EnterpriseUserContext";
 import { useToast } from "../../context/ToastContext";
 
+import {
+  enterpriseMenuItems,
+} from "../../config/EnterpriseAdmin/EpAdminSidebarConfig";
+
 const USER_STATUS = {
   ALL: "all",
   ACTIVE: "active",
@@ -326,7 +330,6 @@ const Users = () => {
     ]
   );
 
-  
   useEffect(() => {
     fetchUsers(
       activeStatus,
@@ -338,7 +341,6 @@ const Users = () => {
     fetchUsers,
   ]);
 
-  
   const handleStatusChange = (
     status
   ) => {
@@ -486,9 +488,7 @@ const Users = () => {
     });
   };
 
-  /*
-   * Resolve Quick Actions for each user.
-   */
+  
   const getActionsForUser = useCallback(
     (user) => {
       const actions = [];
@@ -530,13 +530,6 @@ const Users = () => {
     []
   );
 
-  /*
-   * Confirm the selected action.
-   *
-   * The action is awaited first.
-   * The table is refreshed only after the
-   * action successfully completes.
-   */
   const handleConfirmAction =
     async () => {
       if (!confirmation?.user) {
@@ -595,17 +588,11 @@ const Users = () => {
             `${user.firstName} ${user.lastName} has been made inactive.`,
             "success"
           );
-
-          /*
-           * Close confirmation only after
-           * successful action.
-           */
         }
 
         setConfirmation(null);
         setRejectionReason("");
 
-        
         await fetchUsers(
           activeStatus,
           currentPage
@@ -963,6 +950,8 @@ const Users = () => {
     <DashboardLayout
       title="Users"
       subtitle="View and manage users under your enterprise."
+      menuItems={enterpriseMenuItems}
+      profilePath="/enterprise/profile"
     >
       <div className="space-y-5">
         {/* Status Tabs */}

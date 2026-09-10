@@ -1,18 +1,21 @@
 const PrimaryButton = ({
   text,
+  children,
   onClick,
   type = "button",
   disabled = false,
   loading = false,
   icon = null,
+  fullWidth = true,
+  className = "",
 }) => {
   return (
     <button
       type={type}
       disabled={disabled || loading}
       onClick={onClick}
-      className="
-        w-full
+      className={`
+        ${fullWidth ? "w-full" : "w-fit"}
         rounded-xl
         bg-green-700
         py-3
@@ -30,7 +33,9 @@ const PrimaryButton = ({
         justify-center
         items-center
         gap-3
-      "
+
+        ${className}
+      `}
     >
       {loading ? (
         <div
@@ -44,15 +49,19 @@ const PrimaryButton = ({
             animate-spin
           "
         />
+      ) : children ? (
+        children
       ) : (
-        icon && (
-          <span className="flex items-center text-lg">
-            {icon}
-          </span>
-        )
-      )}
+        <>
+          {icon && (
+            <span className="flex items-center text-lg">
+              {icon}
+            </span>
+          )}
 
-      {text}
+          {text}
+        </>
+      )}
     </button>
   );
 };

@@ -1,11 +1,8 @@
-import {
-  MdPeople,
-  MdMailOutline,
-  MdPendingActions,
-  MdCancel,
-} from "react-icons/md";
-
 import DashboardCard from "./DashboardCard";
+
+import {
+  enterpriseDashboardCards,
+} from "../../config/EnterpriseAdmin/EpAdminDashboardConfig";
 
 const DashboardCards = ({
   stats,
@@ -14,6 +11,20 @@ const DashboardCards = ({
   onPendingApprovalsClick,
   onRejectedRequestsClick,
 }) => {
+  const cardActions = {
+    invitationsSent:
+      onInvitationsClick,
+
+    activeUsers:
+      onActiveUsersClick,
+
+    pendingApprovals:
+      onPendingApprovalsClick,
+
+    rejectedRequests:
+      onRejectedRequestsClick,
+  };
+
   return (
     <div
       className="
@@ -24,41 +35,27 @@ const DashboardCards = ({
         xl:grid-cols-4
       "
     >
-      <DashboardCard
-        title="Invitations Sent"
-        value={stats?.invitationsSent ?? 0}
-        subtitle="Waiting for registration"
-        icon={<MdMailOutline />}
-        color="blue"
-        onClick={onInvitationsClick}
-      />
+      {enterpriseDashboardCards.map(
+        (card) => {
+          const Icon = card.icon;
 
-      <DashboardCard
-        title="Active Users"
-        value={stats?.activeUsers ?? 0}
-        subtitle="Currently working users under your enterprise"
-        icon={<MdPeople />}
-        color="green"
-        onClick={onActiveUsersClick}
-      />
-
-      <DashboardCard
-        title="Pending Users"
-        value={stats?.pendingApprovals ?? 0}
-        subtitle="Waiting for a review and action"
-        icon={<MdPendingActions />}
-        color="yellow"
-        onClick={onPendingApprovalsClick}
-      />
-
-      <DashboardCard
-        title="Rejected Users"
-        value={stats?.rejectedRequests ?? 0}
-        subtitle="Rejected user requests"
-        icon={<MdCancel />}
-        color="red"
-        onClick={onRejectedRequestsClick}
-      />
+          return (
+            <DashboardCard
+              key={card.key}
+              title={card.title}
+              value={
+                stats?.[card.key] ?? 0
+              }
+              subtitle={card.subtitle}
+              icon={<Icon />}
+              color={card.color}
+              onClick={
+                cardActions[card.key]
+              }
+            />
+          );
+        }
+      )}
     </div>
   );
 };

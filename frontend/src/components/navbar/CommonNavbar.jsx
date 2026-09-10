@@ -14,13 +14,17 @@ import {
 
 import { useNavigate } from "react-router-dom";
 
+import PrimaryButton from "../buttons/PrimaryButton";
+
 import {
   getStoredUser,
   logout,
   stopTokenExpirationTimer,
 } from "../../utils/auth";
 
-const TopNavbar = () => {
+const CommonNavbar = ({
+  profilePath = "/enterprise/profile",
+}) => {
   const navigate = useNavigate();
 
   const [profileOpen, setProfileOpen] =
@@ -81,6 +85,18 @@ const TopNavbar = () => {
     navigate("/", {
       replace: true,
     });
+  };
+
+  const handleProfileToggle = () => {
+    setProfileOpen(
+      (previous) => !previous
+    );
+  };
+
+  const handleProfileNavigation = () => {
+    setProfileOpen(false);
+
+    navigate(profilePath);
   };
 
   return (
@@ -163,23 +179,22 @@ const TopNavbar = () => {
         "
       >
         {/* Notifications */}
-        <button
-          type="button"
+        <PrimaryButton
+          text=""
           className="
             relative
-            flex
-            h-10
-            w-10
-            shrink-0
-            items-center
-            justify-center
-            rounded-xl
-            border
-            border-gray-200
-            transition
-            hover:bg-gray-50
-            sm:h-11
-            sm:w-11
+            !h-10
+            !w-10
+            !shrink-0
+            !rounded-xl
+            !border
+            !border-gray-200
+            !bg-white
+            !p-0
+            !text-gray-700
+            !hover:bg-gray-50
+            sm:!h-11
+            sm:!w-11
           "
         >
           <MdNotificationsNone
@@ -203,34 +218,30 @@ const TopNavbar = () => {
               sm:top-2
             "
           />
-        </button>
+        </PrimaryButton>
 
         {/* Profile */}
         <div
           ref={profileRef}
           className="relative shrink-0"
         >
-          <button
-            type="button"
-            onClick={() =>
-              setProfileOpen(
-                (previous) => !previous
-              )
-            }
+          <PrimaryButton
+            onClick={handleProfileToggle}
             className="
-              flex
-              items-center
-              gap-2
-              rounded-xl
-              border
-              border-gray-200
-              px-2
-              py-1.5
-              transition
-              hover:bg-gray-50
-              sm:gap-3
-              sm:px-3
-              sm:py-2
+              !flex
+              !w-auto
+              !rounded-xl
+              !border
+              !border-gray-200
+              !bg-white
+              !px-2
+              !py-1.5
+              !text-gray-900
+              !shadow-none
+              !hover:bg-gray-50
+              sm:!gap-3
+              sm:!px-3
+              sm:!py-2
             "
           >
             {/* Avatar */}
@@ -288,7 +299,7 @@ const TopNavbar = () => {
                 }
               `}
             />
-          </button>
+          </PrimaryButton>
 
           {/* Profile Dropdown */}
           {profileOpen && (
@@ -318,51 +329,49 @@ const TopNavbar = () => {
                 </p>
               </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setProfileOpen(false);
-                  navigate(
-                    "/enterprise/profile"
-                  );
-                }}
+              <PrimaryButton
+                text="Profile"
+                icon={<MdPerson />}
+                onClick={
+                  handleProfileNavigation
+                }
                 className="
-                  flex
-                  w-full
-                  items-center
-                  gap-3
-                  px-4
-                  py-3
-                  text-sm
-                  text-gray-700
-                  hover:bg-gray-50
+                  !flex
+                  !w-full
+                  !justify-start
+                  !rounded-none
+                  !border-0
+                  !bg-white
+                  !px-4
+                  !py-3
+                  !text-sm
+                  !font-normal
+                  !text-gray-700
+                  !hover:bg-gray-50
                 "
-              >
-                <MdPerson className="text-lg" />
-                Profile
-              </button>
+              />
 
-              <button
-                type="button"
+              <PrimaryButton
+                text="Logout"
+                icon={<MdLogout />}
                 onClick={handleLogout}
                 className="
-                  flex
-                  w-full
-                  items-center
-                  gap-3
-                  border-t
-                  border-gray-100
-                  px-4
-                  py-3
-                  text-sm
-                  font-medium
-                  text-red-600
-                  hover:bg-red-50
+                  !flex
+                  !w-full
+                  !justify-start
+                  !rounded-none
+                  !border-0
+                  !border-t
+                  !border-gray-100
+                  !bg-white
+                  !px-4
+                  !py-3
+                  !text-sm
+                  !font-medium
+                  !text-red-600
+                  !hover:bg-red-50
                 "
-              >
-                <MdLogout className="text-lg" />
-                Logout
-              </button>
+              />
             </div>
           )}
         </div>
@@ -371,4 +380,4 @@ const TopNavbar = () => {
   );
 };
 
-export default TopNavbar;
+export default CommonNavbar;

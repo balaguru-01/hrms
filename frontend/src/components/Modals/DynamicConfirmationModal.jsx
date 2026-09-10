@@ -1,3 +1,6 @@
+import PrimaryButton from "../buttons/PrimaryButton";
+import SecondaryButton from "../buttons/SecondaryButton";
+
 const DynamicConfirmationModal = ({
   open = false,
 
@@ -38,6 +41,11 @@ const DynamicConfirmationModal = ({
 
     onConfirm?.(inputValue);
   };
+
+  const isConfirmDisabled =
+    showInput &&
+    inputRequired &&
+    !inputValue.trim();
 
   return (
     <div
@@ -215,48 +223,23 @@ const DynamicConfirmationModal = ({
             gap-3
           "
         >
-          <button
+          <SecondaryButton
             type="button"
             onClick={onCancel}
-            className="
-              rounded-lg
-              border
-              border-gray-300
-              px-4
-              py-2.5
-              text-sm
-              font-medium
-              text-gray-700
-              transition
-              hover:bg-gray-50
-            "
+            disabled={false}
           >
             {cancelLabel}
-          </button>
+          </SecondaryButton>
 
-          <button
+          <PrimaryButton
             type="button"
             onClick={handleConfirm}
-            disabled={
-              showInput &&
-              inputRequired &&
-              !inputValue.trim()
-            }
-            className={`
-              rounded-lg
-              px-4
-              py-2.5
-              text-sm
-              font-medium
-              text-white
-              transition
-              disabled:cursor-not-allowed
-              disabled:opacity-50
-              ${confirmClassName}
-            `}
+            disabled={isConfirmDisabled}
+            fullWidth={false}
+            className={`px-4 py-2.5 text-sm ${confirmClassName}`}
           >
             {confirmLabel}
-          </button>
+          </PrimaryButton>
         </div>
       </div>
     </div>

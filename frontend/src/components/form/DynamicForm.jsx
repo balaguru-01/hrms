@@ -27,8 +27,8 @@ const DynamicForm = ({
   twoColumnLayout = false,
 
   submitButtonFullWidth = true,
-  
-  secondaryAction = null,
+
+  buttons = null,
 }) => {
   const {
     control,
@@ -107,8 +107,21 @@ const DynamicForm = ({
     onForgotPassword?.();
   };
 
-  const hasSecondaryAction =
-    Boolean(secondaryAction);
+  const defaultButton = {
+    type: "submit",
+    variant: "primary",
+    disabled: isSubmitDisabled,
+    fullWidth: submitButtonFullWidth,
+    loadingText,
+    text: submitText,
+  };
+
+  const formButtons = Array.isArray(buttons)
+    ? buttons
+    : [defaultButton];
+
+  const hasMultipleButtons =
+    formButtons.length > 1;
 
   return (
     <form
@@ -166,34 +179,81 @@ const DynamicForm = ({
 
       <div
         className={
-          hasSecondaryAction
+          hasMultipleButtons
             ? "mt-6 flex items-center justify-end gap-3"
             : "mt-6 flex justify-center"
         }
       >
-        {secondaryAction}
+        {formButtons.map(
+          (button, index) => {
+            const isSubmitButton =
+              button.type === "submit";
 
-        <FormButton
-          type="submit"
-          loading={isFormLoading}
-          disabled={isSubmitDisabled}
-          fullWidth={
-            hasSecondaryAction
-              ? false
-              : submitButtonFullWidth
+            const buttonLoading =
+              isSubmitButton &&
+              isFormLoading;
+
+            const buttonDisabled =
+              button.disabled !== undefined
+                ? button.disabled ||
+                  (isSubmitButton &&
+                    isSubmitDisabled)
+                : isSubmitButton
+                  ? isSubmitDisabled
+                  : isFormLoading;
+
+            const buttonText =
+              buttonLoading
+                ? button.loadingText ||
+                  loadingText
+                : button.text ||
+                  button.children ||
+                  submitText;
+
+            return (
+              <FormButton
+                key={
+                  button.id ||
+                  `${button.type}-${index}`
+                }
+                type={
+                  button.type ||
+                  "submit"
+                }
+                variant={
+                  button.variant ||
+                  "primary"
+                }
+                loading={
+                  buttonLoading
+                }
+                disabled={
+                  buttonDisabled
+                }
+                fullWidth={
+                  hasMultipleButtons
+                    ? false
+                    : button.fullWidth ??
+                      submitButtonFullWidth
+                }
+                onClick={
+                  button.onClick
+                }
+                className={
+                  hasMultipleButtons
+                    ? "w-fit px-8 py-2.5 text-sm"
+                    : button.fullWidth ===
+                        false ||
+                      !submitButtonFullWidth
+                      ? "w-fit px-8 py-2.5 text-sm"
+                      : ""
+                }
+              >
+                {buttonText}
+              </FormButton>
+            );
           }
-          className={
-            hasSecondaryAction
-              ? "w-fit px-8 py-2.5 text-sm"
-              : submitButtonFullWidth
-                ? ""
-                : "w-fit px-8 py-2.5 text-sm"
-          }
-        >
-          {isFormLoading
-            ? loadingText
-            : submitText}
-        </FormButton>
+        )}
       </div>
     </form>
   );

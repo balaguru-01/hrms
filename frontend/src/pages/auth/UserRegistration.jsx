@@ -21,7 +21,7 @@ import { MdHourglassTop } from "react-icons/md";
 import {
   userRegistrationFields,
   userRegistrationDefaultValues,
-} from "../../config/forms/userRegistration.config";
+} from "../../config/Authentication/UserRegistrationConfig";
 
 import {
   userRegistrationSchema,
@@ -331,10 +331,10 @@ const UserRegistration = () => {
             </p>
 
             <AuthFooter
-                text="Your registration is securely under review."
-                className="mt-4"
-                icon={MdHourglassTop}
-              />
+              text="Your registration is securely under review."
+              className="mt-4"
+              icon={MdHourglassTop}
+            />
           </AuthCard>
         </div>
       </div>

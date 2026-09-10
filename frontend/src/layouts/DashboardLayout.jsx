@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import Sidebar from "../sidebar/Sidebar";
-import TopNavbar from "../navbar/TopNavbar";
+import CommonNavbar from "../navbar/CommonNavbar";
 
 const SIDEBAR_STORAGE_KEY =
   "tenanthub_sidebar_collapsed";
@@ -10,6 +10,7 @@ const DashboardLayout = ({
   children,
   title,
   subtitle,
+  profilePath = "/enterprise/profile",
 }) => {
   const [collapsed, setCollapsed] = useState(() => {
     const savedState =
@@ -38,18 +39,25 @@ const DashboardLayout = ({
   };
 
   return (
-    <div className="fixed inset-0 flex h-screen w-screen overflow-hidden overscroll-none bg-gray-100">
+    <div className="fixed inset-0 flex h-screen w-screen overflow-hidden bg-gray-100">
+      {/* Sidebar */}
       <Sidebar
         collapsed={collapsed}
         setCollapsed={handleSidebarToggle}
       />
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <div className="shrink-0">
-          <TopNavbar />
+      {/* Right side of dashboard */}
+      <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
+
+       
+        <div className="absolute inset-x-0 top-0 z-50 h-20">
+          <CommonNavbar
+            profilePath={profilePath}
+          />
         </div>
 
-        <main className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-4 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-6">
+        {/* Scrollable Main Content */}
+        <main className="absolute inset-0 overflow-x-hidden overflow-y-auto overscroll-contain px-4 pb-5 pt-24 sm:px-5 sm:pb-5 sm:pt-24 lg:px-6 lg:pb-6 lg:pt-28">
           <div className="mb-5 sm:mb-6">
             <h1 className="text-xl font-bold tracking-tight text-gray-900 sm:text-2xl lg:text-3xl">
               {title}

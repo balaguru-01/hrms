@@ -52,6 +52,10 @@ const DynamicDetailsModal = ({
     return value;
   };
 
+  const fullName =
+    data?.fullName ||
+    `${data?.firstName || ""} ${data?.lastName || ""}`.trim();
+
   return (
     <div
       className="
@@ -155,6 +159,14 @@ const DynamicDetailsModal = ({
               >
                 {avatar}
               </div>
+
+              {fullName && (
+                <div className="min-w-0">
+                  <p className="truncate text-base font-semibold text-gray-900">
+                    {fullName}
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -200,17 +212,11 @@ const DynamicDetailsModal = ({
                           ? "capitalize"
                           : ""
                       }
-                      ${
-                        field.className || ""
-                      }
+                      ${field.className || ""}
                     `}
                   >
-                    {typeof field.render ===
-                    "function"
-                      ? field.render(
-                          value,
-                          data
-                        )
+                    {typeof field.render === "function"
+                      ? field.render(value, data)
                       : value}
                   </p>
                 </div>

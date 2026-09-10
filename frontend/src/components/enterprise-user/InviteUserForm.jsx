@@ -5,12 +5,11 @@ import {
 import { MdClose } from "react-icons/md";
 
 import DynamicForm from "../form/DynamicForm";
-import SecondaryButton from "../buttons/SecondaryButton";
 
 import {
   inviteUserFields,
   inviteUserDefaultValues,
-} from "../../config/forms/inviteUser.config";
+} from "../../config/EnterpriseAdmin/EpAdminInviteUserConfig";
 
 import {
   inviteUserSchema,
@@ -135,15 +134,6 @@ const InviteUserForm = ({
             }
             twoColumnLayout={false}
             submitButtonFullWidth={false}
-            secondaryAction={
-              <SecondaryButton
-                type="button"
-                onClick={onCancel}
-                disabled={loading}
-              >
-                Cancel
-              </SecondaryButton>
-            }
             className="invite-user-form"
           />
         </div>
