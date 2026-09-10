@@ -18,75 +18,123 @@ const userRegistrationService = async ({
     email,
     password,
     phone,
-    location
+    location,
 }) => {
-
-    //checking token exists
-
-    if(!token){
-        const error = new Error("Invalid token");
+    // Checking token exists
+    if (!token) {
+        const error = new Error("Invalid request");
         error.auditReason = "Invitation Token not found";
         error.statusCode = 404;
         throw error;
     }
 
-    
-    //  Verifying invitation token
-    
+    // Verifying invitation token
     const tokenPayload = verifyToken(token);
 
-    if(!tokenPayload){
-        const error = new Error("Invalid token");
-        error.auditReason = "Token Payloads not found";
-        error.statusCode = 404;
+    if (!tokenPayload) {
+        const error = new Error("Invalid request");
+        error.auditReason = "Token payload not found";
+        error.statusCode = 400;
         throw error;
     }
 
     // Check token purpose
     if (tokenPayload.purpose !== "UserRegistration") {
-        const error = new Error("Invalid token");
-        error.auditReason = " Invalid Invitation Token";
+        const error = new Error("Invalid request");
+        error.auditReason = "Invalid invitation token";
         error.statusCode = 400;
         throw error;
     }
 
-
-    
     // Validate submitted user details
-    
     validateUserCreation({
         firstName,
         lastName,
         email,
         password,
         phone,
-        location
+        location,
     });
 
-    
-    //  Verify email against token
-    
+    // Normalize email
     const normalizedEmail = email.trim().toLowerCase();
 
+    // Verify email against token
     if (normalizedEmail !== tokenPayload.email) {
         const error = new Error("Invalid data");
-        error.auditReason = "Email does not match the invitation";
+        error.auditReason =
+            "Email does not match the invitation";
         error.statusCode = 400;
         throw error;
     }
 
+    /*
+     * Find the invited user.
+     */
+    const invitedUser = await User.findOne({
+        email: normalizedEmail,
+        isDeleted: false,
+    })
+        .select("+invitationToken")
+        .lean();
 
-    //  Get role from token
+    // User must already exist because invitation creates the user
+    if (!invitedUser) {
+        const error = new Error("Invalid request");
+        error.auditReason =
+            "No invited user was found for this email";
+        error.statusCode = 404;
+        throw error;
+    }
 
-    if (!tokenPayload.role || !tokenPayload.role.roleId ||
-        !tokenPayload.role.name || ! mongoose.Types.ObjectId.isValid(tokenPayload.role.roleId))
-    {
+    // User must currently be in Invited status
+    if (invitedUser.status !== "Invited") {
+        const error = new Error("Invalid request");
+        error.auditReason =
+            `User cannot complete registration because current status is ${invitedUser.status}`;
+        error.statusCode = 409;
+        throw error;
+    }
+
+    // Verify submitted token against stored invitation token
+    if (
+        !invitedUser.invitationToken ||
+        invitedUser.invitationToken !== token
+    ) {
+        const error = new Error("Invalid request");
+        error.auditReason =
+            "Invitation token does not match the stored token";
+        error.statusCode = 400;
+        throw error;
+    }
+
+    // Verify invitation expiry stored in database
+    if (
+        !invitedUser.invitationTokenExpiresAt ||
+        new Date(invitedUser.invitationTokenExpiresAt) <=
+            new Date()
+    ) {
+        const error = new Error("Invalid request");
+        error.auditReason = "Invitation token has expired";
+        error.statusCode = 401;
+        throw error;
+    }
+
+    // Get role from token
+    if (
+        !tokenPayload.role ||
+        !tokenPayload.role.roleId ||
+        !tokenPayload.role.name ||
+        !mongoose.Types.ObjectId.isValid(
+            tokenPayload.role.roleId
+        )
+    ) {
         const error = new Error("Invalid data");
-        error.auditReason = "Invalid role information in invitation"
+        error.auditReason =
+            "Invalid role information in invitation";
         error.statusCode = 400;
         throw error;
     }
-
 
     const userRole = await Role.findOne({
         _id: tokenPayload.role.roleId,
@@ -95,68 +143,97 @@ const userRegistrationService = async ({
         isDeleted: false,
     }).lean();
 
-
     if (!userRole) {
-        const error = new Error("Resource not found");
-        error.auditReason = "The invited role is no longer available";
+        const error = new Error("Invalid data");
+        error.auditReason =
+            "The invited role is no longer available";
         error.statusCode = 404;
         throw error;
     }
 
-    // Validate the designation from invitation
-
-    if(! tokenPayload.designation || tokenPayload.designation.trim() === ""){
+    // Validate the role stored in the invited User
+    if (
+        !invitedUser.role ||
+        !invitedUser.role.roleId ||
+        !invitedUser.role.name ||
+        invitedUser.role.roleId.toString() !==
+            userRole._id.toString() ||
+        invitedUser.role.name !== userRole.name
+    ) {
         const error = new Error("Invalid data");
-        error.auditReason = "Invalid designation"
+        error.auditReason =
+            "Stored user role does not match the invitation";
         error.statusCode = 400;
         throw error;
     }
 
-
-    const normalizedDesignation = tokenPayload.designation.trim();
-
-    // Validate inviter information from token
-
+    // Validate designation from invitation
     if (
-        !tokenPayload.invitedBy || !tokenPayload.invitedBy.userId ||
-        !tokenPayload.invitedBy.name || !tokenPayload.invitedBy.role ||
-        !mongoose.Types.ObjectId.isValid(tokenPayload.invitedBy.userId)
+        !tokenPayload.designation ||
+        tokenPayload.designation.trim() === ""
     ) {
         const error = new Error("Invalid data");
-        error.auditReason = "Invalid inviter information in invitation";
+        error.auditReason = "Invalid designation";
+        error.statusCode = 400;
+        throw error;
+    }
+
+    const normalizedDesignation =
+        tokenPayload.designation.trim();
+
+    // Validate designation stored in invited User
+    if (
+        invitedUser.designation !==
+        normalizedDesignation
+    ) {
+        const error = new Error("Invalid data");
+        error.auditReason =
+            "Stored designation does not match the invitation";
+        error.statusCode = 400;
+        throw error;
+    }
+
+    // Validate inviter information from token
+    if (
+        !tokenPayload.invitedBy ||
+        !tokenPayload.invitedBy.userId ||
+        !tokenPayload.invitedBy.name ||
+        !tokenPayload.invitedBy.role ||
+        !mongoose.Types.ObjectId.isValid(
+            tokenPayload.invitedBy.userId
+        )
+    ) {
+        const error = new Error("Invalid data");
+        error.auditReason =
+            "Invalid inviter information in invitation";
         error.statusCode = 400;
         throw error;
     }
 
     const inviter = await User.findOne({
-        _id : tokenPayload.invitedBy.userId,
-        isActive : true,
-        isDeleted : false,
-    })
+        _id: tokenPayload.invitedBy.userId,
+        isActive: true,
+        isDeleted: false,
+    });
 
-     if (!inviter) {
-            const error = new Error("Resource not found");
-            error.auditReason = "Unable to find the inviter";
-            error.statusCode = 404;
-            throw error;
-        }
+    if (!inviter) {
+        const error = new Error("Invalid data");
+        error.auditReason = "Unable to find the inviter";
+        error.statusCode = 404;
+        throw error;
+    }
 
-
-
-    //  Get tenant informations from token
-    
-
+    // Get tenant information from token
     let userTenant = null;
 
     if (tokenPayload.tenant) {
-
         if (!tokenPayload.tenant.tenantId) {
             const error = new Error("Invalid data");
-            error.auditReason = "Invalid tenant information in invitation";
+            error.auditReason =
+                "Invalid tenant information in invitation";
             error.statusCode = 400;
             throw error;
         }
-
 
         const tenant = await Tenant.findOne({
             _id: tokenPayload.tenant.tenantId,
@@ -164,14 +241,12 @@ const userRegistrationService = async ({
             isActive: true,
         }).lean();
 
-
         if (!tenant) {
-            const error = new Error("Resource not found");
+            const error = new Error("Invalid data");
             error.auditReason = "Tenant not found";
             error.statusCode = 404;
             throw error;
         }
-
 
         userTenant = {
             tenantId: tenant._id,
@@ -180,121 +255,147 @@ const userRegistrationService = async ({
         };
     }
 
-    // Check duplicate email
-
-    const existingEmail = await User.findOne({
-        email: normalizedEmail,
-        isDeleted: false
-    });
-
-
-    if (existingEmail) {
-        const error = new Error("Invalid data");
-        error.auditReason = "User already exists";
-        error.statusCode = 409;
-        throw error;
+    // Validate tenant against the invited User
+    if (userTenant) {
+        if (
+            !invitedUser.tenant ||
+            !invitedUser.tenant.tenantId ||
+            invitedUser.tenant.tenantId.toString() !==
+                userTenant.tenantId.toString()
+        ) {
+            const error = new Error("Invalid data");
+            error.auditReason =
+                "Stored tenant does not match the invitation";
+            error.statusCode = 400;
+            throw error;
+        }
     }
 
-    
     // Check duplicate phone
-
     const existingPhone = await User.findOne({
-        phone : phone.trim(),
-        isDeleted: false
-    });
-
+        phone: phone.trim(),
+        isDeleted: false,
+        _id: {
+            $ne: invitedUser._id,
+        },
+    }).lean();
 
     if (existingPhone) {
         const error = new Error("Invalid data");
-        error.auditReason = "Phone number already exists";
+        error.auditReason =
+            "Phone number already exists";
         error.statusCode = 409;
         throw error;
     }
 
-    //Avatar Generator
-    const avatarUrl = generateAvatarUrl(firstName,lastName);
+    // Avatar Generator
+    const avatarUrl = generateAvatarUrl(
+        firstName,
+        lastName
+    );
 
-    if(!avatarUrl || avatarUrl.trim()=== "" ){
+    if (!avatarUrl || avatarUrl.trim() === "") {
         const error = new Error("Invalid data");
-        error.auditReason = "Not able to create avatar";
+        error.auditReason =
+            "Not able to create avatar";
         error.statusCode = 400;
         throw error;
     }
 
-
     // Hash password
+    const hashedPassword = await bcrypt.hash(
+        password.trim(),
+        10
+    );
 
-    const hashedPassword = await bcrypt.hash(password.trim(), 10);
-
-    //  Start transaction
-    
+    // Start transaction
     const session = await mongoose.startSession();
 
-
     try {
-
         session.startTransaction();
-    
-        // Creating user
-        
-        const [newUser] = await User.create(
-            [
+
+        /*
+         * Update the existing invited User.
+         */
+        const registeredUser =
+            await User.findOneAndUpdate(
                 {
-                    tenant: userTenant,
-
-                    firstName: firstName.trim(),
-
-                    lastName: lastName.trim(),
-
+                    _id: invitedUser._id,
                     email: normalizedEmail,
-
-                    password: hashedPassword,
-
-                    phone: phone.trim(),
-
-                    location: location?.trim() || null,
-
-                    profilePicture : avatarUrl.trim(),
-
-                    role: {
-                        roleId: userRole._id,
-                        name: userRole.name,
+                    status: "Invited",
+                    invitationToken: token,
+                    invitationTokenExpiresAt: {
+                        $gt: new Date(),
                     },
-
-                    designation: normalizedDesignation,
-
-                    status: "Pending",
-
-                    isActive: false,
-
                     isDeleted: false,
+                },
+                {
+                    $set: {
+                        firstName: firstName.trim(),
+                        lastName: lastName.trim(),
+                        password: hashedPassword,
+                        phone: phone.trim(),
+                        location:
+                            location?.trim() || null,
+                        profilePicture:
+                            avatarUrl.trim(),
 
-                    // User was created automatically by the system
-                    // after invitation registration.
-                    createdBy: {
-                        userId: null,
-                        name: "System",
-                        role: "System",
+                        status: "Pending",
+                        isActive: false,
+
+                        updatedBy: {
+                            userId: null,
+                            name: "System",
+                            role: "System",
+                        },
                     },
 
-                    updatedBy: {
-                        userId: null,
-                        name: null,
-                        role: null,
+                    /*
+                     * Clear invitation token after
+                     * successful registration.
+                     */
+                    $unset: {
+                        invitationToken: "",
+                        invitationTokenExpiresAt: "",
                     },
                 },
-            ],
-            { session }
-        );
+                {
+                    new: true,
+                    session,
+                }
+            );
 
+       
+        if (!registeredUser) {
+            const error = new Error("Invalid data");
+            error.auditReason =
+                "Invitation is no longer valid";
+            error.statusCode = 409;
+            throw error;
+        }
 
-    
-        //  Create audit log
-        
+        // Create audit log
         await AuditLog.create(
             [
                 {
-                    tenant: userTenant,
+                    /*
+                     * Only add tenant information when
+                     * the registered user actually belongs
+                     * to a tenant.
+                     */
+                    ...(registeredUser.tenant?.tenantId && {
+                        tenant: {
+                            tenantId:
+                                registeredUser.tenant
+                                    .tenantId,
+                            orgName:
+                                registeredUser.tenant
+                                    .orgName,
+                            email:
+                                registeredUser.tenant
+                                    .email,
+                        },
+                    }),
 
                     performedBy: {
                         userId: null,
@@ -309,29 +410,80 @@ const userRegistrationService = async ({
 
                     relatedTo: {
                         module: "User",
-                        referenceId: newUser._id,
-                        title: `${newUser.firstName} ${newUser.lastName}`,
+                        referenceId:
+                            registeredUser._id,
+                        title: `${registeredUser.firstName} ${registeredUser.lastName}`,
                     },
 
                     changes: {
-                        oldData: null,
+                        oldData: {
+                            firstName:
+                                invitedUser.firstName ||
+                                null,
+
+                            lastName:
+                                invitedUser.lastName ||
+                                null,
+
+                            email:
+                                invitedUser.email,
+
+                            phone:
+                                invitedUser.phone ||
+                                null,
+
+                            role:
+                                invitedUser.role?.name,
+
+                            location:
+                                invitedUser.location ||
+                                null,
+
+                            designation:
+                                invitedUser.designation,
+
+                            status:
+                                invitedUser.status,
+
+                            isActive:
+                                invitedUser.isActive,
+                        },
 
                         newData: {
-                            firstName: newUser.firstName,
-                            lastName: newUser.lastName,
-                            email: newUser.email,
-                            phone: newUser.phone,
-                            role: newUser.role.name,
-                            location: newUser.location,
-                            designation: newUser.designation,
-                            profilePicture: newUser.profilePicture,
-                            status: newUser.status,
-                            isActive: newUser.isActive,
+                            firstName:
+                                registeredUser.firstName,
+
+                            lastName:
+                                registeredUser.lastName,
+
+                            email:
+                                registeredUser.email,
+
+                            phone:
+                                registeredUser.phone,
+
+                            role:
+                                registeredUser.role.name,
+
+                            location:
+                                registeredUser.location,
+
+                            designation:
+                                registeredUser.designation,
+
+                            profilePicture:
+                                registeredUser.profilePicture,
+
+                            status:
+                                registeredUser.status,
+
+                            isActive:
+                                registeredUser.isActive,
                         },
                     },
 
                     description:
-                        `User registration submitted for ${newUser.role.name}. Account is pending approval.`,
+                        `User registration submitted for ${registeredUser.role.name}. Account is pending approval.`,
 
                     status: "Success",
 
@@ -344,83 +496,81 @@ const userRegistrationService = async ({
         );
 
         // Create notification for inviter
-
-        await Notification.create(
-            [
-                {
-                    tenant: userTenant,
-
-                    sender: {
-                        userId: null,
-                        name: "System",
-                        role: "System",
-                        designation: null,
-                    },
-
-                    recipient: {
-                        userId: inviter._id,
-                        name: `${inviter.firstName} ${inviter.lastName}`,
-                        role: inviter.role.name,
-                        designation: inviter.designation || null,
-                    },
-
-                    title: "New User Registration",
-
-                    message:
-                        `${newUser.firstName} ${newUser.lastName} has submitted a registration request and is waiting for your approval.`,
-
-                    notificationType: "User",
-
-                    relatedTo: {
-                        module: "User",
-                        referenceId: newUser._id,
-                        title: `${newUser.firstName} ${newUser.lastName}`,
-                    },
-
-                    isRead: false,
-
-                    isActive: true,
-                    isDeleted: false,
+await Notification.create(
+    [
+        {
+            ...(registeredUser.tenant?.tenantId && {
+                tenant: {
+                    tenantId:
+                        registeredUser.tenant.tenantId,
+                    orgName:
+                        registeredUser.tenant.orgName,
+                    email:
+                        registeredUser.tenant.email,
                 },
-            ],
-            { session }
-        );
+            }),
 
+            sender: {
+                userId: null,
+                name: "System",
+                role: "System",
+                designation: null,
+            },
 
-        
+            recipient: {
+                userId: inviter._id,
+                name: `${inviter.firstName} ${inviter.lastName}`,
+                role: inviter.role.name,
+                designation:
+                    inviter.designation || null,
+            },
+
+            title: "New User Registration",
+
+            message:
+                `${registeredUser.firstName} ${registeredUser.lastName} has submitted a registration request and is waiting for your approval.`,
+
+            notificationType: "User",
+
+            relatedTo: {
+                module: "User",
+                referenceId: registeredUser._id,
+                title: `${registeredUser.firstName} ${registeredUser.lastName}`,
+            },
+
+            isRead: false,
+
+            isActive: true,
+
+            isDeleted: false,
+        },
+    ],
+    { session }
+);
+
         // Commit transaction
-        
         await session.commitTransaction();
 
-
         return {
-            userId: newUser._id,
-            firstName: newUser.firstName,
-            lastName: newUser.lastName,
-            email: newUser.email,
-            phone: newUser.phone,
-            role: newUser.role,
-            tenant: newUser.tenant,
-            status: newUser.status,
-            isActive: newUser.isActive,
+            userId: registeredUser._id,
+            firstName: registeredUser.firstName,
+            lastName: registeredUser.lastName,
+            email: registeredUser.email,
+            phone: registeredUser.phone,
+            role: registeredUser.role,
+            tenant: registeredUser.tenant,
+            status: registeredUser.status,
+            isActive: registeredUser.isActive,
             invitedBy: tokenPayload.invitedBy,
         };
-
-    } 
-    catch (error) {
-
+    } catch (error) {
         // Rollback transaction
         await session.abortTransaction();
         throw error;
-
-    } 
-
-    finally {
-
+    } finally {
         // End session
         await session.endSession();
     }
 };
-
 
 export default userRegistrationService;

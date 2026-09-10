@@ -25,13 +25,11 @@ const userSchema = new mongoose.Schema(
         // Basic User Information
         firstName: {
             type: String,
-            required: true,
             trim: true,
         },
 
         lastName: {
             type: String,
-            required: true,
             trim: true,
         },
 
@@ -45,13 +43,11 @@ const userSchema = new mongoose.Schema(
 
         password: {
             type: String,
-            required: true,
             select: false,
         },
 
         phone: {
             type: String,
-            required: true,
             trim: true,
         },
 
@@ -187,9 +183,12 @@ const userSchema = new mongoose.Schema(
         status: {
             type: String,
             enum: [
+                "Invited",
                 "Active",
                 "Inactive",
                 "Pending",
+                "Rejected",
+                "Deleted",
                 "Resigned",
                 "Suspended",
             ],
@@ -204,6 +203,18 @@ const userSchema = new mongoose.Schema(
         isDeleted: {
             type: Boolean,
             default: false,
+        },
+
+        // Invitation Tracking
+        invitationToken: {
+            type: String,
+            default: null,
+            select: false,
+        },
+
+        invitationTokenExpiresAt: {
+            type: Date,
+            default: null,
         },
 
         // Authentication Tracking
@@ -237,14 +248,26 @@ const userSchema = new mongoose.Schema(
             unique: true,
         }
     );
-    // Unique phone for every user
+
+    // Unique phone only when a phone number exists
     userSchema.index(
         {
             phone: 1,
         },
         {
             unique: true,
+            partialFilterExpression: {
+                phone: {
+                    $type: "string",
+                },
+            },
         }
     );
+
+    // Helps the scheduled cleanup job find expired invitations
+    userSchema.index({
+        status: 1,
+        invitationTokenExpiresAt: 1,
+    });
 
 export default mongoose.model("User", userSchema);
