@@ -375,8 +375,7 @@ const sendUserInvitationService = async ({
         }
 
         /*
-         * Send invitation email only after the User record
-         * contains the generated token.
+         * Send invitation email only after the User contains token.
          */
         await userInvitationEmail(
             normalizedEmail,
@@ -442,9 +441,6 @@ const sendUserInvitationService = async ({
         /*
          * If email sending or any operation after User creation/update
          * fails, restore the database state.
-         *
-         * New invited user -> remove it.
-         * Existing expired invitation -> restore old invitation data.
          */
         try {
             if (createdNewUser && invitedUser?._id) {

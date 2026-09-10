@@ -70,9 +70,6 @@ const userRegistrationService = async ({
 
     /*
      * Find the invited user.
-     *
-     * invitationToken is select:false in User schema,
-     * so we explicitly select it here.
      */
     const invitedUser = await User.findOne({
         email: normalizedEmail,
@@ -368,10 +365,7 @@ const userRegistrationService = async ({
                 }
             );
 
-        /*
-         * If no document was updated, something changed
-         * between validation and update.
-         */
+       
         if (!registeredUser) {
             const error = new Error("Invalid data");
             error.auditReason =

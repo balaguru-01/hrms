@@ -47,11 +47,6 @@ export const getSentInvitationsService = async ({
 
     /*
      * Fetch users who are currently in Invited status
-     * and were invited by the logged-in user.
-     *
-     * There is no separate Invitation model.
-     * Invitation information is stored directly
-     * inside the User document.
      */
     const invitationQuery = {
         "createdBy.userId": invitedBy.userId,
@@ -60,10 +55,7 @@ export const getSentInvitationsService = async ({
     };
 
     /*
-     * Get total number of invitations.
-     *
-     * This is required to calculate the total
-     * number of pages for server-side pagination.
+     * Get total number of invitations for server-side pagination.
      */
     const totalInvitations =
         await User.countDocuments(
@@ -75,10 +67,7 @@ export const getSentInvitationsService = async ({
             totalInvitations / pageSize
         );
 
-    /*
-     * Calculate how many documents should be
-     * skipped for the requested page.
-     */
+    
     const skip =
         (currentPage - 1) * pageSize;
 
@@ -102,9 +91,6 @@ export const getSentInvitationsService = async ({
     /*
      * Convert User documents into invitation
      * response objects.
-     *
-     * The frontend does not need the actual
-     * invitation token.
      */
     const sentInvitations =
         invitations.map(
