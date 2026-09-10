@@ -17,6 +17,10 @@ import DynamicConfirmationModal from "../../components/Modals/DynamicConfirmatio
 import { useEnterpriseUsers } from "../../context/EnterpriseUserContext";
 import { useToast } from "../../context/ToastContext";
 
+import {
+  enterpriseMenuItems,
+} from "../../config/EnterpriseAdmin/EpAdminSidebarConfig";
+
 const PAGE_SIZE_OPTIONS = [10, 20, 30, 50];
 
 const CONFIRMATION_CONFIG = {
@@ -218,7 +222,6 @@ const InvitationsSent = () => {
       }
 
       try {
-
         showToast(
           "Invitation resend will be processed.",
           "success"
@@ -459,20 +462,13 @@ const InvitationsSent = () => {
       ?.pageSize || 10;
 
   return (
-    <DashboardLayout>
+    <DashboardLayout
+      title="Invitations Sent"
+      subtitle="View and manage invitations sent to users."
+      menuItems={enterpriseMenuItems}
+      profilePath="/enterprise/profile"
+    >
       <div className="space-y-6">
-        {/* Page Header */}
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-800">
-            Invitations Sent
-          </h1>
-
-          <p className="mt-1 text-sm text-gray-500">
-            View and manage invitations sent
-            to users.
-          </p>
-        </div>
-
         {/* Table */}
         <DynamicTable
           columns={columns}
