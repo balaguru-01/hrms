@@ -85,12 +85,12 @@ function AppRoutes() {
             element={<EnterpriseDashboard />}
           />
 
-          <Route
-            path={
-              ROUTES.ENTERPRISE_TENANT_MANAGEMENT
-            }
-            element={<TenantManagement />}
-          />
+        <Route
+          path={
+            ROUTES.ENTERPRISE_TENANT_MANAGEMENT
+          }
+          element={<TenantManagement />}
+        />
 
           <Route
             path={ROUTES.ENTERPRISE_USERS}
@@ -106,9 +106,6 @@ function AppRoutes() {
           />
         </Route>
       </Route>
-
-      {/* Super Admin routes */}
-
       <Route
         element={
           <ProtectedRoute
@@ -125,8 +122,6 @@ function AppRoutes() {
           element={<SuperAdminDashboard />}
         />
       </Route>
-
-      {/* Fallback */}
 
       <Route
         path="*"
