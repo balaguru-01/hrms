@@ -30,10 +30,6 @@ const PAGE_SIZE_OPTIONS = [
 
 /*
  * Confirmation visual configuration.
- *
- * The page owns the action's visual meaning.
- * DynamicConfirmationModal only renders the
- * configuration it receives.
  */
 const CONFIRMATION_CONFIG = {
   remove: {
