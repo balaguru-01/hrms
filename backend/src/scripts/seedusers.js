@@ -9,7 +9,6 @@ import connectDB from "../config/database.js";
 import User from "../models/User.js";
 import Role from "../models/Role.js";
 import Tenant from "../models/Tenant.js";
-import Department from "../models/Department.js";
 
 
 const seedUsers = async () => {
@@ -25,7 +24,6 @@ const seedUsers = async () => {
         console.log("Database connected. Creating users...");
 
 
-
         // Fetch Roles
 
         const superAdminRole = await Role.findOne({
@@ -38,35 +36,40 @@ const seedUsers = async () => {
         });
 
 
+        const enterpriseUserRole = await Role.findOne({
+            name: "EnterpriseUser"
+        });
+
+
+        const tenantSuperAdminRole = await Role.findOne({
+            name: "TenantSuperAdmin"
+        });
+
+
         const tenantAdminRole = await Role.findOne({
             name: "TenantAdmin"
         });
-        const hrRole = await Role.findOne({
-            name: "HR"
-        });
-         const managerRole = await Role.findOne({
-            name: "Manager"
-        });
-         const employeeRole = await Role.findOne({
-            name: "Employee"
+
+
+        const tenantUserRole = await Role.findOne({
+            name: "TenantUser"
         });
 
-        
 
-
-
-        if(
+        if (
             !superAdminRole ||
             !enterpriseAdminRole ||
-            !tenantAdminRole
-        ){
+            !enterpriseUserRole ||
+            !tenantSuperAdminRole ||
+            !tenantAdminRole ||
+            !tenantUserRole
+        ) {
 
             throw new Error(
                 "Required roles not found. Seed roles first."
             );
 
         }
-
 
 
         // Fetch Tenant
@@ -76,8 +79,7 @@ const seedUsers = async () => {
         });
 
 
-
-        if(!tenant){
+        if (!tenant) {
 
             throw new Error(
                 "Tenant not found. Seed tenant first."
@@ -86,24 +88,7 @@ const seedUsers = async () => {
         }
 
 
-
-        // Fetch Departments
-
-        const hrDepartment = await Department.findOne({
-            departmentCode:"HR"
-        });
-
-
-        const itDepartment = await Department.findOne({
-            departmentCode:"IT"
-        });
-
-
-        const operationsDepartment = await Department.findOne({
-            departmentCode:"OPS"
-        });
-
-
+        // Prepare Password
 
         const password =
             await bcrypt.hash(
@@ -112,262 +97,226 @@ const seedUsers = async () => {
             );
 
 
+        // Users
 
         const users = [
 
             // Super Admin
 
             {
-                firstName:"System",
-                lastName:"Admin",
-                email:"superadmin@tenanthub.com",
+                firstName: "System",
+                lastName: "Admin",
+                email: "superadmin@tenanthub.com",
                 password,
-                phone:"9000000001",
+                phone: "9000000001",
 
-                role:{
+                role: {
                     roleId: superAdminRole._id,
                     name: superAdminRole.name
                 },
 
-                designation:"System Administrator",
+                designation: "System Administrator",
 
-                department:null,
+                department: null,
 
-                tenant:null,
+                tenant: null,
 
+                status: "Active",
+                isActive: true,
 
-                status:"Active",
-                isActive:true,
-
-
-                createdBy:{
-                    userId:null,
-                    name:"TenantHub System",
-                    role:"SuperAdmin"
+                createdBy: {
+                    userId: null,
+                    name: "TenantHub System",
+                    role: "SuperAdmin"
                 }
             },
-
 
 
             // Enterprise Admin
 
             {
-                firstName:"Enterprise",
-                lastName:"Admin",
-                email:"enterpriseadmin@tenanthub.com",
+                firstName: "Enterprise",
+                lastName: "Admin",
+                email: "enterpriseadmin@tenanthub.com",
                 password,
-                phone:"9000000002",
+                phone: "9000000002",
 
-                role:{
+                role: {
                     roleId: enterpriseAdminRole._id,
                     name: enterpriseAdminRole.name
                 },
 
-                designation:"Enterprise Administrator",
+                designation: "Enterprise Administrator",
 
-                department:null,
+                department: null,
 
-                tenant:null,
+                tenant: null,
 
+                status: "Active",
+                isActive: true,
 
-                status:"Active",
-                isActive:true,
-
-
-                createdBy:{
-                    userId:null,
-                    name:"TenantHub System",
-                    role:"SuperAdmin"
+                createdBy: {
+                    userId: null,
+                    name: "TenantHub System",
+                    role: "SuperAdmin"
                 }
             },
 
+
+            // Enterprise User
+
+            {
+                firstName: "Enterprise",
+                lastName: "User",
+                email: "enterpriseuser@tenanthub.com",
+                password,
+                phone: "9000000003",
+
+                role: {
+                    roleId: enterpriseUserRole._id,
+                    name: enterpriseUserRole.name
+                },
+
+                designation: "Enterprise User",
+
+                department: null,
+
+                tenant: null,
+
+                status: "Active",
+                isActive: true,
+
+                createdBy: {
+                    userId: null,
+                    name: "Enterprise Admin",
+                    role: "EnterpriseAdmin"
+                }
+            },
+
+
+            // Tenant Super Admin
+
+            {
+                firstName: "Tenant",
+                lastName: "SuperAdmin",
+                email: "tenantsuperadmin@seosaph.com",
+                password,
+                phone: "9000000004",
+
+                tenant: {
+                    tenantId: tenant._id,
+                    orgName: tenant.orgName,
+                    email: tenant.email
+                },
+
+                role: {
+                    roleId: tenantSuperAdminRole._id,
+                    name: tenantSuperAdminRole.name
+                },
+
+                designation: "Tenant Super Administrator",
+
+                department: null,
+
+                status: "Active",
+                isActive: true,
+
+                createdBy: {
+                    userId: null,
+                    name: "Enterprise Admin",
+                    role: "EnterpriseAdmin"
+                }
+            },
 
 
             // Tenant Admin
 
             {
-                firstName:"Tenant",
-                lastName:"Admin",
-                email:"tenantadmin@seosaph.com",
+                firstName: "Tenant",
+                lastName: "Admin",
+                email: "tenantadmin@seosaph.com",
                 password,
-                phone:"9000000003",
+                phone: "9000000005",
 
-                tenant:{
-                    tenantId:tenant._id,
-                    orgName:tenant.orgName,
-                    email:tenant.email
+                tenant: {
+                    tenantId: tenant._id,
+                    orgName: tenant.orgName,
+                    email: tenant.email
                 },
 
-
-            
-                role:{
+                role: {
                     roleId: tenantAdminRole._id,
                     name: tenantAdminRole.name
                 },
 
+                designation: "Tenant Administrator",
 
-                designation:"Tenant Administrator",
+                department: null,
 
-                department:null,
+                status: "Active",
+                isActive: true,
 
-
-                status:"Active",
-                isActive:true,
-
-
-                createdBy:{
-                    userId:null,
-                    name:"Enterprise Admin",
-                    role:"EnterpriseAdmin"
+                createdBy: {
+                    userId: null,
+                    name: "Tenant Super Admin",
+                    role: "TenantSuperAdmin"
                 }
             },
 
 
-            // HR User
+            // Tenant User
 
             {
-                firstName:"HR",
-                lastName:"Manager",
-                email:"hr@seosaph.com",
+                firstName: "Tenant",
+                lastName: "User",
+                email: "tenantuser@seosaph.com",
                 password,
-                phone:"9000000004",
+                phone: "9000000006",
 
-                tenant:{
-                    tenantId:tenant._id,
-                    orgName:tenant.orgName,
-                    email:tenant.email
+                tenant: {
+                    tenantId: tenant._id,
+                    orgName: tenant.orgName,
+                    email: tenant.email
                 },
 
-
-                role:{
-                    roleId:hrRole._id,
-                    name:hrRole.name
+                role: {
+                    roleId: tenantUserRole._id,
+                    name: tenantUserRole.name
                 },
 
+                designation: "Tenant User",
 
-                designation:"HR Manager",
+                department: null,
 
-                department:{
-                    departmentId:hrDepartment._id,
-                    name:hrDepartment.name
-                },
+                status: "Active",
+                isActive: true,
 
-
-                status:"Active",
-                isActive:true,
-
-
-                createdBy:{
-                    userId:null,
-                    name:"Tenant Admin",
-                    role:"TenantAdmin"
-                }
-            },
-
-
-
-            // Manager User
-
-            {
-                firstName:"Operations",
-                lastName:"Manager",
-                email:"manager@seosaph.com",
-                password,
-                phone:"9000000005",
-
-                tenant:{
-                    tenantId:tenant._id,
-                    orgName:tenant.orgName,
-                    email:tenant.email
-                },
-
-
-                 role:{
-                    roleId:managerRole._id,
-                    name:managerRole.name
-                },
-
-
-                designation:"Operations Manager",
-
-
-                department:{
-                    departmentId:operationsDepartment._id,
-                    name:operationsDepartment.name
-                },
-
-
-                status:"Active",
-                isActive:true,
-
-
-                createdBy:{
-                    userId:null,
-                    name:"Tenant Admin",
-                    role:"TenantAdmin"
-                }
-            },
-
-
-
-            // Employee User
-
-            {
-                firstName:"John",
-                lastName:"Employee",
-                email:"employee@seosaph.com",
-                password,
-                phone:"9000000006",
-
-                tenant:{
-                    tenantId:tenant._id,
-                    orgName:tenant.orgName,
-                    email:tenant.email
-                },
-
-
-                role:{
-                    roleId:employeeRole._id,
-                    name:employeeRole.name
-                },
-
-
-                designation:"Software Engineer",
-
-
-                department:{
-                    departmentId:itDepartment._id,
-                    name:itDepartment.name
-                },
-
-
-                status:"Active",
-                isActive:true,
-
-
-                createdBy:{
-                    userId:null,
-                    name:"Manager",
-                    role:"Manager"
+                createdBy: {
+                    userId: null,
+                    name: "Tenant Admin",
+                    role: "TenantAdmin"
                 }
             }
 
         ];
 
 
+        // Create Users
 
-        for(const userData of users){
-
+        for (const userData of users) {
 
             const existingUser = await User.findOne({
-                email:userData.email
+                email: userData.email
             });
 
-            console.log(userData.email, userData.role);
+
+            console.log(
+                userData.email,
+                userData.role
+            );
 
 
-
-            if(existingUser){
+            if (existingUser) {
 
                 console.log(
                     `${userData.email} already exists`
@@ -376,7 +325,6 @@ const seedUsers = async () => {
                 continue;
 
             }
-
 
 
             const user = await User.create(
@@ -391,14 +339,12 @@ const seedUsers = async () => {
         }
 
 
-
         console.log(
             "User seeding completed successfully"
         );
 
 
-    }catch(error){
-
+    } catch (error) {
 
         console.error(
             "User seeding failed:",
@@ -406,8 +352,7 @@ const seedUsers = async () => {
         );
 
 
-    }finally{
-
+    } finally {
 
         await mongoose.connection.close();
 
@@ -419,7 +364,6 @@ const seedUsers = async () => {
     }
 
 };
-
 
 
 seedUsers();

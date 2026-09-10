@@ -4,23 +4,27 @@ import User from "../models/User.js";
 import Role from "../models/Role.js";
 import Tenant from "../models/Tenant.js";
 import AuditLog from "../models/AuditLog.js";
-
 import constants from "../config/constants.js";
 import generateToken from "../utils/tokenGenerator.js";
 import userInvitationEmail from "../utils/mailServices/userInvitationEmail.js";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+const INVITATION_VALIDITY_MS = 24 * 60 * 60 * 1000;
+
 const sendUserInvitationService = async ({
     email,
     roleId,
     orgName = null,
     invitedBy,
-    invitedDesignation
+    invitedDesignation,
 }) => {
-
     // Validate email
-    if (!email || typeof email !== "string" || email.trim() === "") {
+    if (
+        !email ||
+        typeof email !== "string" ||
+        email.trim() === ""
+    ) {
         const error = new Error("Invalid data");
         error.statusCode = 400;
         error.auditReason = "Email is required";
@@ -51,16 +55,25 @@ const sendUserInvitationService = async ({
         throw error;
     }
 
-    //Validate Designation
-
-    if(!invitedDesignation || typeof invitedDesignation !== "string" || invitedDesignation.trim() === ""){
+    // Validate designation
+    if (
+        !invitedDesignation ||
+        typeof invitedDesignation !== "string" ||
+        invitedDesignation.trim() === ""
+    ) {
         const error = new Error("Invalid data");
         error.statusCode = 400;
         error.auditReason = "Designation is required";
         throw error;
     }
 
-    if (invitedDesignation.trim().length < 2 || invitedDesignation.trim().length > 100) {
+    const normalizedDesignation =
+        invitedDesignation.trim();
+
+    if (
+        normalizedDesignation.length < 2 ||
+        normalizedDesignation.length > 100
+    ) {
         const error = new Error("Invalid data");
         error.statusCode = 400;
         error.auditReason =
@@ -102,7 +115,8 @@ const sendUserInvitationService = async ({
     if (!inviterRole) {
         const error = new Error("Request failed");
         error.statusCode = 400;
-        error.auditReason = "Inviting user's role was not found";
+        error.auditReason =
+            "Inviting user's role was not found";
         throw error;
     }
 
@@ -122,7 +136,7 @@ const sendUserInvitationService = async ({
     const tenantLevelRoles = [
         constants.roles.tenantSuperAdmin,
         constants.roles.tenantAdmin,
-        constants.roles.tenantUser
+        constants.roles.tenantUser,
     ];
 
     const requiresTenant = tenantLevelRoles.includes(
@@ -133,10 +147,8 @@ const sendUserInvitationService = async ({
 
     // Determine tenant
     if (requiresTenant) {
-
         // Tenant-level user creating another tenant-level user
         if (inviter.tenant?.tenantId) {
-
             const tenantRecord = await Tenant.findOne({
                 _id: inviter.tenant.tenantId,
                 isActive: true,
@@ -144,7 +156,9 @@ const sendUserInvitationService = async ({
             }).lean();
 
             if (!tenantRecord) {
-                const error = new Error("Resource not found");
+                const error = new Error(
+                    "Resource not found"
+                );
                 error.statusCode = 404;
                 error.auditReason =
                     "Inviting user's organization was not found or is inactive";
@@ -157,11 +171,13 @@ const sendUserInvitationService = async ({
                 email: tenantRecord.email,
             };
         }
-
         // Enterprise-level user creating tenant-level user
         else {
-
-            if (!orgName || orgName.trim() === "") {
+            if (
+                !orgName ||
+                typeof orgName !== "string" ||
+                orgName.trim() === ""
+            ) {
                 const error = new Error("Invalid data");
                 error.statusCode = 400;
                 error.auditReason =
@@ -178,7 +194,9 @@ const sendUserInvitationService = async ({
             }).lean();
 
             if (!tenantRecord) {
-                const error = new Error("Resource not found");
+                const error = new Error(
+                    "Resource not found"
+                );
                 error.statusCode = 404;
                 error.auditReason =
                     "Organization was not found or is inactive";
@@ -193,33 +211,47 @@ const sendUserInvitationService = async ({
         }
     }
 
-    // Global email uniqueness
+    // Find existing user
+    // invitationToken is explicitly selected because it is select:false
     const existingUser = await User.findOne({
         email: normalizedEmail,
         isDeleted: false,
-    }).lean();
+    })
+        .select("+invitationToken")
+        .lean();
 
+    
     if (existingUser) {
-        const error = new Error("Request failed");
-        error.statusCode = 409;
-        error.auditReason =
-            "A user with this email already exists";
-        throw error;
+        if (existingUser.status !== "Invited") {
+            const error = new Error("Request failed");
+            error.statusCode = 409;
+            error.auditReason =
+                `User with email ${normalizedEmail} already exists with status ${existingUser.status}`;
+            throw error;
+        }
+
+        const invitationExpired =
+            !existingUser.invitationTokenExpiresAt ||
+            new Date(existingUser.invitationTokenExpiresAt) <= new Date();
+
+        if (!invitationExpired) {
+            const error = new Error("Request failed");
+            error.statusCode = 409;
+            error.auditReason =
+                "A valid invitation already exists for this email";
+            throw error;
+        }
     }
 
     // Invitation token payload
     const payload = {
         purpose: "UserRegistration",
-
         email: normalizedEmail,
-
         role: {
             roleId: targetRole._id,
             name: targetRole.name,
         },
-
-        designation: invitedDesignation.trim(),
-
+        designation: normalizedDesignation,
         ...(tenant && {
             tenant: {
                 tenantId: tenant.tenantId,
@@ -227,7 +259,6 @@ const sendUserInvitationService = async ({
                 email: tenant.email,
             },
         }),
-
         invitedBy: {
             userId: inviter._id,
             name: `${inviter.firstName} ${inviter.lastName}`,
@@ -236,11 +267,117 @@ const sendUserInvitationService = async ({
     };
 
     // Generate invitation token
-    const token = generateToken(payload, "24h");
+    const token = generateToken(
+        payload,
+        "24h"
+    );
 
-    // Send invitation email
+    // Store the matching expiry in the database
+    const invitationTokenExpiresAt = new Date(
+        Date.now() + INVITATION_VALIDITY_MS
+    );
+
+    let invitedUser = null;
+    let createdNewUser = false;
+    let previousInvitationData = null;
+
     try {
+        /*
+         * Create a new temporary user when no user exists.
+         */
+        if (!existingUser) {
+            const [newUser] = await User.create([
+                {
+                    tenant,
+                    email: normalizedEmail,
 
+                    role: {
+                        roleId: targetRole._id,
+                        name: targetRole.name,
+                    },
+
+                    designation: normalizedDesignation,
+
+                    status: "Invited",
+                    isActive: false,
+                    isDeleted: false,
+
+                    invitationToken: token,
+                    invitationTokenExpiresAt,
+
+                    createdBy: {
+                        userId: inviter._id,
+                        name: `${inviter.firstName} ${inviter.lastName}`,
+                        role: inviter.role.name,
+                    },
+
+                    updatedBy: {
+                        userId: inviter._id,
+                        name: `${inviter.firstName} ${inviter.lastName}`,
+                        role: inviter.role.name,
+                    },
+                },
+            ]);
+
+            invitedUser = newUser;
+            createdNewUser = true;
+        }
+
+        /*
+         * Existing Invited user whose previous token expired.
+         * Replace the old invitation details with the new ones.
+         */
+        else {
+            previousInvitationData = {
+                tenant: existingUser.tenant,
+                role: existingUser.role,
+                designation: existingUser.designation,
+                invitationToken:
+                    existingUser.invitationToken,
+                invitationTokenExpiresAt:
+                    existingUser.invitationTokenExpiresAt,
+                createdBy: existingUser.createdBy,
+                updatedBy: existingUser.updatedBy,
+                status: existingUser.status,
+                isActive: existingUser.isActive,
+            };
+
+            invitedUser =
+                await User.findByIdAndUpdate(
+                    existingUser._id,
+                    {
+                        $set: {
+                            tenant,
+                            role: {
+                                roleId: targetRole._id,
+                                name: targetRole.name,
+                            },
+                            designation:
+                                normalizedDesignation,
+
+                            status: "Invited",
+                            isActive: false,
+
+                            invitationToken: token,
+                            invitationTokenExpiresAt,
+
+                            updatedBy: {
+                                userId: inviter._id,
+                                name: `${inviter.firstName} ${inviter.lastName}`,
+                                role: inviter.role.name,
+                            },
+                        },
+                    },
+                    {
+                        new: true,
+                    }
+                );
+        }
+
+        /*
+         * Send invitation email only after the User record
+         * contains the generated token.
+         */
         await userInvitationEmail(
             normalizedEmail,
             token
@@ -248,64 +385,123 @@ const sendUserInvitationService = async ({
 
         // Successful invitation audit log
         await AuditLog.create({
-            tenant: tenant,
-
+            tenant,
             performedBy: {
                 userId: inviter._id,
                 name: `${inviter.firstName} ${inviter.lastName}`,
                 role: inviter.role.name,
-                designation: inviter.designation,
+                designation:
+                    inviter.designation || null,
             },
-
             module: "User",
-
             action: "Invite",
-
             relatedTo: {
                 module: "User",
-                referenceId: null,
+                referenceId: invitedUser._id,
                 title: normalizedEmail,
             },
-
             changes: {
-                oldData: null,
+                oldData: existingUser
+                    ? {
+                          email: normalizedEmail,
+                          status: existingUser.status,
+                          invitationTokenExpiresAt:
+                              existingUser.invitationTokenExpiresAt,
+                      }
+                    : null,
 
                 newData: {
                     email: normalizedEmail,
                     role: targetRole.name,
-                    tenant: tenant?.orgName || null,
-                    invitationStatus: "Sent",
+                    designation:
+                        normalizedDesignation,
+                    tenant:
+                        tenant?.orgName || null,
+                    status: "Invited",
+                    invitationTokenExpiresAt,
                 },
             },
-
-            description:
-                `User invitation email sent successfully for ${targetRole.name} role to ${normalizedEmail}`,
-
+            description: existingUser
+                ? `Invitation resent successfully for ${targetRole.name} role to ${normalizedEmail} after the previous invitation expired`
+                : `User invitation sent successfully for ${targetRole.name} role to ${normalizedEmail}`,
             status: "Success",
-
             isActive: true,
             isDeleted: false,
         });
 
+        return {
+            userId: invitedUser._id,
+            email: normalizedEmail,
+            role: targetRole.name,
+            designation: normalizedDesignation,
+            tenant: tenant?.orgName || null,
+            status: "Invited",
+            invitationSent: true,
+        };
     } catch (error) {
+        /*
+         * If email sending or any operation after User creation/update
+         * fails, restore the database state.
+         *
+         * New invited user -> remove it.
+         * Existing expired invitation -> restore old invitation data.
+         */
+        try {
+            if (createdNewUser && invitedUser?._id) {
+                await User.findByIdAndDelete(
+                    invitedUser._id
+                );
+            } else if (
+                existingUser &&
+                previousInvitationData
+            ) {
+                await User.findByIdAndUpdate(
+                    existingUser._id,
+                    {
+                        $set: {
+                            tenant:
+                                previousInvitationData.tenant,
+                            role:
+                                previousInvitationData.role,
+                            designation:
+                                previousInvitationData.designation,
+
+                            status:
+                                previousInvitationData.status,
+                            isActive:
+                                previousInvitationData.isActive,
+
+                            invitationToken:
+                                previousInvitationData.invitationToken,
+                            invitationTokenExpiresAt:
+                                previousInvitationData.invitationTokenExpiresAt,
+
+                            createdBy:
+                                previousInvitationData.createdBy,
+                            updatedBy:
+                                previousInvitationData.updatedBy,
+                        },
+                    }
+                );
+            }
+        } catch (rollbackError) {
+            // Preserve the original error while logging rollback failure
+            console.error(
+                "Failed to rollback invitation changes:",
+                rollbackError
+            );
+        }
 
         const invitationError = new Error(
             "Failed to send invitation"
         );
 
         invitationError.statusCode = 500;
-        invitationError.auditReason = error.message;
+        invitationError.auditReason =
+            error.message;
 
         throw invitationError;
     }
-
-    // Return result
-    return {
-        email: normalizedEmail,
-        role: targetRole.name,
-        tenant: tenant?.orgName || null,
-        invitationSent: true,
-    };
 };
 
 export default sendUserInvitationService;
