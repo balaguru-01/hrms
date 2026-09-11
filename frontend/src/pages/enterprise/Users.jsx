@@ -7,16 +7,12 @@ import {
 import { useSearchParams } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { FaEye } from "react-icons/fa";
-import {
-  MdCheck,
-  MdDelete,
-  MdBlock,
-} from "react-icons/md";
 
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import DynamicTable from "../../components/tables/DynamicTable";
 import DynamicPagination from "../../components/tables/DynamicPagination";
 import DynamicTableActions from "../../components/tables/DynamicTableActions";
+import StatusTabs from "../../components/tables/StatusTabs";
 import DynamicDetailsModal from "../../components/Modals/DynamicDetailsModal";
 import DynamicConfirmationModal from "../../components/Modals/DynamicConfirmationModal";
 
@@ -28,57 +24,17 @@ import {
   enterpriseMenuItems,
 } from "../../config/EnterpriseAdmin/EpAdminSidebarConfig";
 
-const USER_STATUS = {
-  ALL: "all",
-  ACTIVE: "active",
-  PENDING: "pending",
-  REJECTED: "rejected",
-};
-
-const API_STATUS = {
-  ACTIVE: "Active",
-  PENDING: "Pending",
-  REJECTED: "Rejected",
-};
-
-const DEFAULT_PAGE_SIZE = 10;
-
-const PAGE_SIZE_OPTIONS = [
-  10,
-  20,
-  30,
-  50,
-];
-
-const CONFIRMATION_CONFIG = {
-  approve: {
-    icon: <MdCheck />,
-    iconClassName: "text-green-600",
-    confirmClassName:
-      "bg-green-600 hover:bg-green-700",
-  },
-
-  reject: {
-    icon: <MdDelete />,
-    iconClassName: "text-red-600",
-    confirmClassName:
-      "bg-red-600 hover:bg-red-700",
-  },
-
-  remove: {
-    icon: <MdDelete />,
-    iconClassName: "text-red-600",
-    confirmClassName:
-      "bg-red-600 hover:bg-red-700",
-  },
-
-  inactive: {
-    icon: <MdBlock />,
-    iconClassName: "text-yellow-600",
-    confirmClassName:
-      "bg-yellow-500 hover:bg-yellow-600",
-  },
-};
+import {
+  USER_STATUS,
+  API_STATUS,
+  DEFAULT_PAGE_SIZE,
+  PAGE_SIZE_OPTIONS,
+  USER_STATUS_TABS,
+  USER_STATUS_CONFIG,
+  USER_ACTIONS_CONFIG,
+  CONFIRMATION_CONFIG,
+  USER_DETAIL_FIELDS,
+} from "../../config/EnterpriseAdmin/EpAdminUsersConfig";
 
 const Users = () => {
   const [searchParams, setSearchParams] =
@@ -125,9 +81,6 @@ const Users = () => {
     searchParams.get("status") ||
     USER_STATUS.ALL;
 
-  /*
-   * Current page from URL.
-   */
   const currentPageFromUrl = Number(
     searchParams.get("page") || 1
   );
@@ -138,10 +91,6 @@ const Users = () => {
       ? currentPageFromUrl
       : 1;
 
-  /*
-   * To prevent the current user's
-   * own Quick Actions from being displayed.
-   */
   const loggedInUserId = useMemo(() => {
     try {
       const accessToken =
@@ -167,9 +116,6 @@ const Users = () => {
     }
   }, []);
 
-  /*
-   * Normalize using reusable table.
-   */
   const normalizeUser = useCallback(
     (user) => {
       const userId =
@@ -370,9 +316,6 @@ const Users = () => {
     });
   };
 
-  /*
-   * Page size change.
-   */
   const handlePageSizeChange = (
     newPageSize
   ) => {
@@ -393,143 +336,116 @@ const Users = () => {
     });
   };
 
-  /*
-   * Open user details.
-   */
+  
   const handleViewUser = (
     user
   ) => {
     setSelectedUser(user);
   };
 
-  /*
-   * Open Approve confirmation.
-   */
-  const handleApproveUser = (
-    user
-  ) => {
-    setConfirmation({
-      type: "approve",
-      user,
+ 
+  const openConfirmation = useCallback(
+    (user, actionType) => {
+      const config =
+        CONFIRMATION_CONFIG[actionType];
 
-      title: "Approve User",
-
-      description: `Are you sure you want to approve ${user.firstName} ${user.lastName}?`,
-
-      confirmLabel: "Approve User",
-
-      confirmationConfig:
-        CONFIRMATION_CONFIG.approve,
-    });
-  };
-
-  /*
-   * Open Reject confirmation.
-   */
-  const handleRejectUser = (
-    user
-  ) => {
-    setRejectionReason("");
-
-    setConfirmation({
-      type: "reject",
-      user,
-
-      title: "Reject User",
-
-      description: `Are you sure you want to reject ${user.firstName} ${user.lastName}?`,
-
-      confirmLabel: "Reject User",
-
-      confirmationConfig:
-        CONFIRMATION_CONFIG.reject,
-    });
-  };
-
-  /*
-   * Open Remove confirmation.
-   */
-  const handleRemoveUser = (
-    user
-  ) => {
-    setConfirmation({
-      type: "remove",
-      user,
-
-      title: "Remove User",
-
-      description: `Are you sure you want to remove ${user.firstName} ${user.lastName}?`,
-
-      confirmLabel: "Remove User",
-
-      confirmationConfig:
-        CONFIRMATION_CONFIG.remove,
-    });
-  };
-
-  /*
-   * Open Make Inactive confirmation.
-   */
-  const handleMakeInactive = (
-    user
-  ) => {
-    setConfirmation({
-      type: "inactive",
-      user,
-
-      title: "Make User Inactive",
-
-      description: `Are you sure you want to make ${user.firstName} ${user.lastName} inactive?`,
-
-      confirmLabel: "Make Inactive",
-
-      confirmationConfig:
-        CONFIRMATION_CONFIG.inactive,
-    });
-  };
-
-  
-  const getActionsForUser = useCallback(
-    (user) => {
-      const actions = [];
-
-      if (user.status === "pending") {
-        actions.push({
-          type: "approve",
-          label: "Approve User",
-          onClick:
-            handleApproveUser,
-        });
-
-        actions.push({
-          type: "reject",
-          label: "Reject User",
-          onClick:
-            handleRejectUser,
-        });
+      if (!config) {
+        return;
       }
 
-      if (user.status === "active") {
-        actions.push({
-          type: "remove",
-          label: "Remove User",
-          onClick:
-            handleRemoveUser,
-        });
-
-        actions.push({
-          type: "inactive",
-          label: "Make Inactive",
-          onClick:
-            handleMakeInactive,
-        });
-      }
-
-      return actions;
+      setConfirmation({
+        type: actionType,
+        user,
+        title: config.title,
+        description:
+          config.description(user),
+        confirmLabel:
+          config.confirmLabel,
+        confirmationConfig: config,
+      });
     },
     []
   );
 
+  const handleApproveUser = useCallback(
+    (user) => {
+      openConfirmation(
+        user,
+        "approve"
+      );
+    },
+    [openConfirmation]
+  );
+
+  
+  const handleRejectUser = useCallback(
+    (user) => {
+      setRejectionReason("");
+
+      openConfirmation(
+        user,
+        "reject"
+      );
+    },
+    [openConfirmation]
+  );
+
+ 
+  const handleRemoveUser = useCallback(
+    (user) => {
+      openConfirmation(
+        user,
+        "remove"
+      );
+    },
+    [openConfirmation]
+  );
+
+  
+  const handleMakeInactive = useCallback(
+    (user) => {
+      openConfirmation(
+        user,
+        "inactive"
+      );
+    },
+    [openConfirmation]
+  );
+
+ 
+  const getActionsForUser = useCallback(
+    (user) => {
+      const actionHandlers = {
+        approve: handleApproveUser,
+        reject: handleRejectUser,
+        remove: handleRemoveUser,
+        inactive: handleMakeInactive,
+      };
+
+      const configuredActions =
+        USER_ACTIONS_CONFIG[
+          user.status
+        ] || [];
+
+      return configuredActions.map(
+        (action) => ({
+          ...action,
+          onClick:
+            actionHandlers[action.type],
+        })
+      );
+    },
+    [
+      handleApproveUser,
+      handleRejectUser,
+      handleRemoveUser,
+      handleMakeInactive,
+    ]
+  );
+
+  /*
+   * Execute confirmed user action.
+   */
   const handleConfirmAction =
     async () => {
       if (!confirmation?.user) {
@@ -545,9 +461,7 @@ const Users = () => {
         setIsLoading(true);
 
         if (type === "approve") {
-          await approveUser(
-            user.id
-          );
+          await approveUser(user.id);
 
           showToast(
             `${user.firstName} ${user.lastName} has been approved.`,
@@ -569,9 +483,7 @@ const Users = () => {
         }
 
         if (type === "remove") {
-          await removeUser(
-            user.id
-          );
+          await removeUser(user.id);
 
           showToast(
             `${user.firstName} ${user.lastName} has been removed.`,
@@ -621,6 +533,7 @@ const Users = () => {
         key: "user",
         header: "User",
         width: "28%",
+
         render: (user) => {
           const fullName =
             `${user.firstName || ""} ${
@@ -708,8 +621,7 @@ const Users = () => {
                   handleViewUser(user);
                 }}
                 aria-label={`View ${
-                  user.fullName ||
-                  "user"
+                  user.fullName || "user"
                 }`}
                 title="View User"
                 className="
@@ -727,9 +639,7 @@ const Users = () => {
                   focus:outline-none
                 "
               >
-                <FaEye
-                  className="h-4 w-4"
-                />
+                <FaEye className="h-4 w-4" />
               </button>
             </div>
           );
@@ -762,32 +672,17 @@ const Users = () => {
           "text-center",
         cellClassName:
           "text-center",
+
         render: (user) => {
           const status =
             user.status?.toLowerCase();
 
-          let statusClass =
-            "bg-gray-100 text-gray-600";
-
-          if (status === "pending") {
-            statusClass =
-              "bg-yellow-50 text-yellow-700";
-          }
-
-          if (status === "active") {
-            statusClass =
-              "bg-green-50 text-green-700";
-          }
-
-          if (status === "rejected") {
-            statusClass =
-              "bg-red-50 text-red-700";
-          }
-
-          if (status === "inactive") {
-            statusClass =
-              "bg-gray-100 text-gray-600";
-          }
+          const statusClass =
+            USER_STATUS_CONFIG[
+              status
+            ]?.className ||
+            USER_STATUS_CONFIG.default
+              .className;
 
           const formattedStatus =
             status
@@ -825,13 +720,9 @@ const Users = () => {
 
         render: (user) => {
           const isCurrentUser =
-            Boolean(
-              loggedInUserId
-            ) &&
+            Boolean(loggedInUserId) &&
             String(user.id) ===
-              String(
-                loggedInUserId
-              );
+              String(loggedInUserId);
 
           if (isCurrentUser) {
             return null;
@@ -840,12 +731,9 @@ const Users = () => {
           return (
             <DynamicTableActions
               row={user}
-              actions={
-                getActionsForUser
-              }
+              actions={getActionsForUser}
               buttonLabel={`Quick actions for ${
-                user.fullName ||
-                "user"
+                user.fullName || "user"
               }`}
             />
           );
@@ -858,94 +746,6 @@ const Users = () => {
     ]
   );
 
-  /*
-   * Status tabs.
-   */
-  const statusTabs = [
-    {
-      key: USER_STATUS.ALL,
-      label: "All Users",
-    },
-
-    {
-      key: USER_STATUS.ACTIVE,
-      label: "Active Users",
-    },
-
-    {
-      key: USER_STATUS.PENDING,
-      label: "Pending Users",
-    },
-
-    {
-      key: USER_STATUS.REJECTED,
-      label: "Rejected Users",
-    },
-  ];
-
-  /*
-   * User details fields.
-   */
-  const userDetailFields = [
-    {
-      key: "email",
-      label: "Email",
-      breakAll: true,
-    },
-
-    {
-      key: "role",
-      label: "Role",
-    },
-
-    {
-      key: "designation",
-      label: "Designation",
-    },
-
-    {
-      key: "phone",
-      label: "Phone",
-    },
-
-    {
-      key: "location",
-      label: "Location",
-    },
-
-    {
-      key: "status",
-      label: "Status",
-      capitalize: true,
-    },
-
-    {
-      key: "joinedAt",
-      label: "Joined At",
-      type: "date",
-      show: (user) =>
-        Boolean(user.joinedAt),
-    },
-
-    {
-      key: "registeredAt",
-      label: "Registered At",
-      type: "date",
-      show: (user) =>
-        Boolean(user.registeredAt),
-    },
-
-    {
-      key: "rejectionReason",
-      label: "Reason for Rejection",
-      fullWidth: true,
-      show: (user) =>
-        Boolean(
-          user.rejectionReason
-        ),
-    },
-  ];
-
   return (
     <DashboardLayout
       title="Users"
@@ -957,54 +757,11 @@ const Users = () => {
         {/* Status Tabs */}
 
         <div className="flex justify-center">
-          <div
-            className="
-              inline-flex
-              items-center
-              gap-1
-              rounded-xl
-              border
-              border-gray-200
-              bg-white
-              p-1
-              shadow-sm
-            "
-          >
-            {statusTabs.map(
-              (tab) => {
-                const isActive =
-                  activeStatus ===
-                  tab.key;
-
-                return (
-                  <button
-                    key={tab.key}
-                    type="button"
-                    onClick={() =>
-                      handleStatusChange(
-                        tab.key
-                      )
-                    }
-                    className={`
-                      rounded-lg
-                      px-5
-                      py-2.5
-                      text-sm
-                      font-medium
-                      transition
-                      ${
-                        isActive
-                          ? "bg-green-600 text-white shadow-lg"
-                          : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
-                      }
-                    `}
-                  >
-                    {tab.label}
-                  </button>
-                );
-              }
-            )}
-          </div>
+          <StatusTabs
+            tabs={USER_STATUS_TABS}
+            activeTab={activeStatus}
+            onChange={handleStatusChange}
+          />
         </div>
 
         {/* Loading */}
@@ -1109,14 +866,11 @@ const Users = () => {
         title="User Details"
         subtitle="Review user's account information"
         data={selectedUser}
-        fields={
-          userDetailFields
-        }
+        fields={USER_DETAIL_FIELDS}
         avatar={
           selectedUser?.firstName
             ?.charAt(0)
-            .toUpperCase() ||
-          "U"
+            .toUpperCase() || "U"
         }
         onClose={() =>
           setSelectedUser(null)
@@ -1132,8 +886,7 @@ const Users = () => {
           "Confirm Action"
         }
         description={
-          confirmation?.description ||
-          ""
+          confirmation?.description || ""
         }
         confirmLabel={
           confirmation?.confirmLabel ||
@@ -1154,14 +907,8 @@ const Users = () => {
             ?.confirmationConfig
             ?.confirmClassName
         }
-
-        /*
-         * Show rejection reason only
-         * when rejecting a user.
-         */
         showInput={
-          confirmation?.type ===
-          "reject"
+          confirmation?.type === "reject"
         }
         inputLabel="Rejection Reason"
         inputValue={rejectionReason}
@@ -1170,14 +917,11 @@ const Users = () => {
           setRejectionReason
         }
         inputRequired={
-          confirmation?.type ===
-          "reject"
+          confirmation?.type === "reject"
         }
-
         onConfirm={
           handleConfirmAction
         }
-
         onCancel={() => {
           setConfirmation(null);
           setRejectionReason("");

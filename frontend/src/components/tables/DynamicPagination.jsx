@@ -1,3 +1,10 @@
+import {
+  MdChevronLeft,
+  MdChevronRight,
+} from "react-icons/md";
+
+import IconButton from "../buttons/IconButton";
+
 const DynamicPagination = ({
   currentPage = 1,
   totalPages = 1,
@@ -56,6 +63,12 @@ const DynamicPagination = ({
   if (totalItems === 0) {
     return null;
   }
+
+  const isPreviousDisabled =
+    currentPage === 1;
+
+  const isNextDisabled =
+    currentPage >= totalPages;
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
@@ -120,40 +133,18 @@ const DynamicPagination = ({
       {/* Pagination Controls */}
       <div className="flex items-center gap-2">
         {/* Previous Page */}
-        <span
-          role="button"
-          tabIndex={
-            currentPage === 1 ? -1 : 0
-          }
-          aria-label="Previous page"
-          title="Previous page"
+        <IconButton
+          icon={MdChevronLeft}
           onClick={() =>
             handlePageChange(
               currentPage - 1
             )
           }
-          onKeyDown={(event) => {
-            if (
-              event.key === "Enter" ||
-              event.key === " "
-            ) {
-              handlePageChange(
-                currentPage - 1
-              );
-            }
-          }}
-          className={`
-            text-base
-            leading-none
-            ${
-              currentPage === 1
-                ? "cursor-not-allowed opacity-50"
-                : "cursor-pointer hover:text-gray-900"
-            }
-          `}
-        >
-          ◀
-        </span>
+          disabled={isPreviousDisabled}
+          title="Previous page"
+          ariaLabel="Previous page"
+          className="text-gray-600"
+        />
 
         <span className="px-2 text-sm text-gray-600">
           Page{" "}
@@ -167,42 +158,18 @@ const DynamicPagination = ({
         </span>
 
         {/* Next Page */}
-        <span
-          role="button"
-          tabIndex={
-            currentPage >= totalPages
-              ? -1
-              : 0
-          }
-          aria-label="Next page"
-          title="Next page"
+        <IconButton
+          icon={MdChevronRight}
           onClick={() =>
             handlePageChange(
               currentPage + 1
             )
           }
-          onKeyDown={(event) => {
-            if (
-              event.key === "Enter" ||
-              event.key === " "
-            ) {
-              handlePageChange(
-                currentPage + 1
-              );
-            }
-          }}
-          className={`
-            text-base
-            leading-none
-            ${
-              currentPage >= totalPages
-                ? "cursor-not-allowed opacity-50"
-                : "cursor-pointer hover:text-gray-900"
-            }
-          `}
-        >
-          ▶
-        </span>
+          disabled={isNextDisabled}
+          title="Next page"
+          ariaLabel="Next page"
+          className="text-gray-600"
+        />
       </div>
     </div>
   );

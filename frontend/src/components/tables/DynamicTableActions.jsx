@@ -11,6 +11,8 @@ import {
   MdMoreVert,
 } from "react-icons/md";
 
+import IconButton from "../buttons/IconButton";
+
 const DynamicTableActions = ({
   row,
   actions = [],
@@ -211,7 +213,6 @@ const DynamicTableActions = ({
     action?.onClick?.(row);
   };
 
-  
   if (quickActions.length === 0) {
     return null;
   }
@@ -221,31 +222,19 @@ const DynamicTableActions = ({
       {/* Three Dots */}
 
       <div className="flex w-full items-center justify-center">
-        <button
-          ref={buttonRef}
-          type="button"
-          onClick={handleMenuToggle}
-          disabled={disabled}
-          title={
-            disabledReason ||
-            buttonLabel
-          }
-          aria-label={buttonLabel}
-          aria-expanded={isOpen}
-          className="
-            rounded-lg
-            p-2
-            text-xl
-            text-gray-500
-            transition
-            hover:bg-gray-100
-            hover:text-gray-700
-            disabled:cursor-not-allowed
-            disabled:opacity-50
-          "
-        >
-          <MdMoreVert />
-        </button>
+        <div ref={buttonRef}>
+          <IconButton
+            icon={MdMoreVert}
+            onClick={handleMenuToggle}
+            disabled={disabled}
+            title={
+              disabledReason ||
+              buttonLabel
+            }
+            ariaLabel={buttonLabel}
+            className="text-xl"
+          />
+        </div>
       </div>
 
       {/* Quick Actions Menu */}
