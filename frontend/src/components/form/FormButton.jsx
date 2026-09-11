@@ -1,30 +1,32 @@
+import PrimaryButton from "../buttons/PrimaryButton";
+import SecondaryButton from "../buttons/SecondaryButton";
+
 const FormButton = ({
   children,
   type = "submit",
+  variant = "primary",
   loading = false,
   disabled = false,
   fullWidth = true,
+  onClick,
   className = "",
 }) => {
-  const isDisabled =
-    loading || disabled;
+  const ButtonComponent =
+    variant === "secondary"
+      ? SecondaryButton
+      : PrimaryButton;
 
   return (
-    <button
+    <ButtonComponent
       type={type}
-      disabled={isDisabled}
-      className={`flex items-center justify-center gap-3 rounded-xl bg-green-700 py-3 font-semibold text-white transition-all duration-300 hover:bg-green-800 disabled:cursor-not-allowed disabled:bg-gray-400 ${
-        fullWidth ? "w-full" : ""
-      } ${className}`}
+      loading={loading}
+      disabled={disabled}
+      fullWidth={fullWidth}
+      onClick={onClick}
+      className={className}
     >
-      {loading && (
-        <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-      )}
-
-      {loading
-        ? children
-        : children}
-    </button>
+      {children}
+    </ButtonComponent>
   );
 };
 

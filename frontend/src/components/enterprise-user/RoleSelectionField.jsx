@@ -45,6 +45,11 @@ const RoleSelectionField = ({
     useState([]);
 
   const [
+    selectedRole,
+    setSelectedRole,
+  ] = useState(null);
+
+  const [
     loadingRoles,
     setLoadingRoles,
   ] = useState(false);
@@ -56,15 +61,6 @@ const RoleSelectionField = ({
 
   const roleSelectorRef =
     useRef(null);
-
-  const selectedRoleId =
-    registration?.value;
-
-  const selectedRole =
-    roles.find(
-      (role) =>
-        role._id === selectedRoleId
-    );
 
   useEffect(() => {
     const handleClickOutside = (
@@ -176,6 +172,8 @@ const RoleSelectionField = ({
   const handleRoleSelect = (
     role
   ) => {
+    setSelectedRole(role);
+
     registration?.onChange?.({
       target: {
         name: field.name,
