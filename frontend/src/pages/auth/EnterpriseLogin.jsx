@@ -14,7 +14,7 @@ import DynamicForm from "../../components/form/DynamicForm";
 import {
   enterpriseLoginFields,
   enterpriseLoginDefaultValues,
-} from "../../config/forms/enterpriseLogin.config";
+} from "../../config/Authentication/EnterpriseLoginConfig";
 
 import { enterpriseLoginSchema } from "../../schemas/auth/enterpriseLogin.schema";
 

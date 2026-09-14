@@ -16,11 +16,12 @@ import AuthHeader from "../../components/auth/AuthHeader";
 import AuthFooter from "../../components/auth/AuthFooter";
 
 import DynamicForm from "../../components/form/DynamicForm";
+import { MdHourglassTop } from "react-icons/md";
 
 import {
   userRegistrationFields,
   userRegistrationDefaultValues,
-} from "../../config/forms/userRegistration.config";
+} from "../../config/Authentication/UserRegistrationConfig";
 
 import {
   userRegistrationSchema,
@@ -332,6 +333,7 @@ const UserRegistration = () => {
             <AuthFooter
               text="Your registration is securely under review."
               className="mt-4"
+              icon={MdHourglassTop}
             />
           </AuthCard>
         </div>

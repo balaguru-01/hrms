@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, Outlet } from "react-router-dom";
 
 import ChooseLogin from "./pages/auth/ChooseLogin";
 import EnterpriseLogin from "./pages/auth/EnterpriseLogin";
@@ -12,17 +12,31 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import PublicOnlyRoute from "./routes/PublicOnlyRoute";
 
 import EnterpriseDashboard from "./pages/enterprise/EnterpriseDashboard";
-import PendingApprovals from "./pages/enterprise/PendingApprovals";
 import TenantManagement from "./pages/enterprise/TenantManagement";
 
+import Users from "./pages/enterprise/Users";
+import InvitationsSent from "./pages/enterprise/InvitationsSent";
+
 import SuperAdminDashboard from "./pages/superadmin/SuperAdminDashboard";
+
+import { EnterpriseUserProvider } from "./context/EnterpriseUserContext";
 
 import { ROLES } from "./utils/constants/roles";
 import { ROUTES } from "./utils/constants/routes";
 
+const EnterpriseUserLayout = () => {
+  return (
+    <EnterpriseUserProvider>
+      <Outlet />
+    </EnterpriseUserProvider>
+  );
+};
+
 function AppRoutes() {
   return (
     <Routes>
+      {/* Public routes */}
+
       <Route
         path={ROUTES.HOME}
         element={<ChooseLogin />}
@@ -52,6 +66,8 @@ function AppRoutes() {
         element={<TenantLogin />}
       />
 
+      {/* Enterprise Admin routes */}
+
       <Route
         element={
           <ProtectedRoute
@@ -61,12 +77,13 @@ function AppRoutes() {
           />
         }
       >
-        <Route
-          path={
-            ROUTES.ENTERPRISE_DASHBOARD
-          }
-          element={<EnterpriseDashboard />}
-        />
+        <Route element={<EnterpriseUserLayout />}>
+          <Route
+            path={
+              ROUTES.ENTERPRISE_DASHBOARD
+            }
+            element={<EnterpriseDashboard />}
+          />
 
         <Route
           path={
@@ -75,14 +92,20 @@ function AppRoutes() {
           element={<TenantManagement />}
         />
 
-        <Route
-          path={
-            ROUTES.ENTERPRISE_PENDING_APPROVALS
-          }
-          element={<PendingApprovals />}
-        />
-      </Route>
+          <Route
+            path={ROUTES.ENTERPRISE_USERS}
+            element={<Users />}
+          />
 
+
+          <Route
+            path={
+              ROUTES.ENTERPRISE_INVITATIONS
+            }
+            element={<InvitationsSent />}
+          />
+        </Route>
+      </Route>
       <Route
         element={
           <ProtectedRoute
