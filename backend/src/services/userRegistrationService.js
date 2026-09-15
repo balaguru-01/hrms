@@ -18,7 +18,7 @@ const userRegistrationService = async ({
     email,
     password,
     phone,
-    location,
+    location
 }) => {
     // Checking token exists
     if (!token) {
@@ -87,7 +87,7 @@ const userRegistrationService = async ({
         throw error;
     }
 
-    // User must currently be in Invited status
+    // Validating Invited status
     if (invitedUser.status !== "Invited") {
         const error = new Error("Invalid request");
         error.auditReason =
@@ -181,7 +181,6 @@ const userRegistrationService = async ({
     const normalizedDesignation =
         tokenPayload.designation.trim();
 
-    // Validate designation stored in invited User
     if (
         invitedUser.designation !==
         normalizedDesignation
@@ -223,7 +222,7 @@ const userRegistrationService = async ({
         throw error;
     }
 
-    // Get tenant information from token
+    // Get tenant information from token if available
     let userTenant = null;
 
     if (tokenPayload.tenant) {
@@ -379,8 +378,7 @@ const userRegistrationService = async ({
             [
                 {
                     /*
-                     * Only add tenant information when
-                     * the registered user actually belongs
+                     * Only add tenant information if user belongs
                      * to a tenant.
                      */
                     ...(registeredUser.tenant?.tenantId && {

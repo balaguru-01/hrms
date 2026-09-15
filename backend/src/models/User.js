@@ -239,35 +239,24 @@ const userSchema = new mongoose.Schema(
     }
 );
 
-    // Unique email for every user
-    userSchema.index(
-        {
-            email: 1,
-        },
-        {
-            unique: true,
-        }
-    );
+// Unique email for every user
+userSchema.index(
+    {
+        email: 1,
+    },
+    {
+        unique: true,
+    }
+);
 
-    // Unique phone only when a phone number exists
-    userSchema.index(
-        {
-            phone: 1,
-        },
-        {
-            unique: true,
-            partialFilterExpression: {
-                phone: {
-                    $type: "string",
-                },
-            },
-        }
-    );
-
-    // Helps the scheduled cleanup job find expired invitations
-    userSchema.index({
-        status: 1,
-        invitationTokenExpiresAt: 1,
-    });
+// Unique phone number for every user
+userSchema.index(
+    {
+        phone: 1,
+    },
+    {
+        unique: true,
+    }
+);
 
 export default mongoose.model("User", userSchema);

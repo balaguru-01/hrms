@@ -1,20 +1,31 @@
 import User from "../models/User.js";
+import constants from "../config/constants.js";
 
 export const getSentInvitationsService = async ({
-    invitedBy,
+    userId,
+    roleName,
     page = 1,
     limit = 10,
 }) => {
-    // Validate logged-in user
-    if (!invitedBy?.userId) {
-        const error = new Error("Invalid request");
-        error.statusCode = 400;
+   
+    const currentScope =
+        constants.roleScopes[roleName];
+
+    if (!currentScope) {
+        const error = new Error(
+            "User role scope could not be determined"
+        );
+
+        error.statusCode = 403;
         error.auditReason =
-            "Inviting user information was not found";
+            "Invalid or unsupported user role";
+
         throw error;
     }
 
-    // Validate pagination values
+    /*
+     * Validate pagination values.
+     */
     const currentPage = Number(page);
     const pageSize = Number(limit);
 
@@ -25,9 +36,11 @@ export const getSentInvitationsService = async ({
         const error = new Error(
             "Page must be a positive integer"
         );
+
         error.statusCode = 400;
         error.auditReason =
             "Invalid pagination page value";
+
         throw error;
     }
 
@@ -39,23 +52,92 @@ export const getSentInvitationsService = async ({
         const error = new Error(
             "Limit must be between 1 and 100"
         );
+
         error.statusCode = 400;
         error.auditReason =
             "Invalid pagination limit value";
+
         throw error;
     }
 
     /*
-     * Fetch users who are currently in Invited status
+     * Tenant ID is required only if user belongs to tenant scope.
+     */
+    let tenantId = null;
+
+    if (
+        currentScope ===
+        constants.scopes.tenant
+    ) {
+        /*
+         * Fetch user's tenant information.
+         */
+        const currentUser =
+            await User.findById(userId)
+                .select("tenant")
+                .lean();
+
+        if (!currentUser) {
+            const error = new Error("Logged-in user not found");
+            error.statusCode = 404;
+            error.auditReason = "Logged-in user could not be found";
+            throw error;
+        }
+
+        tenantId =
+            currentUser.tenant?.tenantId;
+
+        if (!tenantId) {
+            const error = new Error(
+                "Tenant information could not be determined"
+            );
+
+            error.statusCode = 400;
+            error.auditReason =
+                "Tenant information is required for tenant-scope invitations";
+
+            throw error;
+        }
+    }
+
+
+    const targetRoles = Object.entries(
+        constants.roleScopes
+    )
+        .filter(
+            ([, scope]) =>
+                scope === currentScope
+        )
+        .map(([role]) => role);
+
+    /*
+     * Fetch invited users belong to the same scope using roles.
      */
     const invitationQuery = {
-        "createdBy.userId": invitedBy.userId,
+        "role.name": {
+            $in: targetRoles,
+        },
         status: "Invited",
         isDeleted: false,
     };
 
     /*
-     * Get total number of invitations for server-side pagination.
+     * Tenant-scope users can only see
+     * invitations belonging to their own tenant.
+     */
+    
+    if (
+        currentScope ===
+        constants.scopes.tenant
+    ) {
+        invitationQuery[
+            "tenant.tenantId"
+        ] = tenantId;
+    }
+
+    /*
+     * Get total number of invitations
+     * for server-side pagination.
      */
     const totalInvitations =
         await User.countDocuments(
@@ -67,13 +149,12 @@ export const getSentInvitationsService = async ({
             totalInvitations / pageSize
         );
 
-    
     const skip =
         (currentPage - 1) * pageSize;
 
     /*
-     * Fetch only the invitations required for
-     * the current page.
+     * Fetch only the invitations required
+     * for the current page.
      */
     const invitations = await User.find(
         invitationQuery
@@ -95,12 +176,6 @@ export const getSentInvitationsService = async ({
     const sentInvitations =
         invitations.map(
             (invitation) => {
-                const isExpired =
-                    !invitation.invitationTokenExpiresAt ||
-                    new Date(
-                        invitation.invitationTokenExpiresAt
-                    ) <= new Date();
-
                 return {
                     invitationId:
                         invitation._id,
@@ -132,8 +207,6 @@ export const getSentInvitationsService = async ({
 
                     invitationExpiresAt:
                         invitation.invitationTokenExpiresAt,
-
-                    isExpired,
 
                     invitedBy:
                         invitation.createdBy ||

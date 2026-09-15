@@ -1,7 +1,10 @@
+import User from "../models/User.js";
+import constants from "../config/constants.js";
+
 import sendUserInvitationService from "../services/invitationServices.js";
 import userRegistrationService from "../services/userRegistrationService.js";
-import fetchRoles from "../services/roleFetchServices.js";
-import fetchUsers from "../services/userFetchServices.js";
+import fetchRolesService from "../services/roleFetchServices.js";
+import fetchUsersService from "../services/userFetchServices.js";
 import {getSentInvitationsService} from "../services/getSentInvitationsService.js";
 
 export const sendUserInvitation = async (req, res, next) => {
@@ -85,7 +88,7 @@ export const registerUser = async (req, res, next) => {
 };
 
 
-export const fetchingRoles = async (req, res, next) => {
+export const fetchRoles = async (req, res, next) => {
     try {
 
         // Logged-in user's role comes from auth middleware
@@ -94,7 +97,7 @@ export const fetchingRoles = async (req, res, next) => {
         // recieving scope comes from query parameter
         const { scope } = req.query;
 
-        const roleDetails = await fetchRoles(
+        const roleDetails = await fetchRolesService(
             roleName,
             scope
         );
@@ -117,9 +120,9 @@ export const fetchingRoles = async (req, res, next) => {
     }
 };
 
-export const fetchingUsers = async (req, res, next) => {
+
+export const fetchUsers = async (req, res, next) => {
     try {
-        
         const roleName = req.user.role;
 
         // Scope, status and pagination
@@ -130,7 +133,7 @@ export const fetchingUsers = async (req, res, next) => {
             limit = 10,
         } = req.query;
 
-        const result = await fetchUsers({
+        const result = await fetchUsersService({
             roleName,
             scope,
             status,
@@ -143,6 +146,7 @@ export const fetchingUsers = async (req, res, next) => {
             message: "Users fetched successfully",
             data: result,
         });
+
     } catch (error) {
         error.auditDetails = {
             module: "User",
@@ -156,15 +160,17 @@ export const fetchingUsers = async (req, res, next) => {
     }
 };
 
+
 export const getSentInvitations = async (
     req,
     res,
     next
 ) => {
     try {
-        const invitedBy = {
-            userId: req.user.userId,
-        };
+        const {
+            userId,
+            role: roleName,
+        } = req.user;
 
         const {
             page = 1,
@@ -173,7 +179,8 @@ export const getSentInvitations = async (
 
         const result =
             await getSentInvitationsService({
-                invitedBy,
+                userId,
+                roleName,
                 page,
                 limit,
             });
@@ -184,6 +191,7 @@ export const getSentInvitations = async (
                 "Sent invitations fetched successfully",
             data: result,
         });
+
     } catch (error) {
         error.auditDetails = {
             module: "User",

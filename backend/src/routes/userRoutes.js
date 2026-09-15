@@ -2,19 +2,20 @@ import express from "express";
 
 import authMiddleware from "../middlewares/authMiddleware.js";
 import roleMiddleware from "../middlewares/roleMiddleware.js";
+
 import constants from "../config/constants.js";
 
 import {
     sendUserInvitation,
     registerUser,
-    fetchingRoles,
-    fetchingUsers,
-    getSentInvitations
+    fetchRoles,
+    fetchUsers,
+    getSentInvitations,
 } from "../controllers/userController.js";
 
 const router = express.Router();
 
-router.get(
+router.post(
     "/roles",
     authMiddleware,
     roleMiddleware(
@@ -23,10 +24,10 @@ router.get(
         constants.roles.tenantSuperAdmin,
         constants.roles.tenantAdmin
     ),
-    fetchingRoles
+    fetchRoles
 );
 
-router.get(
+router.post(
     "/",
     authMiddleware,
     roleMiddleware(
@@ -35,7 +36,7 @@ router.get(
         constants.roles.tenantSuperAdmin,
         constants.roles.tenantAdmin
     ),
-    fetchingUsers
+    fetchUsers
 );
 
 router.post(
@@ -50,7 +51,7 @@ router.post(
     sendUserInvitation
 );
 
-router.get(
+router.post(
     "/invitations",
     authMiddleware,
     roleMiddleware(
@@ -64,7 +65,7 @@ router.get(
 
 router.post(
     "/register",
-    registerUser 
+    registerUser
 );
 
 export default router;

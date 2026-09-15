@@ -17,14 +17,11 @@ const sendUserInvitationService = async ({
     roleId,
     orgName = null,
     invitedBy,
-    invitedDesignation,
+    invitedDesignation
 }) => {
+
     // Validate email
-    if (
-        !email ||
-        typeof email !== "string" ||
-        email.trim() === ""
-    ) {
+    if (!email || typeof email !== "string" || email.trim() === "") {
         const error = new Error("Invalid data");
         error.statusCode = 400;
         error.auditReason = "Email is required";
@@ -56,11 +53,7 @@ const sendUserInvitationService = async ({
     }
 
     // Validate designation
-    if (
-        !invitedDesignation ||
-        typeof invitedDesignation !== "string" ||
-        invitedDesignation.trim() === ""
-    ) {
+    if (!invitedDesignation || typeof invitedDesignation !== "string" || invitedDesignation.trim() === "") {
         const error = new Error("Invalid data");
         error.statusCode = 400;
         error.auditReason = "Designation is required";
@@ -70,10 +63,7 @@ const sendUserInvitationService = async ({
     const normalizedDesignation =
         invitedDesignation.trim();
 
-    if (
-        normalizedDesignation.length < 2 ||
-        normalizedDesignation.length > 100
-    ) {
+    if (normalizedDesignation.length < 2 || normalizedDesignation.length > 100) {
         const error = new Error("Invalid data");
         error.statusCode = 400;
         error.auditReason =
@@ -115,8 +105,7 @@ const sendUserInvitationService = async ({
     if (!inviterRole) {
         const error = new Error("Request failed");
         error.statusCode = 400;
-        error.auditReason =
-            "Inviting user's role was not found";
+        error.auditReason = "Inviting user's role was not found";
         throw error;
     }
 
@@ -136,7 +125,7 @@ const sendUserInvitationService = async ({
     const tenantLevelRoles = [
         constants.roles.tenantSuperAdmin,
         constants.roles.tenantAdmin,
-        constants.roles.tenantUser,
+        constants.roles.tenantUser
     ];
 
     const requiresTenant = tenantLevelRoles.includes(
@@ -147,8 +136,10 @@ const sendUserInvitationService = async ({
 
     // Determine tenant
     if (requiresTenant) {
+
         // Tenant-level user creating another tenant-level user
         if (inviter.tenant?.tenantId) {
+
             const tenantRecord = await Tenant.findOne({
                 _id: inviter.tenant.tenantId,
                 isActive: true,
@@ -156,9 +147,7 @@ const sendUserInvitationService = async ({
             }).lean();
 
             if (!tenantRecord) {
-                const error = new Error(
-                    "Resource not found"
-                );
+                const error = new Error("Resource not found");
                 error.statusCode = 404;
                 error.auditReason =
                     "Inviting user's organization was not found or is inactive";
@@ -171,6 +160,7 @@ const sendUserInvitationService = async ({
                 email: tenantRecord.email,
             };
         }
+
         // Enterprise-level user creating tenant-level user
         else {
             if (
@@ -212,7 +202,7 @@ const sendUserInvitationService = async ({
     }
 
     // Find existing user
-    // invitationToken is explicitly selected because it is select:false
+    
     const existingUser = await User.findOne({
         email: normalizedEmail,
         isDeleted: false,
@@ -272,7 +262,7 @@ const sendUserInvitationService = async ({
         "24h"
     );
 
-    // Store the matching expiry in the database
+    // Store the token expiry 
     const invitationTokenExpiresAt = new Date(
         Date.now() + INVITATION_VALIDITY_MS
     );
@@ -324,7 +314,7 @@ const sendUserInvitationService = async ({
         }
 
         /*
-         * Existing Invited user whose previous token expired.
+         * Existing Invited user with expired token,
          * Replace the old invitation details with the new ones.
          */
         else {
@@ -375,7 +365,7 @@ const sendUserInvitationService = async ({
         }
 
         /*
-         * Send invitation email only after the User contains token.
+         * Send invitation email.
          */
         await userInvitationEmail(
             normalizedEmail,
@@ -439,8 +429,7 @@ const sendUserInvitationService = async ({
         };
     } catch (error) {
         /*
-         * If email sending or any operation after User creation/update
-         * fails, restore the database state.
+         * If email sending fails, restore the database.
          */
         try {
             if (createdNewUser && invitedUser?._id) {
@@ -481,7 +470,6 @@ const sendUserInvitationService = async ({
                 );
             }
         } catch (rollbackError) {
-            // Preserve the original error while logging rollback failure
             console.error(
                 "Failed to rollback invitation changes:",
                 rollbackError
