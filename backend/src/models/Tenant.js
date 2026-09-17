@@ -1,9 +1,11 @@
 import mongoose from "mongoose";
+
 import validator from "validator";
 
 const tenantSchema = new mongoose.Schema(
     {
         // Organization Information
+
         orgName: {
             type: String,
             required: true,
@@ -13,10 +15,12 @@ const tenantSchema = new mongoose.Schema(
 
         companyCode: {
             type: String,
-            required: true,
+            required: false,
             unique: true,
+            sparse: true,
             uppercase: true,
             trim: true,
+            default: null,
         },
 
         email: {
@@ -30,8 +34,16 @@ const tenantSchema = new mongoose.Schema(
 
         phone: {
             type: String,
-            required: true,
+            required: false,
             trim: true,
+            default: null,
+        },
+
+        employeeCount: {
+            type: Number,
+            min: 0,
+            max: 70,
+            default: 0,
         },
 
         website: {
@@ -50,6 +62,7 @@ const tenantSchema = new mongoose.Schema(
         },
 
         // Organization Address
+
         address: {
             doorNumber: {
                 type: String,
@@ -83,6 +96,7 @@ const tenantSchema = new mongoose.Schema(
         },
 
         // Subscription Information
+
         subscription: {
             plan: {
                 planId: {
@@ -120,6 +134,7 @@ const tenantSchema = new mongoose.Schema(
 
             status: {
                 type: String,
+
                 enum: [
                     "Pending",
                     "Active",
@@ -127,6 +142,7 @@ const tenantSchema = new mongoose.Schema(
                     "Suspended",
                     "Rejected",
                 ],
+
                 default: "Pending",
             },
 
@@ -148,6 +164,7 @@ const tenantSchema = new mongoose.Schema(
         },
 
         // Audit Information
+
         createdBy: {
             userId: {
                 type: mongoose.Schema.Types.ObjectId,
@@ -157,7 +174,9 @@ const tenantSchema = new mongoose.Schema(
 
             name: {
                 type: String,
-                required: true,
+                required: false,
+                default: null,
+                trim: true,
             },
 
             role: {
@@ -185,6 +204,7 @@ const tenantSchema = new mongoose.Schema(
         },
 
         // Tenant Status
+
         isActive: {
             type: Boolean,
             default: false,
@@ -195,6 +215,7 @@ const tenantSchema = new mongoose.Schema(
             default: false,
         },
     },
+
     {
         timestamps: true,
     }
