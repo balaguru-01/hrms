@@ -5,6 +5,7 @@ import EnterpriseLogin from "./pages/auth/EnterpriseLogin";
 import TenantLogin from "./pages/auth/TenantLogin";
 import TenantOrganization from "./pages/auth/TenantOrganization";
 import UserRegistration from "./pages/auth/UserRegistration";
+import TenantRegistration from "./pages/enterprise/TenantRegistration";
 
 import NotFound from "./pages/errors/NotFound";
 
@@ -13,7 +14,6 @@ import PublicOnlyRoute from "./routes/PublicOnlyRoute";
 
 import EnterpriseDashboard from "./pages/enterprise/EnterpriseDashboard";
 import TenantManagement from "./pages/enterprise/TenantManagement";
-
 import Users from "./pages/enterprise/Users";
 import InvitationsSent from "./pages/enterprise/InvitationsSent";
 
@@ -35,6 +35,7 @@ const EnterpriseUserLayout = () => {
 function AppRoutes() {
   return (
     <Routes>
+
       {/* Public routes */}
 
       <Route
@@ -54,6 +55,12 @@ function AppRoutes() {
       <Route
         path={ROUTES.USER_REGISTER}
         element={<UserRegistration />}
+      />
+
+      {/* Tenant registration from email invitation */}
+      <Route
+        path="/tenant-register"
+        element={<TenantRegistration />}
       />
 
       <Route
@@ -78,34 +85,32 @@ function AppRoutes() {
         }
       >
         <Route element={<EnterpriseUserLayout />}>
+
           <Route
-            path={
-              ROUTES.ENTERPRISE_DASHBOARD
-            }
+            path={ROUTES.ENTERPRISE_DASHBOARD}
             element={<EnterpriseDashboard />}
           />
 
-        <Route
-          path={
-            ROUTES.ENTERPRISE_TENANT_MANAGEMENT
-          }
-          element={<TenantManagement />}
-        />
+          <Route
+            path={ROUTES.ENTERPRISE_TENANT_MANAGEMENT}
+            element={<TenantManagement />}
+          />
 
           <Route
             path={ROUTES.ENTERPRISE_USERS}
             element={<Users />}
           />
 
-
           <Route
-            path={
-              ROUTES.ENTERPRISE_INVITATIONS
-            }
+            path={ROUTES.ENTERPRISE_INVITATIONS}
             element={<InvitationsSent />}
           />
+
         </Route>
       </Route>
+
+      {/* Super Admin routes */}
+
       <Route
         element={
           <ProtectedRoute
@@ -116,17 +121,18 @@ function AppRoutes() {
         }
       >
         <Route
-          path={
-            ROUTES.SUPER_ADMIN_DASHBOARD
-          }
+          path={ROUTES.SUPER_ADMIN_DASHBOARD}
           element={<SuperAdminDashboard />}
         />
       </Route>
+
+      {/* Not found */}
 
       <Route
         path="*"
         element={<NotFound />}
       />
+
     </Routes>
   );
 }
