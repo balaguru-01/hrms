@@ -445,7 +445,8 @@ const tenantRegistrationService = async ({
     await Tenant.findOne({
       _id: invitedTenantId,
 
-      orgName: organizationName,
+      orgName:
+        organizationName,
 
       email,
 
@@ -572,6 +573,7 @@ const tenantRegistrationService = async ({
     await mongoose.startSession();
 
   try {
+
     session.startTransaction();
 
     // ---------------------------------------
@@ -631,13 +633,24 @@ const tenantRegistrationService = async ({
     tenantDocument.employeeCount =
       tenantDocument.employeeCount ?? 0;
 
-    tenantDocument.subscription = {
-      ...(tenantDocument.subscription || {}),
-      status: "Pending",
-      employeeLimit:
-        tenantDocument.subscription?.employeeLimit ??
-        10,
-    };
+    // Update only the required nested fields.
+    // Do not replace the complete subscription object.
+    tenantDocument.set(
+      "subscription.status",
+      "Pending"
+    );
+
+    if (
+      tenantDocument.subscription?.employeeLimit ===
+        undefined ||
+      tenantDocument.subscription?.employeeLimit ===
+        null
+    ) {
+      tenantDocument.set(
+        "subscription.employeeLimit",
+        10
+      );
+    }
 
     tenantDocument.isActive =
       false;
@@ -646,11 +659,14 @@ const tenantRegistrationService = async ({
       false;
 
     tenantDocument.updatedBy = {
-      userId: inviter._id,
+      userId:
+        inviter._id,
 
-      name: inviterName,
+      name:
+        inviterName,
 
-      role: inviterRole,
+      role:
+        inviterRole,
     };
 
     await tenantDocument.save({
@@ -859,7 +875,6 @@ const tenantRegistrationService = async ({
             false,
         },
       ],
-
       {
         session,
       }

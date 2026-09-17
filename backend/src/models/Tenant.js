@@ -20,7 +20,7 @@ const tenantSchema = new mongoose.Schema(
             sparse: true,
             uppercase: true,
             trim: true,
-            default: null,
+           
         },
 
         email: {
