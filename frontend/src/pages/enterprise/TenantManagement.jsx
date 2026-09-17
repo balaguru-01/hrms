@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useMemo,
   useState,
@@ -32,15 +33,13 @@ const TenantManagement = () => {
 
   const [tenants, setTenants] = useState([]);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
 
   // -------------------------
   // Search
   // -------------------------
 
-  const [search, setSearch] =
-    useState("");
+  const [search, setSearch] = useState("");
 
   // -------------------------
   // Status Filter
@@ -53,21 +52,18 @@ const TenantManagement = () => {
   // Sort
   // -------------------------
 
-  const [sortConfig, setSortConfig] =
-    useState({
-      key: "name",
-      direction: "asc",
-    });
+  const [sortConfig, setSortConfig] = useState({
+    key: "name",
+    direction: "asc",
+  });
 
   // -------------------------
   // Pagination
   // -------------------------
 
-  const [currentPage, setCurrentPage] =
-    useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const [pageSize, setPageSize] =
-    useState(5);
+  const [pageSize, setPageSize] = useState(5);
 
   // -------------------------
   // Invite Tenant
@@ -78,11 +74,10 @@ const TenantManagement = () => {
     setShowInviteModal,
   ] = useState(false);
 
-  const [inviteForm, setInviteForm] =
-    useState({
-      organizationName: "",
-      email: "",
-    });
+  const [inviteForm, setInviteForm] = useState({
+    organizationName: "",
+    email: "",
+  });
 
   const [inviteLoading, setInviteLoading] =
     useState(false);
@@ -115,111 +110,107 @@ const TenantManagement = () => {
   // Fetch Tenants
   // -------------------------
 
-  useEffect(() => {
-    const fetchTenants = async () => {
-      try {
-        const token =
-          localStorage.getItem(
-            "accessToken"
-          );
+  const fetchTenants = useCallback(async () => {
+    try {
+      setLoading(true);
 
-        if (!token) {
-          showToast({
-            type: "error",
-            title: "Authentication Error",
-            message:
-              "Please login again. Token not found.",
-          });
+      const token =
+        localStorage.getItem("accessToken");
 
-          return;
-        }
-
-        const response =
-          await fetch(
-            "http://localhost:5000/tenants",
-            {
-              method: "GET",
-
-              headers: {
-                Authorization:
-                  `Bearer ${token}`,
-              },
-            }
-          );
-
-        const data =
-          await response.json();
-
-        if (
-          !response.ok ||
-          !data.success
-        ) {
-          showToast({
-            type: "error",
-            title: "Failed to Load Tenants",
-            message:
-              data.message ||
-              "Unable to fetch tenants.",
-          });
-
-          return;
-        }
-
-        const formattedTenants =
-          (data.data || []).map(
-            (tenant) => ({
-              id: tenant._id,
-
-              name:
-                tenant.orgName || "",
-
-              email:
-                tenant.email || "",
-
-              phone:
-                tenant.phone || "",
-
-              employees:
-                tenant.employeeCount ??
-                0,
-
-              status:
-                tenant.subscription
-                  ?.status ||
-                "Pending",
-
-              createdAt:
-                tenant.createdAt,
-
-              // Keep original
-              // MongoDB data available
-              // for View/Edit if needed.
-              ...tenant,
-            })
-          );
-
-        setTenants(
-          formattedTenants
-        );
-      } catch (error) {
-        console.error(
-          "Fetch Tenants Error:",
-          error
-        );
-
+      if (!token) {
         showToast({
           type: "error",
-          title: "Network Error",
+          title: "Authentication Error",
           message:
-            "Unable to load tenants.",
+            "Please login again. Token not found.",
         });
-      } finally {
-        setLoading(false);
-      }
-    };
 
-    fetchTenants();
+        return;
+      }
+
+      const response = await fetch(
+        "http://localhost:5000/tenants",
+        {
+          method: "GET",
+
+          headers: {
+            Authorization:
+              `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (
+        !response.ok ||
+        !data.success
+      ) {
+        showToast({
+          type: "error",
+          title: "Failed to Load Tenants",
+          message:
+            data.message ||
+            "Unable to fetch tenants.",
+        });
+
+        return;
+      }
+
+      const formattedTenants =
+        (data.data || []).map(
+          (tenant) => ({
+            // Keep original MongoDB data
+            ...tenant,
+
+            // Frontend fields
+            id: tenant._id,
+
+            organization:
+              tenant.orgName || "",
+
+            name:
+              tenant.orgName || "",
+
+            email:
+              tenant.email || "",
+
+            phone:
+              tenant.phone || "",
+
+            employees:
+              tenant.employeeCount ?? 0,
+
+            status:
+              tenant.subscription?.status ||
+              "Pending",
+
+            createdAt:
+              tenant.createdAt,
+          })
+        );
+
+      setTenants(formattedTenants);
+    } catch (error) {
+      console.error(
+        "Fetch Tenants Error:",
+        error
+      );
+
+      showToast({
+        type: "error",
+        title: "Network Error",
+        message:
+          "Unable to load tenants.",
+      });
+    } finally {
+      setLoading(false);
+    }
   }, [showToast]);
+
+  useEffect(() => {
+    fetchTenants();
+  }, [fetchTenants]);
 
   // -------------------------
   // Search + Filter + Sort
@@ -227,77 +218,106 @@ const TenantManagement = () => {
 
   const filteredTenants = useMemo(() => {
     const normalizedSearch =
-      search
-        .trim()
-        .toLowerCase();
+      search.trim().toLowerCase();
 
-    let result =
-      tenants.filter(
-        (tenant) => {
-          const tenantName =
-            tenant.name ||
-            tenant.orgName ||
-            "";
+    const result = tenants.filter(
+      (tenant) => {
+        const tenantName =
+          tenant.organization ||
+          tenant.name ||
+          tenant.orgName ||
+          "";
 
-          const tenantEmail =
-            tenant.email || "";
+        const tenantEmail =
+          tenant.email || "";
 
-          const tenantStatus =
-            tenant.status ||
-            tenant.subscription
-              ?.status ||
-            "Pending";
+        const tenantStatus =
+          tenant.status ||
+          tenant.subscription?.status ||
+          "Pending";
 
-          const matchesSearch =
-            !normalizedSearch ||
-            tenantName
-              .toLowerCase()
-              .includes(
-                normalizedSearch
-              ) ||
-            tenantEmail
-              .toLowerCase()
-              .includes(
-                normalizedSearch
-              );
+        const matchesSearch =
+          !normalizedSearch ||
+          tenantName
+            .toLowerCase()
+            .includes(normalizedSearch) ||
+          tenantEmail
+            .toLowerCase()
+            .includes(normalizedSearch);
 
-          const matchesStatus =
-            statusFilter === "All" ||
-            tenantStatus ===
-              statusFilter;
+        const matchesStatus =
+          statusFilter === "All" ||
+          tenantStatus === statusFilter;
 
-          return (
-            matchesSearch &&
-            matchesStatus
-          );
-        }
-      );
+        return (
+          matchesSearch &&
+          matchesStatus
+        );
+      }
+    );
 
     result.sort((a, b) => {
-      const firstValue =
-        a[sortConfig.key] ?? "";
+      let firstValue;
+      let secondValue;
 
-      const secondValue =
-        b[sortConfig.key] ?? "";
+      if (sortConfig.key === "name") {
+        firstValue =
+          a.organization ||
+          a.name ||
+          a.orgName ||
+          "";
 
-      if (
-        firstValue <
-        secondValue
+        secondValue =
+          b.organization ||
+          b.name ||
+          b.orgName ||
+          "";
+
+        firstValue =
+          firstValue.toLowerCase();
+
+        secondValue =
+          secondValue.toLowerCase();
+      } else if (
+        sortConfig.key === "employees"
       ) {
-        return sortConfig.direction ===
-          "asc"
-          ? -1
-          : 1;
+        firstValue =
+          a.employees ?? 0;
+
+        secondValue =
+          b.employees ?? 0;
+      } else if (
+        sortConfig.key === "createdAt"
+      ) {
+        firstValue = new Date(
+          a.createdAt || 0
+        );
+
+        secondValue = new Date(
+          b.createdAt || 0
+        );
+      } else {
+        firstValue =
+          a[sortConfig.key] ?? "";
+
+        secondValue =
+          b[sortConfig.key] ?? "";
       }
 
-      if (
-        firstValue >
-        secondValue
-      ) {
-        return sortConfig.direction ===
-          "asc"
-          ? 1
-          : -1;
+      if (firstValue < secondValue) {
+        return (
+          sortConfig.direction === "asc"
+            ? -1
+            : 1
+        );
+      }
+
+      if (firstValue > secondValue) {
+        return (
+          sortConfig.direction === "asc"
+            ? 1
+            : -1
+        );
       }
 
       return 0;
@@ -318,34 +338,30 @@ const TenantManagement = () => {
   const totalPages = Math.max(
     1,
     Math.ceil(
-      filteredTenants.length /
-        pageSize
+      filteredTenants.length / pageSize
     )
   );
 
-  const paginatedTenants =
-    useMemo(() => {
-      const startIndex =
-        (currentPage - 1) *
-        pageSize;
+  const paginatedTenants = useMemo(() => {
+    const startIndex =
+      (currentPage - 1) *
+      pageSize;
 
-      return filteredTenants.slice(
-        startIndex,
-        startIndex + pageSize
-      );
-    }, [
-      filteredTenants,
-      currentPage,
-      pageSize,
-    ]);
+    return filteredTenants.slice(
+      startIndex,
+      startIndex + pageSize
+    );
+  }, [
+    filteredTenants,
+    currentPage,
+    pageSize,
+  ]);
 
   // -------------------------
   // Search
   // -------------------------
 
-  const handleSearchChange = (
-    value
-  ) => {
+  const handleSearchChange = (value) => {
     setSearch(value);
     setCurrentPage(1);
   };
@@ -354,9 +370,7 @@ const TenantManagement = () => {
   // Status
   // -------------------------
 
-  const handleStatusChange = (
-    value
-  ) => {
+  const handleStatusChange = (value) => {
     setStatusFilter(value);
     setCurrentPage(1);
   };
@@ -371,10 +385,8 @@ const TenantManagement = () => {
         key,
 
         direction:
-          previousConfig.key ===
-            key &&
-          previousConfig.direction ===
-            "asc"
+          previousConfig.key === key &&
+          previousConfig.direction === "asc"
             ? "desc"
             : "asc",
       })
@@ -387,15 +399,11 @@ const TenantManagement = () => {
   // Pagination
   // -------------------------
 
-  const handlePageChange = (
-    page
-  ) => {
+  const handlePageChange = (page) => {
     setCurrentPage(page);
   };
 
-  const handlePageSizeChange = (
-    size
-  ) => {
+  const handlePageSizeChange = (size) => {
     setPageSize(size);
     setCurrentPage(1);
   };
@@ -404,9 +412,7 @@ const TenantManagement = () => {
   // View
   // -------------------------
 
-  const handleViewTenant = (
-    tenant
-  ) => {
+  const handleViewTenant = (tenant) => {
     setSelectedTenant(tenant);
     setShowViewModal(true);
   };
@@ -415,9 +421,7 @@ const TenantManagement = () => {
   // Edit
   // -------------------------
 
-  const handleEditTenant = (
-    tenant
-  ) => {
+  const handleEditTenant = (tenant) => {
     setSelectedTenant({
       ...tenant,
 
@@ -435,9 +439,7 @@ const TenantManagement = () => {
   // Delete
   // -------------------------
 
-  const handleDeleteTenant = (
-    tenant
-  ) => {
+  const handleDeleteTenant = (tenant) => {
     setSelectedTenant(tenant);
     setShowDeleteModal(true);
   };
@@ -459,9 +461,7 @@ const TenantManagement = () => {
   // Invite Input Change
   // -------------------------
 
-  const handleInviteChange = (
-    event
-  ) => {
+  const handleInviteChange = (event) => {
     const {
       name,
       value,
@@ -470,15 +470,15 @@ const TenantManagement = () => {
     let updatedValue = value;
 
     if (
-      name ===
-      "organizationName"
+      name === "organizationName"
     ) {
-      updatedValue = value
-        .toLowerCase()
-        .replace(
-          /[^a-z]/g,
-          ""
-        );
+      updatedValue =
+        value
+          .toLowerCase()
+          .replace(
+            /[^a-z]/g,
+            ""
+          );
     }
 
     setInviteForm(
@@ -509,10 +509,12 @@ const TenantManagement = () => {
           .trim()
           .toLowerCase();
 
+      // Organization required
       if (!organizationName) {
         showToast({
           type: "error",
-          title: "Validation Error",
+          title:
+            "Validation Error",
           message:
             "Organization name is required.",
         });
@@ -520,10 +522,12 @@ const TenantManagement = () => {
         return;
       }
 
+      // Email required
       if (!email) {
         showToast({
           type: "error",
-          title: "Validation Error",
+          title:
+            "Validation Error",
           message:
             "Email is required.",
         });
@@ -539,7 +543,8 @@ const TenantManagement = () => {
       if (!token) {
         showToast({
           type: "error",
-          title: "Authentication Error",
+          title:
+            "Authentication Error",
           message:
             "Please login again. Token not found.",
         });
@@ -564,10 +569,11 @@ const TenantManagement = () => {
                   `Bearer ${token}`,
               },
 
-              body: JSON.stringify({
-                organizationName,
-                email,
-              }),
+              body:
+                JSON.stringify({
+                  organizationName,
+                  email,
+                }),
             }
           );
 
@@ -580,7 +586,8 @@ const TenantManagement = () => {
         ) {
           showToast({
             type: "error",
-            title: "Invitation Failed",
+            title:
+              "Invitation Failed",
             message:
               data.message ||
               "Failed to send tenant invitation.",
@@ -589,9 +596,11 @@ const TenantManagement = () => {
           return;
         }
 
+        // Invitation successfully sent
         showToast({
           type: "success",
-          title: "Invitation Sent",
+          title:
+            "Invitation Sent",
           message:
             data.message ||
             "Tenant invitation sent successfully.",
@@ -603,6 +612,10 @@ const TenantManagement = () => {
         });
 
         setShowInviteModal(false);
+
+        // Refresh tenant list immediately
+        await fetchTenants();
+
       } catch (error) {
         console.error(
           "Invite Tenant Error:",
@@ -611,10 +624,12 @@ const TenantManagement = () => {
 
         showToast({
           type: "error",
-          title: "Invitation Failed",
+          title:
+            "Invitation Failed",
           message:
             "Unable to send tenant invitation. Please try again.",
         });
+
       } finally {
         setInviteLoading(false);
       }
@@ -635,7 +650,8 @@ const TenantManagement = () => {
         if (!token) {
           showToast({
             type: "error",
-            title: "Authentication Error",
+            title:
+              "Authentication Error",
             message:
               "Please login again. Token not found.",
           });
@@ -677,27 +693,28 @@ const TenantManagement = () => {
                   `Bearer ${token}`,
               },
 
-              body: JSON.stringify({
-                orgName:
-                  updatedTenant.organization,
+              body:
+                JSON.stringify({
+                  orgName:
+                    updatedTenant.organization,
 
-                email:
-                  updatedTenant.email,
+                  email:
+                    updatedTenant.email,
 
-                phone:
-                  updatedTenant.phone,
+                  phone:
+                    updatedTenant.phone,
 
-                employeeCount:
-                  employeeCount,
+                  employeeCount:
+                    employeeCount,
 
-                subscription: {
-                  ...(updatedTenant.subscription ||
-                    {}),
+                  subscription: {
+                    ...(updatedTenant.subscription ||
+                      {}),
 
-                  status:
-                    updatedTenant.status,
-                },
-              }),
+                    status:
+                      updatedTenant.status,
+                  },
+                }),
             }
           );
 
@@ -710,7 +727,8 @@ const TenantManagement = () => {
         ) {
           showToast({
             type: "error",
-            title: "Update Failed",
+            title:
+              "Update Failed",
             message:
               data.message ||
               "Unable to update tenant.",
@@ -723,23 +741,34 @@ const TenantManagement = () => {
           data.data;
 
         const formattedTenant = {
+          ...updatedBackendTenant,
+
           id:
             updatedBackendTenant._id,
 
+          organization:
+            updatedBackendTenant
+              .orgName ||
+            "",
+
           name:
-            updatedBackendTenant.orgName ||
+            updatedBackendTenant
+              .orgName ||
             "",
 
           email:
-            updatedBackendTenant.email ||
+            updatedBackendTenant
+              .email ||
             "",
 
           phone:
-            updatedBackendTenant.phone ||
+            updatedBackendTenant
+              .phone ||
             "",
 
           employees:
-            updatedBackendTenant.employeeCount ??
+            updatedBackendTenant
+              .employeeCount ??
             0,
 
           status:
@@ -750,8 +779,6 @@ const TenantManagement = () => {
 
           createdAt:
             updatedBackendTenant.createdAt,
-
-          ...updatedBackendTenant,
         };
 
         setTenants(
@@ -771,10 +798,12 @@ const TenantManagement = () => {
 
         showToast({
           type: "success",
-          title: "Tenant Updated",
+          title:
+            "Tenant Updated",
           message:
             "Tenant information updated successfully.",
         });
+
       } catch (error) {
         console.error(
           "Update Tenant Error:",
@@ -783,7 +812,8 @@ const TenantManagement = () => {
 
         showToast({
           type: "error",
-          title: "Update Failed",
+          title:
+            "Update Failed",
           message:
             "Unable to update tenant. Please try again.",
         });
@@ -796,6 +826,7 @@ const TenantManagement = () => {
 
   const handleConfirmDelete =
     async () => {
+
       if (!selectedTenant) {
         return;
       }
@@ -809,7 +840,8 @@ const TenantManagement = () => {
         if (!token) {
           showToast({
             type: "error",
-            title: "Authentication Error",
+            title:
+              "Authentication Error",
             message:
               "Please login again. Token not found.",
           });
@@ -839,7 +871,8 @@ const TenantManagement = () => {
         ) {
           showToast({
             type: "error",
-            title: "Delete Failed",
+            title:
+              "Delete Failed",
             message:
               data.message ||
               "Unable to delete tenant.",
@@ -863,10 +896,12 @@ const TenantManagement = () => {
 
         showToast({
           type: "success",
-          title: "Tenant Deleted",
+          title:
+            "Tenant Deleted",
           message:
             "Tenant deleted successfully.",
         });
+
       } catch (error) {
         console.error(
           "Delete Tenant Error:",
@@ -875,7 +910,8 @@ const TenantManagement = () => {
 
         showToast({
           type: "error",
-          title: "Delete Failed",
+          title:
+            "Delete Failed",
           message:
             "Unable to delete tenant. Please try again.",
         });
@@ -1015,13 +1051,8 @@ const TenantManagement = () => {
           selectedTenant
         }
         onClose={() => {
-          setShowViewModal(
-            false
-          );
-
-          setSelectedTenant(
-            null
-          );
+          setShowViewModal(false);
+          setSelectedTenant(null);
         }}
       />
 
@@ -1035,13 +1066,8 @@ const TenantManagement = () => {
           selectedTenant
         }
         onClose={() => {
-          setShowEditModal(
-            false
-          );
-
-          setSelectedTenant(
-            null
-          );
+          setShowEditModal(false);
+          setSelectedTenant(null);
         }}
         onUpdate={
           handleUpdateTenant
@@ -1058,13 +1084,8 @@ const TenantManagement = () => {
           selectedTenant
         }
         onClose={() => {
-          setShowDeleteModal(
-            false
-          );
-
-          setSelectedTenant(
-            null
-          );
+          setShowDeleteModal(false);
+          setSelectedTenant(null);
         }}
         onConfirm={
           handleConfirmDelete

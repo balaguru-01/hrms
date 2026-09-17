@@ -117,15 +117,49 @@ const tenantInvitationService = async ({
 
     let newTenant;
 
-    // Used to know whether this request created
-    // or restored a tenant and email failure
-    // should therefore hide it again.
+    // Used when email sending fails.
     let tenantNeedsCleanup = false;
 
     try {
 
         // ---------------------------------------
-        // Check active/non-deleted tenant
+        // DEBUG: Check what backend receives
+        // ---------------------------------------
+
+        console.log(
+            "========================================"
+        );
+
+        console.log(
+            "TENANT INVITATION DEBUG"
+        );
+
+        console.log(
+            "Original Organization:",
+            organizationName
+        );
+
+        console.log(
+            "Normalized Organization:",
+            normalizedOrganizationName
+        );
+
+        console.log(
+            "Original Email:",
+            email
+        );
+
+        console.log(
+            "Normalized Email:",
+            normalizedEmail
+        );
+
+        console.log(
+            "========================================"
+        );
+
+        // ---------------------------------------
+        // Check existing tenant by email
         // ---------------------------------------
 
         const existingTenant =
@@ -133,6 +167,19 @@ const tenantInvitationService = async ({
                 email: normalizedEmail,
                 isDeleted: false,
             });
+
+        // ---------------------------------------
+        // DEBUG: Check whether tenant exists
+        // ---------------------------------------
+
+        console.log(
+            "Existing Tenant:",
+            existingTenant
+        );
+
+        // ---------------------------------------
+        // If tenant already exists
+        // ---------------------------------------
 
         if (existingTenant) {
 
@@ -151,18 +198,16 @@ const tenantInvitationService = async ({
         // ---------------------------------------
         // Check old deleted tenant
         // ---------------------------------------
-        // This can happen when a previous invitation
-        // was created but email sending failed.
-        //
-        // Because email is unique, we reuse that old
-        // tenant instead of creating another one.
-        // ---------------------------------------
 
         const deletedTenant =
             await Tenant.findOne({
                 email: normalizedEmail,
                 isDeleted: true,
             });
+
+        // ---------------------------------------
+        // Reuse old deleted tenant
+        // ---------------------------------------
 
         if (deletedTenant) {
 
@@ -215,46 +260,69 @@ const tenantInvitationService = async ({
         } else {
 
             // ---------------------------------------
-            // Create a brand-new Pending tenant
+            // Create brand-new Pending Tenant
             // ---------------------------------------
 
-            newTenant = await Tenant.create({
+            newTenant =
+                await Tenant.create({
 
-                orgName:
-                    normalizedOrganizationName,
+                    orgName:
+                        normalizedOrganizationName,
 
-                email:
-                    normalizedEmail,
+                    email:
+                        normalizedEmail,
 
-                employeeCount:
-                    0,
+                    employeeCount:
+                        0,
 
-                subscription: {
-                    status: "Pending",
-                },
+                    subscription: {
+                        status: "Pending",
+                    },
 
-                createdBy: {
-                    userId:
-                        invitedBy.userId,
+                    createdBy: {
+                        userId:
+                            invitedBy.userId,
 
-                    name:
-                        invitedBy.name || null,
+                        name:
+                            invitedBy.name || null,
 
-                    role:
-                        invitedBy.role || "",
-                },
+                        role:
+                            invitedBy.role || "",
+                    },
 
-                updatedBy: {
-                    userId: null,
-                    name: null,
-                    role: null,
-                },
+                    updatedBy: {
+                        userId: null,
+                        name: null,
+                        role: null,
+                    },
 
-                isActive: false,
+                    isActive: false,
 
-                isDeleted: false,
-            });
+                    isDeleted: false,
+                });
+console.log("========================================");
+console.log("PENDING TENANT CREATED");
+console.log("Tenant ID:", newTenant._id.toString());
+console.log("Organization:", newTenant.orgName);
+console.log("Email:", newTenant.email);
+console.log(
+    "Status:",
+    newTenant.subscription?.status
+);
+console.log(
+    "isActive:",
+    newTenant.isActive
+);
+console.log(
+    "isDeleted:",
+    newTenant.isDeleted
+);
 
+const verifyTenant =
+    await Tenant.findById(newTenant._id).lean();
+
+console.log("DATABASE VERIFY:", verifyTenant);
+console.log("========================================");
             tenantNeedsCleanup = true;
         }
 
@@ -265,32 +333,101 @@ const tenantInvitationService = async ({
             error
         );
 
-        // MongoDB duplicate-key protection.
-        // This can happen if two invitations for
-        // the same email arrive at almost the same time.
+        // ---------------------------------------
+        // Handle MongoDB duplicate key
+        // ---------------------------------------
+
         if (error.code === 11000) {
 
-            const duplicateError = new Error(
-                "An invitation has already been sent to this email address."
+            console.log(
+                "========================================"
             );
 
-            duplicateError.statusCode = 409;
+            console.log(
+                "DUPLICATE ERROR DETECTED"
+            );
+
+            console.log(
+                "Duplicate Field:",
+                error.keyPattern
+            );
+
+            console.log(
+                "Duplicate Value:",
+                error.keyValue
+            );
+
+            console.log(
+                "========================================"
+            );
+
+            const duplicateFields =
+                Object.keys(
+                    error.keyPattern || {}
+                );
+
+            const duplicateField =
+                duplicateFields[0];
+
+            let duplicateMessage =
+                "Duplicate tenant data already exists.";
+
+            if (
+                duplicateField === "email"
+            ) {
+                duplicateMessage =
+                    "An invitation has already been sent to this email address.";
+            }
+
+            if (
+                duplicateField === "orgName"
+            ) {
+                duplicateMessage =
+                    "An organization with this name already exists.";
+            }
+
+            if (
+                duplicateField === "companyCode"
+            ) {
+                duplicateMessage =
+                    "This company code already exists.";
+            }
+
+            const duplicateError =
+                new Error(
+                    duplicateMessage
+                );
+
+            duplicateError.statusCode =
+                409;
 
             duplicateError.auditReason =
-                "Duplicate tenant email";
+                `Duplicate tenant field: ${
+                    duplicateField || "unknown"
+                }`;
 
             throw duplicateError;
         }
+
+        // ---------------------------------------
+        // Pass custom application errors
+        // ---------------------------------------
 
         if (error.statusCode) {
             throw error;
         }
 
-        const tenantError = new Error(
-            "Unable to create pending tenant."
-        );
+        // ---------------------------------------
+        // Other database errors
+        // ---------------------------------------
 
-        tenantError.statusCode = 500;
+        const tenantError =
+            new Error(
+                "Unable to create pending tenant."
+            );
+
+        tenantError.statusCode =
+            500;
 
         tenantError.auditReason =
             error.message ||
@@ -300,47 +437,49 @@ const tenantInvitationService = async ({
     }
 
     // ---------------------------------------
-    // 5. Generate invitation token
+    // 5. Generate Invitation Token
     // ---------------------------------------
 
-    const token = generateToken(
-        {
-            purpose: "TenantInvitation",
+    const token =
+        generateToken(
+            {
+                purpose:
+                    "TenantInvitation",
 
-            tenant: {
-                tenantId:
-                    newTenant._id,
+                tenant: {
+                    tenantId:
+                        newTenant._id,
 
-                orgName:
+                    orgName:
+                        normalizedOrganizationName,
+
+                    email:
+                        normalizedEmail,
+                },
+
+                organizationName:
                     normalizedOrganizationName,
 
                 email:
                     normalizedEmail,
+
+                invitedBy: {
+                    userId:
+                        invitedBy.userId,
+
+                    name:
+                        invitedBy.name || "",
+
+                    role:
+                        invitedBy.role || "",
+                },
             },
 
-            organizationName:
-                normalizedOrganizationName,
-
-            email:
-                normalizedEmail,
-
-            invitedBy: {
-                userId:
-                    invitedBy.userId,
-
-                name:
-                    invitedBy.name || "",
-
-                role:
-                    invitedBy.role || "",
-            },
-        },
-
-        "2h"
-    );
+            "2h"
+        );
 
     // ---------------------------------------
-    // 6. Send invitation email
+    // 6. Send Invitation Email
     // ---------------------------------------
 
     try {
@@ -354,7 +493,7 @@ const tenantInvitationService = async ({
     } catch (error) {
 
         // Email failed.
-        // Hide the tenant again so that the same
+        // Hide the tenant again so the same
         // email can be invited again later.
 
         if (tenantNeedsCleanup) {
@@ -378,11 +517,13 @@ const tenantInvitationService = async ({
             }
         }
 
-        const mailError = new Error(
-            "Unable to send tenant invitation email."
-        );
+        const mailError =
+            new Error(
+                "Unable to send tenant invitation email."
+            );
 
-        mailError.statusCode = 500;
+        mailError.statusCode =
+            500;
 
         mailError.auditReason =
             error.message ||
@@ -392,7 +533,7 @@ const tenantInvitationService = async ({
     }
 
     // ---------------------------------------
-    // 7. Store invitation in AuditLog
+    // 7. Store Invitation in AuditLog
     // ---------------------------------------
 
     try {
@@ -482,7 +623,7 @@ const tenantInvitationService = async ({
 
         // Email has already been sent.
         // Audit failure should not make the
-        // invitation itself look unsuccessful.
+        // invitation look unsuccessful.
 
         console.error(
             "Tenant invitation audit log failed:",
@@ -491,7 +632,7 @@ const tenantInvitationService = async ({
     }
 
     // ---------------------------------------
-    // 8. Return success response
+    // 8. Return Success Response
     // ---------------------------------------
 
     return {
