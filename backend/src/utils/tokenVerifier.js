@@ -8,7 +8,7 @@ const verifyToken = (token) => {
     catch (error) 
     {
         const err = new Error("Invalid token");
-        error.auditReason = "Invalid or expired token";
+        err.auditReason = "Invalid or expired token";
         err.statusCode = 401;
         throw err;
     }

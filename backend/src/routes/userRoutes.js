@@ -1,13 +1,22 @@
 import express from "express";
+
 import authMiddleware from "../middlewares/authMiddleware.js";
 import roleMiddleware from "../middlewares/roleMiddleware.js";
-import constants from "../config/constants.js";
-import {sendUserInvitation, registerUser,fetchingRoles} from "../controllers/userController.js";
 
+import constants from "../config/constants.js";
+
+import {
+    sendUserInvitation,
+    registerUser,
+    fetchRoles,
+    fetchUsers,
+    getSentInvitations,
+} from "../controllers/userController.js";
 
 const router = express.Router();
 
-router.get("/roles",
+router.post(
+    "/roles",
     authMiddleware,
     roleMiddleware(
         constants.roles.enterpriseAdmin,
@@ -15,19 +24,48 @@ router.get("/roles",
         constants.roles.tenantSuperAdmin,
         constants.roles.tenantAdmin
     ),
-    fetchingRoles
-)
+    fetchRoles
+);
 
-router.post("/invite",
-    authMiddleware, 
+router.post(
+    "/",
+    authMiddleware,
     roleMiddleware(
         constants.roles.enterpriseAdmin,
         constants.roles.superAdmin,
         constants.roles.tenantSuperAdmin,
         constants.roles.tenantAdmin
     ),
-    sendUserInvitation);
-    
-router.post("/register",registerUser);
+    fetchUsers
+);
+
+router.post(
+    "/invite",
+    authMiddleware,
+    roleMiddleware(
+        constants.roles.enterpriseAdmin,
+        constants.roles.superAdmin,
+        constants.roles.tenantSuperAdmin,
+        constants.roles.tenantAdmin
+    ),
+    sendUserInvitation
+);
+
+router.post(
+    "/invitations",
+    authMiddleware,
+    roleMiddleware(
+        constants.roles.enterpriseAdmin,
+        constants.roles.superAdmin,
+        constants.roles.tenantSuperAdmin,
+        constants.roles.tenantAdmin
+    ),
+    getSentInvitations
+);
+
+router.post(
+    "/register",
+    registerUser
+);
 
 export default router;

@@ -5,8 +5,9 @@ import { USER_ENDPOINTS } from "../endpoints/endpoints";
 export const getAllowedRoles = async (
   scope
 ) => {
-  const response = await api.get(
+  const response = await api.post(
     USER_ENDPOINTS.ROLES,
+    {},
     {
       params: {
         scope,
@@ -66,8 +67,9 @@ export const getUsers = async ({
   page = 1,
   limit = 10,
 }) => {
-  const response = await api.get(
+  const response = await api.post(
     USER_ENDPOINTS.USERS,
+    {},
     {
       params: {
         scope,
@@ -85,8 +87,9 @@ export const getSentInvitations = async ({
   page = 1,
   limit = 10,
 } = {}) => {
-  const response = await api.get(
+  const response = await api.post(
     USER_ENDPOINTS.INVITATIONS,
+    {},
     {
       params: {
         page,

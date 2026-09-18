@@ -25,13 +25,11 @@ const userSchema = new mongoose.Schema(
         // Basic User Information
         firstName: {
             type: String,
-            required: true,
             trim: true,
         },
 
         lastName: {
             type: String,
-            required: true,
             trim: true,
         },
 
@@ -45,13 +43,11 @@ const userSchema = new mongoose.Schema(
 
         password: {
             type: String,
-            required: true,
             select: false,
         },
 
         phone: {
             type: String,
-            required: true,
             trim: true,
         },
 
@@ -187,9 +183,12 @@ const userSchema = new mongoose.Schema(
         status: {
             type: String,
             enum: [
+                "Invited",
                 "Active",
                 "Inactive",
                 "Pending",
+                "Rejected",
+                "Deleted",
                 "Resigned",
                 "Suspended",
             ],
@@ -204,6 +203,18 @@ const userSchema = new mongoose.Schema(
         isDeleted: {
             type: Boolean,
             default: false,
+        },
+
+        // Invitation Tracking
+        invitationToken: {
+            type: String,
+            default: null,
+            select: false,
+        },
+
+        invitationTokenExpiresAt: {
+            type: Date,
+            default: null,
         },
 
         // Authentication Tracking
@@ -228,23 +239,24 @@ const userSchema = new mongoose.Schema(
     }
 );
 
-    // Unique email for every user
-    userSchema.index(
-        {
-            email: 1,
-        },
-        {
-            unique: true,
-        }
-    );
-    // Unique phone for every user
-    userSchema.index(
-        {
-            phone: 1,
-        },
-        {
-            unique: true,
-        }
-    );
+// Unique email for every user
+userSchema.index(
+    {
+        email: 1,
+    },
+    {
+        unique: true,
+    }
+);
+
+// Unique phone number for every user
+userSchema.index(
+    {
+        phone: 1,
+    },
+    {
+        unique: true,
+    }
+);
 
 export default mongoose.model("User", userSchema);
