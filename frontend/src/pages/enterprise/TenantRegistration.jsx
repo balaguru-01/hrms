@@ -364,7 +364,7 @@ const TenantRegistration = () => {
       setLoading(true);
 
       const response = await fetch(
-        "http://localhost:5000/tenant-invitations/register",
+        "http://localhost:5000/tenants/register",
         {
           method: "POST",
 

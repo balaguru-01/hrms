@@ -200,7 +200,7 @@ const handleInvite = async () => {
 
     // Call backend API
     const response = await fetch(
-      "http://localhost:5000/tenant-invitations/invite",
+      "http://localhost:5000/tenants/invite",
       {
         method: "POST",
 

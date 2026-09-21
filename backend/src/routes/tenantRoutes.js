@@ -1,5 +1,6 @@
 import express from "express";
-
+import { sendTenantInvitation } from "../controllers/tenantInvitationController.js";
+import { registerTenant } from "../controllers/tenantRegistrationController.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
 import roleMiddleware from "../middlewares/roleMiddleware.js";
 import constants from "../config/constants.js";
@@ -69,5 +70,20 @@ router.delete(
   ),
   deleteTenant
 );
+// Tenant Invitation
+router.post(
+  "/invite",
+  authMiddleware,
+  roleMiddleware(
+    constants.roles.enterpriseAdmin,
+    constants.roles.superAdmin
+  ),
+  sendTenantInvitation
+);
 
+// Tenant Registration
+router.post(
+  "/register",
+  registerTenant
+);
 export default router;
