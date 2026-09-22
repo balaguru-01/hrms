@@ -1,70 +1,101 @@
 import {
   MdBusiness,
   MdCheckCircle,
-  MdPendingActions,
+  MdAccessTime,
   MdMailOutline,
 } from "react-icons/md";
 
-const stats = [
-  {
-    id: 1,
-    title: "Total Tenants",
-    value: 28,
-    icon: <MdBusiness />,
-    bg: "bg-blue-100",
-    color: "text-blue-600",
-  },
-  {
-    id: 2,
-    title: "Active Tenants",
-    value: 22,
-    icon: <MdCheckCircle />,
-    bg: "bg-green-100",
-    color: "text-green-600",
-  },
-  {
-    id: 3,
-    title: "Pending Approval",
-    value: 4,
-    icon: <MdPendingActions />,
-    bg: "bg-yellow-100",
-    color: "text-yellow-600",
-  },
-  {
-    id: 4,
-    title: "Invitations Sent",
-    value: 9,
-    icon: <MdMailOutline />,
-    bg: "bg-purple-100",
-    color: "text-purple-600",
-  },
-];
+const TenantStats = ({
+  tenants = [],
+}) => {
+  // Total tenants
+  const totalTenants =
+    tenants.length;
 
-const TenantStats = () => {
+  // Active tenants
+  const activeTenants =
+    tenants.filter(
+      (tenant) =>
+        tenant.status === "Active"
+    ).length;
+
+  // Pending tenants
+  const pendingTenants =
+    tenants.filter(
+      (tenant) =>
+        tenant.status === "Pending"
+    ).length;
+
+  // Invitations sent
+  // Every tenant currently represents
+  // an invitation/tenant record.
+  const invitationsSent =
+    tenants.length;
+
+  const stats = [
+    {
+      title: "Total Tenants",
+      value: totalTenants,
+      icon: (
+        <MdBusiness className="text-3xl text-blue-600" />
+      ),
+      iconBg: "bg-blue-100",
+    },
+
+    {
+      title: "Active Tenants",
+      value: activeTenants,
+      icon: (
+        <MdCheckCircle className="text-3xl text-green-600" />
+      ),
+      iconBg: "bg-green-100",
+    },
+
+    {
+      title: "Pending Approval",
+      value: pendingTenants,
+      icon: (
+        <MdAccessTime className="text-3xl text-yellow-600" />
+      ),
+      iconBg: "bg-yellow-100",
+    },
+
+    {
+      title: "Invitations Sent",
+      value: invitationsSent,
+      icon: (
+        <MdMailOutline className="text-3xl text-purple-600" />
+      ),
+      iconBg: "bg-purple-100",
+    },
+  ];
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-      {stats.map((item) => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+      {stats.map((stat) => (
         <div
-          key={item.id}
-          className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 transition hover:shadow-md"
+          key={stat.title}
+          className="flex items-center justify-between rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
         >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 text-sm">{item.title}</p>
+          <div>
+            <p className="text-sm font-medium text-gray-500">
+              {stat.title}
+            </p>
 
-              <h2 className="text-3xl font-bold text-gray-900 mt-2">
-                {item.value}
-              </h2>
-            </div>
+            <p className="mt-2 text-3xl font-bold text-gray-900">
+              {stat.value}
+            </p>
+          </div>
 
-            <div
-              className={`h-14 w-14 rounded-2xl flex items-center justify-center text-3xl ${item.bg} ${item.color}`}
-            >
-              {item.icon}
-            </div>
+          <div
+            className={`flex h-14 w-14 items-center justify-center rounded-2xl ${stat.iconBg}`}
+          >
+            {stat.icon}
           </div>
         </div>
       ))}
+
     </div>
   );
 };

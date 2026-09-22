@@ -1,21 +1,28 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+
 import { useState } from "react";
 
 import Logo from "../../components/common/Logo";
+
 import AuthCard from "../../components/auth/AuthCard";
+
 import BackButton from "../../components/common/BackButton";
+
 import StepIndicator from "../../components/auth/StepIndicator";
+
 import OrganizationInfo from "../../components/auth/OrganizationInfo";
+
 import AuthFooter from "../../components/auth/AuthFooter";
 
 import InputField from "../../components/forms/InputField";
+
 import PasswordField from "../../components/forms/PasswordField";
+
 import PrimaryButton from "../../components/buttons/PrimaryButton";
 
 import bgImage from "../../assets/images/auth-bg.jpg";
 
 const TenantLogin = () => {
-  const navigate = useNavigate();
   const location = useLocation();
 
   const organization =
@@ -25,6 +32,7 @@ const TenantLogin = () => {
     };
 
   const [employeeId, setEmployeeId] = useState("");
+
   const [password, setPassword] = useState("");
 
   const handleSubmit = (e) => {
@@ -49,7 +57,7 @@ const TenantLogin = () => {
     >
       {/* Overlay */}
 
-      <div className="min-h-screen bg-white/50 backdrop-blur-[1px] flex flex-col">
+      <div className="flex min-h-screen flex-col bg-white/50 backdrop-blur-[1px]">
 
         {/* Logo */}
 
@@ -59,8 +67,7 @@ const TenantLogin = () => {
 
         {/* Center */}
 
-        <div className="flex-1 flex justify-center px-6 py-8">
-
+        <div className="flex flex-1 justify-center px-6 py-8">
           <AuthCard className="my-auto">
 
             <BackButton
@@ -70,7 +77,7 @@ const TenantLogin = () => {
 
             {/* Step Indicator */}
 
-            <div className="mt-6 mb-8">
+            <div className="mb-8 mt-6">
               <StepIndicator
                 currentStep={2}
                 totalSteps={2}
@@ -117,16 +124,13 @@ const TenantLogin = () => {
               {/* Remember */}
 
               <div className="flex items-center justify-between pt-1">
-
                 <label className="flex items-center gap-2 text-sm text-gray-700">
-
                   <input
                     type="checkbox"
                     className="rounded border-gray-300"
                   />
 
                   Remember me
-
                 </label>
 
                 <button
@@ -135,7 +139,6 @@ const TenantLogin = () => {
                 >
                   Forgot password?
                 </button>
-
               </div>
 
               <PrimaryButton
@@ -145,13 +148,9 @@ const TenantLogin = () => {
             </form>
 
             <AuthFooter />
-
           </AuthCard>
-
         </div>
-
       </div>
-
     </div>
   );
 };

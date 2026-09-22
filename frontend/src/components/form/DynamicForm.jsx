@@ -2,6 +2,7 @@ import {
   useForm,
   useWatch,
 } from "react-hook-form";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import FormField from "./FormField";
@@ -25,16 +26,15 @@ const DynamicForm = ({
 
   disableSubmitUntilFilled = true,
   twoColumnLayout = false,
-
   submitButtonFullWidth = true,
-
-  buttons = null,
+  secondaryAction = null,
 }) => {
   const {
     control,
     register,
     handleSubmit,
     formState: {
+      errors,
       isSubmitting,
     },
   } = useForm({
@@ -48,7 +48,7 @@ const DynamicForm = ({
 
     reValidateMode: "onChange",
 
-    shouldFocusError: false,
+    shouldFocusError: true,
   });
 
   const fieldValues = useWatch({
@@ -78,22 +78,27 @@ const DynamicForm = ({
       !isFormFilled) ||
     isFormLoading;
 
-  const hasOddNumberOfFields =
-    fields.length % 2 !== 0;
-
   const handleValidSubmit = async (
     data
   ) => {
     try {
       await onSubmit?.(data);
-    } catch {
-      return;
+    } catch (error) {
+      console.error(
+        "Form submit error:",
+        error
+      );
     }
   };
 
   const handleInvalidSubmit = (
     validationErrors
   ) => {
+    console.log(
+      "Validation errors:",
+      validationErrors
+    );
+
     onValidationError?.(
       validationErrors
     );
@@ -107,21 +112,8 @@ const DynamicForm = ({
     onForgotPassword?.();
   };
 
-  const defaultButton = {
-    type: "submit",
-    variant: "primary",
-    disabled: isSubmitDisabled,
-    fullWidth: submitButtonFullWidth,
-    loadingText,
-    text: submitText,
-  };
-
-  const formButtons = Array.isArray(buttons)
-    ? buttons
-    : [defaultButton];
-
-  const hasMultipleButtons =
-    formButtons.length > 1;
+  const hasSecondaryAction =
+    Boolean(secondaryAction);
 
   return (
     <form
@@ -139,13 +131,11 @@ const DynamicForm = ({
             : "space-y-4"
         }
       >
-        {fields.map((field, index) => (
+        {fields.map((field) => (
           <div
             key={field.name}
             className={
-              twoColumnLayout &&
-              hasOddNumberOfFields &&
-              index === 0
+              field.fullWidth
                 ? "sm:col-span-2"
                 : ""
             }
@@ -157,6 +147,10 @@ const DynamicForm = ({
               )}
               control={control}
               formLoading={isFormLoading}
+              error={
+                errors[field.name]
+                  ?.message
+              }
             />
           </div>
         ))}
@@ -179,81 +173,34 @@ const DynamicForm = ({
 
       <div
         className={
-          hasMultipleButtons
+          hasSecondaryAction
             ? "mt-6 flex items-center justify-end gap-3"
             : "mt-6 flex justify-center"
         }
       >
-        {formButtons.map(
-          (button, index) => {
-            const isSubmitButton =
-              button.type === "submit";
+        {secondaryAction}
 
-            const buttonLoading =
-              isSubmitButton &&
-              isFormLoading;
-
-            const buttonDisabled =
-              button.disabled !== undefined
-                ? button.disabled ||
-                  (isSubmitButton &&
-                    isSubmitDisabled)
-                : isSubmitButton
-                  ? isSubmitDisabled
-                  : isFormLoading;
-
-            const buttonText =
-              buttonLoading
-                ? button.loadingText ||
-                  loadingText
-                : button.text ||
-                  button.children ||
-                  submitText;
-
-            return (
-              <FormButton
-                key={
-                  button.id ||
-                  `${button.type}-${index}`
-                }
-                type={
-                  button.type ||
-                  "submit"
-                }
-                variant={
-                  button.variant ||
-                  "primary"
-                }
-                loading={
-                  buttonLoading
-                }
-                disabled={
-                  buttonDisabled
-                }
-                fullWidth={
-                  hasMultipleButtons
-                    ? false
-                    : button.fullWidth ??
-                      submitButtonFullWidth
-                }
-                onClick={
-                  button.onClick
-                }
-                className={
-                  hasMultipleButtons
-                    ? "w-fit px-8 py-2.5 text-sm"
-                    : button.fullWidth ===
-                        false ||
-                      !submitButtonFullWidth
-                      ? "w-fit px-8 py-2.5 text-sm"
-                      : ""
-                }
-              >
-                {buttonText}
-              </FormButton>
-            );
+        <FormButton
+          type="submit"
+          loading={isFormLoading}
+          disabled={isSubmitDisabled}
+          fullWidth={
+            hasSecondaryAction
+              ? false
+              : submitButtonFullWidth
           }
-        )}
+          className={
+            hasSecondaryAction
+              ? "w-fit px-8 py-2.5 text-sm"
+              : submitButtonFullWidth
+                ? ""
+                : "w-fit px-8 py-2.5 text-sm"
+          }
+        >
+          {isFormLoading
+            ? loadingText
+            : submitText}
+        </FormButton>
       </div>
     </form>
   );

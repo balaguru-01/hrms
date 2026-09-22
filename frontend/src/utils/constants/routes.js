@@ -27,4 +27,7 @@ export const ROUTES = {
 
   TENANT_LOGIN:
     "/tenant/login",
+
+  TENANT_REGISTRATION:
+    "/tenant-register",
 };

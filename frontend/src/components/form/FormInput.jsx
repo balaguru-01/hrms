@@ -3,6 +3,8 @@ import { MdEmail } from "react-icons/md";
 const FormInput = ({
   field,
   registration,
+  error,
+  formLoading,
 }) => {
   const {
     name,
@@ -15,6 +17,9 @@ const FormInput = ({
 
   const showEmailIcon =
     type === "email";
+
+  const isDisabled =
+    disabled || formLoading;
 
   return (
     <div className="space-y-2">
@@ -39,17 +44,28 @@ const FormInput = ({
         <input
           id={name}
           type={type}
-          name={name}
           placeholder={placeholder}
-          disabled={disabled}
+          disabled={isDisabled}
           {...registration}
-          className={`w-full rounded-xl border border-gray-300 ${inputClassName || "py-3"} outline-none transition-all duration-200 focus:border-green-600 focus:ring-2 focus:ring-green-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 ${
+          className={`w-full rounded-xl border ${
+            error
+              ? "border-red-500 focus:border-red-500 focus:ring-red-100"
+              : "border-gray-300 focus:border-green-600 focus:ring-green-100"
+          } ${
+            inputClassName || "py-3"
+          } outline-none transition-all duration-200 focus:ring-2 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 ${
             showEmailIcon
               ? "pl-12 pr-4"
               : "px-4"
           }`}
         />
       </div>
+
+      {error && (
+        <p className="text-sm text-red-500">
+          {error}
+        </p>
+      )}
     </div>
   );
 };
