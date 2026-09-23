@@ -1,14 +1,20 @@
+
 import {
   useCallback,
   useEffect,
   useMemo,
   useState,
 } from "react";
+import { MdInfoOutline } from "react-icons/md";
+
 import { useSearchParams } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { FaEye } from "react-icons/fa";
+import { MdPersonAdd } from "react-icons/md";
 
 import DashboardLayout from "../../components/layout/DashboardLayout";
+import PrimaryButton from "../../components/buttons/PrimaryButton";
+import InviteUserForm from "../../components/enterprise-user/InviteUserForm";
 import DynamicTable from "../../components/tables/DynamicTable";
 import DynamicPagination from "../../components/tables/DynamicPagination";
 import DynamicTableActions from "../../components/tables/DynamicTableActions";
@@ -334,6 +340,78 @@ const Users = () => {
       status: activeStatus,
       page: "1",
     });
+  };
+
+  const handleAddAdminUser = () => {
+    setIsInviteFormOpen(
+      (previous) => !previous
+    );
+  };
+
+  const handleInviteCancel = () => {
+    setIsInviteFormOpen(false);
+  };
+
+  const handleInviteSubmit = async (
+    formData
+  ) => {
+    try {
+      const response =
+        await sendUserInvitation({
+          email: formData.email.trim(),
+          roleId: formData.roleId,
+          invitedDesignation:
+            formData.designation.trim(),
+        });
+
+      if (!response?.success) {
+        showToast({
+          message:
+            response?.message ||
+            "Unable to send the user invitation.",
+          type: "error",
+        });
+
+        return;
+      }
+
+      addInvitation({
+        email: formData.email.trim(),
+        role:
+          formData.roleName ||
+          formData.role ||
+          "User",
+        designation:
+          formData.designation.trim(),
+      });
+
+      setIsInviteFormOpen(false);
+
+      showToast({
+        message:
+          response?.message ||
+          "User invitation sent successfully.",
+        type: "success",
+        title: "Invitation Sent",
+        duration: 5000,
+      });
+
+      await fetchUsers(
+        activeStatus,
+        currentPage
+      );
+    } catch (error) {
+      const backendMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.error;
+
+      showToast({
+        message:
+          backendMessage ||
+          "Unable to send the user invitation. Please try again.",
+        type: "error",
+      });
+    }
   };
 
   
@@ -754,15 +832,30 @@ const Users = () => {
       profilePath="/enterprise/profile"
     >
       <div className="space-y-5">
-        {/* Status Tabs */}
+  {/* Invite User */}
+  {/* Status Tabs */}
 
-        <div className="flex justify-center">
-          <StatusTabs
-            tabs={USER_STATUS_TABS}
-            activeTab={activeStatus}
-            onChange={handleStatusChange}
-          />
-        </div>
+  <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+  <div className="border-t border-gray-100 p-4 sm:p-5">
+    <div className="flex w-full flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="order-2 min-w-0 flex-1 lg:order-1">
+        <StatusTabs
+          tabs={USER_STATUS_TABS}
+          activeTab={activeStatus}
+          onChange={handleStatusChange}
+        />
+      </div>
+
+      <div className="order-1 w-full lg:order-2 lg:w-48 lg:shrink-0">
+        <PrimaryButton
+          text="Invite User"
+          icon={<MdPersonAdd />}
+          onClick={handleAddAdminUser}
+        />
+      </div>
+    </div>
+  </div>
+</div>
 
         {/* Loading */}
 
@@ -835,29 +928,75 @@ const Users = () => {
               shadow-sm
             "
           >
-            <h3
-              className="
-                text-base
-                font-semibold
-                text-gray-900
-              "
-            >
-              No Users Found
-            </h3>
+<div className="flex items-center justify-center gap-1.5">
+  <h3
+    className="
+      text-base
+      font-semibold
+      text-gray-900
+    "
+  >
+    No Users Found
+  </h3>
 
-            <p
-              className="
-                mt-1
-                text-sm
-                text-gray-500
-              "
-            >
-              There are currently no users
-              matching the selected status.
-            </p>
+  <div className="group relative flex items-center">
+    <span
+      aria-label="More information"
+      className="
+        flex
+        items-center
+        justify-center
+        text-base
+        text-gray-400
+        transition
+        group-hover:text-gray-600
+      "
+    >
+      <MdInfoOutline />
+    </span>
+
+    <div
+      className="
+        pointer-events-none
+        absolute
+        left-0
+        top-full
+        z-50
+        mt-2
+        w-56
+        rounded-lg
+        border
+        border-gray-200
+        bg-white
+        px-3
+        py-2
+        text-xs
+        font-normal
+        leading-5
+        text-gray-600
+        opacity-0
+        shadow-lg
+        transition-opacity
+        duration-150
+        group-hover:opacity-100
+      "
+    >
+      There are currently no users matching the selected status.
+    </div>
+  </div>
+
+  
+</div>
           </div>
         )}
       </div>
+
+      {isInviteFormOpen && (
+        <InviteUserForm
+          onCancel={handleInviteCancel}
+          onSubmit={handleInviteSubmit}
+        />
+      )}
 
       {/* User Details Modal */}
 
