@@ -16,7 +16,6 @@ import TenantEmptyState from "../../components/tenant/TenantEmptyState";
 
 import InviteTenantModal from "../../components/tenant/InviteTenantModal";
 import ViewTenantModal from "../../components/tenant/ViewTenantModal";
-import EditTenantModal from "../../components/tenant/EditTenantModal";
 import DeleteTenantModal from "../../components/tenant/DeleteTenantModal";
 
 import { useToast } from "../../context/ToastContext";
@@ -227,7 +226,7 @@ const TenantManagement = () => {
   ] = useState(false);
 
   // ----------------------
-  // VIEW / EDIT / DELETE
+  // VIEW / DELETE
   // ----------------------
 
   const [
@@ -238,11 +237,6 @@ const TenantManagement = () => {
   const [
     viewOpen,
     setViewOpen,
-  ] = useState(false);
-
-  const [
-    editOpen,
-    setEditOpen,
   ] = useState(false);
 
   const [
@@ -554,7 +548,7 @@ const TenantManagement = () => {
 
       const response =
         await fetch(
-         "http://localhost:5000/tenants/invite",
+          "http://localhost:5000/tenant-invitations/invite",
           {
             method: "POST",
 
@@ -778,48 +772,6 @@ const TenantManagement = () => {
   };
 
   // ----------------------
-  // EDIT
-  // ----------------------
-
-  const handleEdit = (tenant) => {
-    setSelectedTenant(tenant);
-
-    setEditOpen(true);
-  };
-
-  const handleUpdate = (
-    updatedTenant
-  ) => {
-    const updatedTenants =
-      tenants.map(
-        (tenant) =>
-          tenant.id ===
-          updatedTenant.id
-            ? {
-                ...tenant,
-                ...updatedTenant,
-              }
-            : tenant
-      );
-
-    saveTenants(
-      updatedTenants
-    );
-
-    setEditOpen(false);
-
-    showToast({
-      type: "success",
-
-      title:
-        "Tenant Updated",
-
-      message:
-        "Tenant information updated successfully.",
-    });
-  };
-
-  // ----------------------
   // DELETE
   // ----------------------
 
@@ -925,10 +877,6 @@ const TenantManagement = () => {
                 handleView
               }
 
-              onEdit={
-                handleEdit
-              }
-
               onDelete={
                 handleDelete
               }
@@ -1017,19 +965,6 @@ const TenantManagement = () => {
         tenant={selectedTenant}
         onClose={() =>
           setViewOpen(false)
-        }
-      />
-
-      {/* Edit Tenant Modal */}
-
-      <EditTenantModal
-        open={editOpen}
-        tenant={selectedTenant}
-        onClose={() =>
-          setEditOpen(false)
-        }
-        onSubmit={
-          handleUpdate
         }
       />
 

@@ -19,11 +19,9 @@ const DynamicForm = ({
   loading = false,
   className = "",
   mode = "onSubmit",
-
   forgotPassword = false,
   forgotPasswordText = "Forgot password?",
   onForgotPassword,
-
   disableSubmitUntilFilled = true,
   twoColumnLayout = false,
   submitButtonFullWidth = true,
@@ -36,18 +34,15 @@ const DynamicForm = ({
     formState: {
       errors,
       isSubmitting,
+      isValid,
     },
   } = useForm({
     resolver: schema
       ? zodResolver(schema)
       : undefined,
-
     defaultValues,
-
     mode,
-
     reValidateMode: "onChange",
-
     shouldFocusError: true,
   });
 
@@ -55,6 +50,9 @@ const DynamicForm = ({
     control,
   });
 
+  // ---------------------------------------
+  // CHECK REQUIRED FIELDS
+  // ---------------------------------------
   const isFormFilled = fields
     .filter(
       (field) => field.required !== false
@@ -70,14 +68,23 @@ const DynamicForm = ({
       );
     });
 
+  // ---------------------------------------
+  // LOADING
+  // ---------------------------------------
   const isFormLoading =
     loading || isSubmitting;
 
+  // ---------------------------------------
+  // SUBMIT BUTTON
+  // ---------------------------------------
   const isSubmitDisabled =
     (disableSubmitUntilFilled &&
-      !isFormFilled) ||
+      (!isFormFilled || !isValid)) ||
     isFormLoading;
 
+  // ---------------------------------------
+  // VALID SUBMIT
+  // ---------------------------------------
   const handleValidSubmit = async (
     data
   ) => {
@@ -91,6 +98,9 @@ const DynamicForm = ({
     }
   };
 
+  // ---------------------------------------
+  // INVALID SUBMIT
+  // ---------------------------------------
   const handleInvalidSubmit = (
     validationErrors
   ) => {
@@ -104,6 +114,9 @@ const DynamicForm = ({
     );
   };
 
+  // ---------------------------------------
+  // FORGOT PASSWORD
+  // ---------------------------------------
   const handleForgotPassword = () => {
     if (isFormLoading) {
       return;
@@ -131,31 +144,91 @@ const DynamicForm = ({
             : "space-y-4"
         }
       >
-        {fields.map((field) => (
-          <div
-            key={field.name}
-            className={
-              field.fullWidth
-                ? "sm:col-span-2"
-                : ""
-            }
-          >
-            <FormField
-              field={field}
-              registration={register(
-                field.name
-              )}
-              control={control}
-              formLoading={isFormLoading}
-              error={
-                errors[field.name]
-                  ?.message
+        {fields.map((field) => {
+          // ---------------------------------------
+          // FIELD REGISTRATION
+          // ---------------------------------------
+          const fieldRegistration =
+            register(field.name, {
+              // Add validation rules
+              ...field.rules,
+
+              // Custom input handling
+              onChange: (event) => {
+                const input =
+                  event.target;
+
+                // FIRST NAME
+                if (
+                  field.name ===
+                  "firstName"
+                ) {
+                  input.value =
+                    input.value.replace(
+                      /[^A-Za-z]/g,
+                      ""
+                    );
+                }
+
+                // LAST NAME
+                if (
+                  field.name ===
+                  "lastName"
+                ) {
+                  input.value =
+                    input.value.replace(
+                      /[^A-Za-z]/g,
+                      ""
+                    );
+                }
+
+                // PHONE NUMBER
+                if (
+                  field.name ===
+                  "phone"
+                ) {
+                  input.value =
+                    input.value
+                      .replace(
+                        /\D/g,
+                        ""
+                      )
+                      .slice(0, 10);
+                }
+              },
+            });
+
+          return (
+            <div
+              key={field.name}
+              className={
+                field.fullWidth
+                  ? "sm:col-span-2"
+                  : ""
               }
-            />
-          </div>
-        ))}
+            >
+              <FormField
+                field={field}
+                registration={
+                  fieldRegistration
+                }
+                control={control}
+                formLoading={
+                  isFormLoading
+                }
+                error={
+                  errors[field.name]
+                    ?.message
+                }
+              />
+            </div>
+          );
+        })}
       </div>
 
+      {/* ---------------------------------------
+          FORGOT PASSWORD
+      --------------------------------------- */}
       {forgotPassword && (
         <div className="mt-4 flex items-center justify-end text-sm">
           <button
@@ -171,6 +244,9 @@ const DynamicForm = ({
         </div>
       )}
 
+      {/* ---------------------------------------
+          SUBMIT AREA
+      --------------------------------------- */}
       <div
         className={
           hasSecondaryAction

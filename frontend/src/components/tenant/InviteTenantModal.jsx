@@ -5,7 +5,6 @@ import {
 } from "react-icons/md";
 
 import InputField from "../forms/InputField";
-
 import PrimaryButton from "../buttons/PrimaryButton";
 
 const InviteTenantModal = ({
@@ -18,17 +17,11 @@ const InviteTenantModal = ({
 }) => {
   if (!open) return null;
 
-  // Disable invite button until both fields are filled
-  const isInviteDisabled =
-    loading ||
-    !formData.organizationName.trim() ||
-    !formData.email.trim();
-
   // Organization name validation
   const handleOrganizationChange = (e) => {
     const value = e.target.value;
 
-    // Remove everything except lowercase letters
+    // Only lowercase letters are allowed
     const cleanedValue = value
       .toLowerCase()
       .replace(/[^a-z]/g, "");
@@ -41,13 +34,32 @@ const InviteTenantModal = ({
     });
   };
 
+  // Email validation
+  const isValidEmail = (email) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+  };
+
+  const emailIsValid = isValidEmail(formData.email.trim());
+
+  // Enable button only when:
+  // 1. Organization name exists
+  // 2. Email exists
+  // 3. Email format is correct
+  // 4. Not loading
+  const isInviteDisabled =
+    loading ||
+    !formData.organizationName.trim() ||
+    !formData.email.trim() ||
+    !emailIsValid;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
       <div className="flex max-h-[90vh] w-full max-w-xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
 
-        {/* Header */}
+        {/* ================= HEADER ================= */}
         <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-200 px-8 py-6">
           <div className="flex items-center gap-4">
+
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-green-100">
               <MdMailOutline className="text-3xl text-green-700" />
             </div>
@@ -61,6 +73,7 @@ const InviteTenantModal = ({
                 Send an invitation email to an organization.
               </p>
             </div>
+
           </div>
 
           <button
@@ -73,7 +86,7 @@ const InviteTenantModal = ({
           </button>
         </div>
 
-        {/* Body */}
+        {/* ================= BODY ================= */}
         <div className="flex-1 space-y-5 overflow-y-auto px-8 py-8">
 
           {/* Organization Name */}
@@ -85,24 +98,35 @@ const InviteTenantModal = ({
               onChange={handleOrganizationChange}
               placeholder="abctechnologies"
               disabled={loading}
+              required
+              helperText="Use only lowercase letters"
             />
 
             <p className="mt-2 text-xs text-gray-500">
-              Use only lowercase letters. Numbers, spaces,
-              and symbols are not allowed.
+              Numbers, spaces, and symbols are restricted.
             </p>
           </div>
 
-          {/* Email */}
-          <InputField
-            label="Business Email"
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={onChange}
-            placeholder="admin@company.com"
-            disabled={loading}
-          />
+          {/* Business Email */}
+          <div>
+            <InputField
+              label="Business Email"
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={onChange}
+              placeholder="admin@company.com"
+              disabled={loading}
+              required
+            />
+
+            {/* Show email error only after user starts typing */}
+            {formData.email.trim() && !emailIsValid && (
+              <p className="mt-2 text-xs text-red-500">
+                Please enter a valid email address.
+              </p>
+            )}
+          </div>
 
           {/* Loading Message */}
           {loading && (
@@ -114,9 +138,10 @@ const InviteTenantModal = ({
               </span>
             </div>
           )}
+
         </div>
 
-        {/* Footer */}
+        {/* ================= FOOTER ================= */}
         <div className="flex flex-shrink-0 justify-end gap-4 border-t border-gray-200 bg-white px-8 py-6">
 
           <button
@@ -130,15 +155,12 @@ const InviteTenantModal = ({
 
           <div className="w-44">
             <PrimaryButton
-              text={
-                loading
-                  ? "Sending..."
-                  : "Send Invite"
-              }
+              text={loading ? "Sending..." : "Send Invite"}
               onClick={onSubmit}
               disabled={isInviteDisabled}
             />
           </div>
+
         </div>
       </div>
     </div>

@@ -1,5 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
 import { useSearchParams } from "react-router-dom";
+
 import { jwtDecode } from "jwt-decode";
 
 import Logo from "../../components/common/Logo";
@@ -12,14 +18,21 @@ import { useToast } from "../../context/ToastContext";
 import authBg from "../../assets/images/auth-bg.jpg";
 
 const TenantRegistration = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams] =
+    useSearchParams();
+
   const { showToast } = useToast();
 
-  const [loading, setLoading] = useState(false);
-  const [registrationCompleted, setRegistrationCompleted] =
+  const [loading, setLoading] =
     useState(false);
 
-  const token = searchParams.get("token");
+  const [
+    registrationCompleted,
+    setRegistrationCompleted,
+  ] = useState(false);
+
+  const token =
+    searchParams.get("token");
 
   // ---------------------------------------
   // Decode invitation token
@@ -30,9 +43,13 @@ const TenantRegistration = () => {
     }
 
     try {
-      const decoded = jwtDecode(token);
+      const decoded =
+        jwtDecode(token);
 
-      if (!decoded || typeof decoded !== "object") {
+      if (
+        !decoded ||
+        typeof decoded !== "object"
+      ) {
         return null;
       }
 
@@ -43,13 +60,16 @@ const TenantRegistration = () => {
   }, [token]);
 
   const organizationName =
-    invitationData?.organizationName || "";
+    invitationData?.organizationName ||
+    "";
 
-  const email = invitationData?.email || "";
+  const email =
+    invitationData?.email || "";
 
   const isTokenExpired = Boolean(
     invitationData?.exp &&
-      Date.now() >= invitationData.exp * 1000
+      Date.now() >=
+        invitationData.exp * 1000
   );
 
   const isInvitationUsable =
@@ -58,7 +78,8 @@ const TenantRegistration = () => {
         invitationData &&
         organizationName &&
         email &&
-        invitationData?.purpose === "TenantInvitation"
+        invitationData?.purpose ===
+          "TenantInvitation"
     ) && !isTokenExpired;
 
   // ---------------------------------------
@@ -70,70 +91,158 @@ const TenantRegistration = () => {
         name: "firstName",
         label: "First Name",
         type: "text",
-        placeholder: "Enter first name",
+        placeholder:
+          "Enter first name",
         required: true,
-        inputClassName: "py-2.5",
+        inputClassName:
+          "py-2.5",
+
+        rules: {
+          required:
+            "First name is required.",
+
+          pattern: {
+            value:
+              /^[A-Za-z]+$/,
+            message:
+              "First name should contain letters only.",
+          },
+        },
       },
 
       {
         name: "lastName",
         label: "Last Name",
         type: "text",
-        placeholder: "Enter last name",
+        placeholder:
+          "Enter last name",
         required: true,
-        inputClassName: "py-2.5",
+        inputClassName:
+          "py-2.5",
+
+        rules: {
+          required:
+            "Last name is required.",
+
+          pattern: {
+            value:
+              /^[A-Za-z]+$/,
+            message:
+              "Last name should contain letters only.",
+          },
+        },
       },
 
       {
         name: "phone",
         label: "Phone Number",
         type: "tel",
-        placeholder: "Enter 10 digit phone number",
+        placeholder:
+          "Enter 10 digit phone number",
         required: true,
-        inputClassName: "py-2.5",
+        inputClassName:
+          "py-2.5",
+
+        rules: {
+          required:
+            "Phone number is required.",
+
+          pattern: {
+            value:
+              /^\d{10}$/,
+            message:
+              "Phone number must contain exactly 10 digits.",
+          },
+        },
       },
 
       {
         name: "location",
         label: "Location",
         type: "text",
-        placeholder: "Enter location",
+        placeholder:
+          "Enter location",
         required: true,
-        inputClassName: "py-2.5",
+        inputClassName:
+          "py-2.5",
+
+        rules: {
+          required:
+            "Location is required.",
+        },
       },
 
       {
         name: "password",
         label: "Password",
         type: "password",
-        placeholder: "Enter password",
+        placeholder:
+          "Enter password",
         required: true,
-        inputClassName: "py-2.5",
+        inputClassName:
+          "py-2.5",
+
+        rules: {
+          required:
+            "Password is required.",
+
+          minLength: {
+            value: 8,
+            message:
+              "Password must contain at least 8 characters.",
+          },
+
+          pattern: {
+            value:
+              /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).+$/,
+            message:
+              "Password must contain uppercase, lowercase and a number.",
+          },
+        },
       },
 
       {
         name: "confirmPassword",
         label: "Confirm Password",
         type: "password",
-        placeholder: "Confirm password",
+        placeholder:
+          "Confirm password",
         required: true,
-        inputClassName: "py-2.5",
+        inputClassName:
+          "py-2.5",
+
+        rules: {
+          required:
+            "Please confirm your password.",
+
+          validate: (
+            value,
+            formValues
+          ) =>
+            value ===
+              formValues.password ||
+            "Password and confirm password must match.",
+        },
       },
     ],
     []
   );
 
-  const registrationDefaultValues = useMemo(
-    () => ({
-      firstName: "",
-      lastName: "",
-      phone: "",
-      location: "",
-      password: "",
-      confirmPassword: "",
-    }),
-    []
-  );
+  // ---------------------------------------
+  // Default values
+  // ---------------------------------------
+  const registrationDefaultValues =
+    useMemo(
+      () => ({
+        firstName: "",
+        lastName: "",
+        phone: "",
+        location: "",
+        password: "",
+        confirmPassword: "",
+      }),
+      []
+    );
 
   // ---------------------------------------
   // Token validation
@@ -142,7 +251,8 @@ const TenantRegistration = () => {
     if (!token) {
       showToast({
         type: "error",
-        title: "Invalid Registration Link",
+        title:
+          "Invalid Registration Link",
         message:
           "The registration link is missing the invitation token.",
       });
@@ -153,7 +263,8 @@ const TenantRegistration = () => {
     if (!invitationData) {
       showToast({
         type: "error",
-        title: "Invalid Registration Link",
+        title:
+          "Invalid Registration Link",
         message:
           "The registration link is invalid.",
       });
@@ -167,7 +278,8 @@ const TenantRegistration = () => {
     ) {
       showToast({
         type: "error",
-        title: "Invalid Invitation",
+        title:
+          "Invalid Invitation",
         message:
           "This link is not a valid tenant registration invitation.",
       });
@@ -178,7 +290,8 @@ const TenantRegistration = () => {
     if (isTokenExpired) {
       showToast({
         type: "error",
-        title: "Invitation Expired",
+        title:
+          "Invitation Expired",
         message:
           "This tenant registration invitation has expired.",
       });
@@ -193,234 +306,276 @@ const TenantRegistration = () => {
   // ---------------------------------------
   // Submit registration
   // ---------------------------------------
-  const handleRegistrationSubmit = async (
-    formData
-  ) => {
-    if (!isInvitationUsable) {
-      showToast({
-        type: "error",
-        title: "Invalid Invitation",
-        message:
-          "This registration invitation is invalid or expired.",
-      });
-
-      return;
-    }
-
-    const firstName = formData.firstName
-      ?.trim();
-
-    const lastName = formData.lastName
-      ?.trim();
-
-    const phone = formData.phone
-      ?.trim();
-
-    const location = formData.location
-      ?.trim();
-
-    const password = formData.password || "";
-
-    const confirmPassword =
-      formData.confirmPassword || "";
-
-    // ---------------------------------------
-    // First name
-    // ---------------------------------------
-    if (!firstName) {
-      showToast({
-        type: "error",
-        title: "Validation Error",
-        message: "First name is required.",
-      });
-
-      return;
-    }
-
-    if (!/^[A-Za-z]+$/.test(firstName)) {
-      showToast({
-        type: "error",
-        title: "Validation Error",
-        message:
-          "First name should contain letters only.",
-      });
-
-      return;
-    }
-
-    // ---------------------------------------
-    // Last name
-    // ---------------------------------------
-    if (!lastName) {
-      showToast({
-        type: "error",
-        title: "Validation Error",
-        message: "Last name is required.",
-      });
-
-      return;
-    }
-
-    if (!/^[A-Za-z]+$/.test(lastName)) {
-      showToast({
-        type: "error",
-        title: "Validation Error",
-        message:
-          "Last name should contain letters only.",
-      });
-
-      return;
-    }
-
-    // ---------------------------------------
-    // Phone number
-    // ---------------------------------------
-    if (!/^\d{10}$/.test(phone)) {
-      showToast({
-        type: "error",
-        title: "Invalid Phone Number",
-        message:
-          "Phone number must contain exactly 10 digits.",
-      });
-
-      return;
-    }
-
-    // ---------------------------------------
-    // Location
-    // ---------------------------------------
-    if (!location) {
-      showToast({
-        type: "error",
-        title: "Validation Error",
-        message: "Location is required.",
-      });
-
-      return;
-    }
-
-    // ---------------------------------------
-    // Password
-    // ---------------------------------------
-    if (password.length < 8) {
-      showToast({
-        type: "error",
-        title: "Invalid Password",
-        message:
-          "Password must contain at least 8 characters.",
-      });
-
-      return;
-    }
-
-    if (!/[A-Z]/.test(password)) {
-      showToast({
-        type: "error",
-        title: "Invalid Password",
-        message:
-          "Password must contain at least one capital letter.",
-      });
-
-      return;
-    }
-
-    if (!/[a-z]/.test(password)) {
-      showToast({
-        type: "error",
-        title: "Invalid Password",
-        message:
-          "Password must contain at least one small letter.",
-      });
-
-      return;
-    }
-
-    if (!/\d/.test(password)) {
-      showToast({
-        type: "error",
-        title: "Invalid Password",
-        message:
-          "Password must contain at least one number.",
-      });
-
-      return;
-    }
-
-    // ---------------------------------------
-    // Confirm password
-    // ---------------------------------------
-    if (password !== confirmPassword) {
-      showToast({
-        type: "error",
-        title: "Password Mismatch",
-        message:
-          "Password and confirm password must match.",
-      });
-
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      const response = await fetch(
-        "http://localhost:5000/tenants/register",
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type": "application/json",
-          },
-
-          body: JSON.stringify({
-            token,
-            firstName,
-            lastName,
-            phone,
-            location,
-            password,
-          }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
+  const handleRegistrationSubmit =
+    async (formData) => {
+      if (!isInvitationUsable) {
         showToast({
           type: "error",
-          title: "Registration Failed",
+          title:
+            "Invalid Invitation",
           message:
-            data?.message ||
-            "Unable to complete registration.",
+            "This registration invitation is invalid or expired.",
         });
 
         return;
       }
 
-      showToast({
-        type: "success",
-        title: "Registration Submitted",
-        message:
-          "Your registration has been submitted and is pending approval.",
-      });
+      const firstName =
+        formData.firstName?.trim();
 
-      setRegistrationCompleted(true);
-    } catch (error) {
-      console.error(
-        "Tenant registration error:",
-        error
-      );
+      const lastName =
+        formData.lastName?.trim();
 
-      showToast({
-        type: "error",
-        title: "Registration Failed",
-        message:
-          "Unable to complete registration. Please try again.",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+      const phone =
+        formData.phone?.trim();
+
+      const location =
+        formData.location?.trim();
+
+      const password =
+        formData.password || "";
+
+      const confirmPassword =
+        formData.confirmPassword ||
+        "";
+
+      // ---------------------------------------
+      // First name
+      // ---------------------------------------
+      if (!firstName) {
+        showToast({
+          type: "error",
+          title:
+            "Validation Error",
+          message:
+            "First name is required.",
+        });
+
+        return;
+      }
+
+      if (
+        !/^[A-Za-z]+$/.test(
+          firstName
+        )
+      ) {
+        showToast({
+          type: "error",
+          title:
+            "Validation Error",
+          message:
+            "First name should contain letters only.",
+        });
+
+        return;
+      }
+
+      // ---------------------------------------
+      // Last name
+      // ---------------------------------------
+      if (!lastName) {
+        showToast({
+          type: "error",
+          title:
+            "Validation Error",
+          message:
+            "Last name is required.",
+        });
+
+        return;
+      }
+
+      if (
+        !/^[A-Za-z]+$/.test(
+          lastName
+        )
+      ) {
+        showToast({
+          type: "error",
+          title:
+            "Validation Error",
+          message:
+            "Last name should contain letters only.",
+        });
+
+        return;
+      }
+
+      // ---------------------------------------
+      // Phone number
+      // ---------------------------------------
+      if (
+        !/^\d{10}$/.test(
+          phone
+        )
+      ) {
+        showToast({
+          type: "error",
+          title:
+            "Invalid Phone Number",
+          message:
+            "Phone number must contain exactly 10 digits.",
+        });
+
+        return;
+      }
+
+      // ---------------------------------------
+      // Location
+      // ---------------------------------------
+      if (!location) {
+        showToast({
+          type: "error",
+          title:
+            "Validation Error",
+          message:
+            "Location is required.",
+        });
+
+        return;
+      }
+
+      // ---------------------------------------
+      // Password
+      // ---------------------------------------
+      if (password.length < 8) {
+        showToast({
+          type: "error",
+          title:
+            "Invalid Password",
+          message:
+            "Password must contain at least 8 characters.",
+        });
+
+        return;
+      }
+
+      if (!/[A-Z]/.test(password)) {
+        showToast({
+          type: "error",
+          title:
+            "Invalid Password",
+          message:
+            "Password must contain at least one capital letter.",
+        });
+
+        return;
+      }
+
+      if (!/[a-z]/.test(password)) {
+        showToast({
+          type: "error",
+          title:
+            "Invalid Password",
+          message:
+            "Password must contain at least one small letter.",
+        });
+
+        return;
+      }
+
+      if (!/\d/.test(password)) {
+        showToast({
+          type: "error",
+          title:
+            "Invalid Password",
+          message:
+            "Password must contain at least one number.",
+        });
+
+        return;
+      }
+
+      // ---------------------------------------
+      // Confirm password
+      // ---------------------------------------
+      if (
+        password !==
+        confirmPassword
+      ) {
+        showToast({
+          type: "error",
+          title:
+            "Password Mismatch",
+          message:
+            "Password and confirm password must match.",
+        });
+
+        return;
+      }
+
+      try {
+        setLoading(true);
+
+        const response =
+          await fetch(
+            "http://localhost:5000/tenants/register",
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+
+              body: JSON.stringify({
+                token,
+                firstName,
+                lastName,
+                phone,
+                location,
+                password,
+              }),
+            }
+          );
+
+        const data =
+          await response.json();
+
+        if (
+          !response.ok ||
+          !data.success
+        ) {
+          showToast({
+            type: "error",
+            title:
+              "Registration Failed",
+            message:
+              data?.message ||
+              "Unable to complete registration.",
+          });
+
+          return;
+        }
+
+        showToast({
+          type: "success",
+          title:
+            "Registration Submitted",
+          message:
+            "Your registration has been submitted and is pending approval.",
+        });
+
+        setRegistrationCompleted(
+          true
+        );
+      } catch (error) {
+        console.error(
+          "Tenant registration error:",
+          error
+        );
+
+        showToast({
+          type: "error",
+          title:
+            "Registration Failed",
+          message:
+            "Unable to complete registration. Please try again.",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
 
   // ---------------------------------------
   // Validation error from DynamicForm
@@ -428,13 +583,15 @@ const TenantRegistration = () => {
   const handleValidationError = (
     validationErrors
   ) => {
-    const firstError = Object.values(
-      validationErrors || {}
-    )[0];
+    const firstError =
+      Object.values(
+        validationErrors || {}
+      )[0];
 
     showToast({
       type: "error",
-      title: "Validation Error",
+      title:
+        "Validation Error",
       message:
         firstError?.message ||
         "Please complete all required fields.",
@@ -449,7 +606,8 @@ const TenantRegistration = () => {
       <div
         className="flex min-h-screen items-center justify-center bg-cover bg-center bg-no-repeat px-4 py-6"
         style={{
-          backgroundImage: `url(${authBg})`,
+          backgroundImage:
+            `url(${authBg})`,
         }}
       >
         <div className="w-full">
@@ -470,7 +628,8 @@ const TenantRegistration = () => {
               </p>
 
               <p className="mt-2 text-sm font-semibold text-gray-800">
-                Organization: {organizationName}
+                Organization:{" "}
+                {organizationName}
               </p>
 
               <p className="mt-1 text-sm text-gray-600">
@@ -490,7 +649,8 @@ const TenantRegistration = () => {
     <div
       className="min-h-screen bg-cover bg-center bg-no-repeat px-4 py-6 sm:px-6"
       style={{
-        backgroundImage: `url(${authBg})`,
+        backgroundImage:
+          `url(${authBg})`,
       }}
     >
       <div className="w-full">
@@ -546,7 +706,9 @@ const TenantRegistration = () => {
               {/* Personal details */}
               <div className="mt-5">
                 <DynamicForm
-                  fields={registrationFields}
+                  fields={
+                    registrationFields
+                  }
                   defaultValues={
                     registrationDefaultValues
                   }
@@ -560,9 +722,13 @@ const TenantRegistration = () => {
                   loadingText="SUBMITTING..."
                   loading={loading}
                   mode="onChange"
-                  disableSubmitUntilFilled={false}
+                  disableSubmitUntilFilled={
+                    true
+                  }
                   twoColumnLayout
-                  submitButtonFullWidth={false}
+                  submitButtonFullWidth={
+                    false
+                  }
                 />
               </div>
             </>

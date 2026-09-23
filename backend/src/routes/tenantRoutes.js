@@ -1,8 +1,18 @@
 import express from "express";
-import { sendTenantInvitation } from "../controllers/tenantInvitationController.js";
-import { registerTenant } from "../controllers/tenantRegistrationController.js";
+
+import {
+  sendTenantInvitation,
+} from "../controllers/tenantInvitationController.js";
+
+import {
+  registerTenant,
+  validateTenantInvitation,
+} from "../controllers/tenantRegistrationController.js";
+
 import authMiddleware from "../middlewares/authMiddleware.js";
+
 import roleMiddleware from "../middlewares/roleMiddleware.js";
+
 import constants from "../config/constants.js";
 
 import {
@@ -12,8 +22,7 @@ import {
   deleteTenant,
 } from "../controllers/tenantController.js";
 
-const router =
-  express.Router();
+const router = express.Router();
 
 // ---------------------------------------
 // GET ALL TENANTS
@@ -27,6 +36,15 @@ router.get(
     constants.roles.superAdmin
   ),
   getTenants
+);
+
+// ---------------------------------------
+// VALIDATE TENANT INVITATION
+// ---------------------------------------
+
+router.post(
+  "/invitation/validate",
+  validateTenantInvitation
 );
 
 // ---------------------------------------
@@ -70,7 +88,11 @@ router.delete(
   ),
   deleteTenant
 );
-// Tenant Invitation
+
+// ---------------------------------------
+// TENANT INVITATION
+// ---------------------------------------
+
 router.post(
   "/invite",
   authMiddleware,
@@ -81,9 +103,13 @@ router.post(
   sendTenantInvitation
 );
 
-// Tenant Registration
+// ---------------------------------------
+// TENANT REGISTRATION
+// ---------------------------------------
+
 router.post(
   "/register",
   registerTenant
 );
+
 export default router;

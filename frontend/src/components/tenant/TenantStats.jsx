@@ -8,30 +8,89 @@ import {
 const TenantStats = ({
   tenants = [],
 }) => {
-  // Total tenants
+  // ---------------------------------------
+  // REMOVE DUPLICATE TENANT RECORDS
+  // ---------------------------------------
+  const uniqueTenants = Array.from(
+    new Map(
+      tenants.map((tenant, index) => {
+        const email =
+          tenant.email
+            ?.trim()
+            .toLowerCase();
+
+        const tenantId =
+          tenant.tenantId
+            ?.toString()
+            .trim();
+
+        const organization =
+          tenant.organization
+            ?.trim()
+            .toLowerCase();
+
+        // Use the strongest available
+        // unique identifier
+        const uniqueKey =
+          tenantId ||
+          email ||
+          organization ||
+          `tenant-${index}`;
+
+        return [
+          uniqueKey,
+          tenant,
+        ];
+      })
+    ).values()
+  );
+
+  // ---------------------------------------
+  // NORMALIZE STATUS
+  // ---------------------------------------
+  const getStatus = (tenant) =>
+    tenant.status
+      ?.toString()
+      .trim()
+      .toLowerCase();
+
+  // ---------------------------------------
+  // TOTAL TENANTS
+  // ---------------------------------------
   const totalTenants =
-    tenants.length;
+    uniqueTenants.length;
 
-  // Active tenants
+  // ---------------------------------------
+  // ACTIVE TENANTS
+  // ---------------------------------------
   const activeTenants =
-    tenants.filter(
+    uniqueTenants.filter(
       (tenant) =>
-        tenant.status === "Active"
+        getStatus(tenant) ===
+        "active"
     ).length;
 
-  // Pending tenants
+  // ---------------------------------------
+  // PENDING TENANTS
+  // ---------------------------------------
   const pendingTenants =
-    tenants.filter(
+    uniqueTenants.filter(
       (tenant) =>
-        tenant.status === "Pending"
+        getStatus(tenant) ===
+          "pending" ||
+        getStatus(tenant) ===
+          "pending approval"
     ).length;
 
-  // Invitations sent
-  // Every tenant currently represents
-  // an invitation/tenant record.
+  // ---------------------------------------
+  // INVITATIONS SENT
+  // ---------------------------------------
   const invitationsSent =
-    tenants.length;
+    uniqueTenants.length;
 
+  // ---------------------------------------
+  // STATS
+  // ---------------------------------------
   const stats = [
     {
       title: "Total Tenants",
@@ -71,8 +130,7 @@ const TenantStats = ({
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
       {stats.map((stat) => (
         <div
           key={stat.title}
@@ -95,7 +153,6 @@ const TenantStats = ({
           </div>
         </div>
       ))}
-
     </div>
   );
 };

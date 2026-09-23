@@ -1,248 +1,193 @@
 import {
-  MdVisibility,
-  MdEdit,
-  MdDelete,
   MdBusiness,
+  MdVisibility,
+  MdDelete,
+  MdArrowUpward,
+  MdArrowDownward,
 } from "react-icons/md";
 
-import TenantTableHeader from "./TenantTableHeader";
-
-const dummyTenants = [
-  {
-    id: 1,
-    organization: "Acme Corporation",
-    contact: "John David",
-    email: "admin@acme.com",
-    employees: 156,
-    status: "Active",
-    created: "12 Aug 2026",
-  },
-  {
-    id: 2,
-    organization: "TechNova Pvt Ltd",
-    contact: "Michael Roy",
-    email: "contact@technova.com",
-    employees: 82,
-    status: "Pending",
-    created: "10 Aug 2026",
-  },
-  {
-    id: 3,
-    organization: "GreenLeaf Solutions",
-    contact: "Sara Wilson",
-    email: "admin@greenleaf.com",
-    employees: 245,
-    status: "Active",
-    created: "05 Aug 2026",
-  },
-];
-
-const statusStyle = {
-  Active:
-    "bg-green-100 text-green-700 border border-green-200",
-  Pending:
-    "bg-yellow-100 text-yellow-700 border border-yellow-200",
-  Inactive:
-    "bg-red-100 text-red-700 border border-red-200",
-};
-
 const TenantTable = ({
-  tenants = dummyTenants,
+  tenants,
   onView,
-  onEdit,
   onDelete,
   sortField,
   sortDirection,
   onSort,
 }) => {
+  const handleSort = (field) => {
+    if (onSort) {
+      onSort(field);
+    }
+  };
+
+  const getSortIcon = (field) => {
+    if (sortField !== field) {
+      return <span className="text-gray-400 text-xs">↕</span>;
+    }
+
+    return sortDirection === "asc" ? (
+      <MdArrowUpward className="text-gray-400 text-sm" />
+    ) : (
+      <MdArrowDownward className="text-gray-400 text-sm" />
+    );
+  };
+
   return (
-    <div className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
-
-      {/* Header */}
-
-      <div className="flex items-center justify-between border-b border-gray-100 px-6 py-5">
-
-        <div>
-
-          <h2 className="text-xl font-semibold text-gray-900">
-            Tenant Organizations
-          </h2>
-
-          <p className="mt-1 text-sm text-gray-500">
-            Manage all organizations connected with TenantHub.
-          </p>
-
-        </div>
-
-      </div>
-
-      {/* Table */}
-
-      <div className="overflow-x-auto">
-
-        <table className="min-w-full">
-
-          <thead className="bg-gray-50">
-
-            <tr>
-
-              <TenantTableHeader
-                title="Organization"
-                field="organization"
-                sortable
-                sortField={sortField}
-                sortDirection={sortDirection}
-                onSort={onSort}
-              />
-
-              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-                Contact
-              </th>
-
-              <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-                Email
-              </th>
-
-              <TenantTableHeader
-                title="Employees"
-                field="employees"
-                sortable
-                sortField={sortField}
-                sortDirection={sortDirection}
-                onSort={onSort}
-              />
-
-              <th className="px-6 py-4 text-center text-sm font-semibold text-gray-600">
-                Status
-              </th>
-
-              <TenantTableHeader
-                title="Created"
-                field="created"
-                sortable
-                sortField={sortField}
-                sortDirection={sortDirection}
-                onSort={onSort}
-              />
-
-              <th className="px-6 py-4 text-center text-sm font-semibold text-gray-600">
-                Actions
-              </th>
-
-            </tr>
-
-          </thead>
-
-          <tbody>
-
-            {tenants.map((tenant) => (
-
-              <tr
-                key={tenant.id}
-                onClick={() => onView?.(tenant)}
-                className="cursor-pointer border-t border-gray-100 transition hover:bg-gray-50"
+    <div className="w-full overflow-x-auto rounded-2xl border border-gray-200 bg-white">
+      <table className="w-full min-w-[900px] border-collapse">
+        {/* TABLE HEADER */}
+        <thead>
+          <tr className="border-b border-gray-200 bg-gray-50">
+            {/* ORGANIZATION */}
+            <th className="px-3 py-5 text-left">
+              <button
+                type="button"
+                onClick={() => handleSort("organization")}
+                className="flex items-center gap-2 text-sm font-semibold text-slate-800"
               >
+                Organization
+                {getSortIcon("organization")}
+              </button>
+            </th>
 
-                <td className="px-6 py-5">
+            {/* CONTACT */}
+            <th className="px-3 py-5 text-left text-sm font-semibold text-slate-800">
+              Contact
+            </th>
 
-                  <div className="flex items-center gap-4">
+            {/* EMAIL */}
+            <th className="px-3 py-5 text-left text-sm font-semibold text-slate-800">
+              Email
+            </th>
 
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-green-100">
+            {/* EMPLOYEES */}
+            <th className="px-3 py-5 text-left">
+              <button
+                type="button"
+                onClick={() => handleSort("employees")}
+                className="flex items-center gap-2 text-sm font-semibold text-slate-800"
+              >
+                Employees
+                {getSortIcon("employees")}
+              </button>
+            </th>
 
-                      <MdBusiness className="text-2xl text-green-700" />
+            {/* STATUS */}
+            <th className="px-3 py-5 text-left text-sm font-semibold text-slate-800">
+              Status
+            </th>
 
-                    </div>
+            {/* CREATED */}
+            <th className="px-3 py-5 text-left">
+              <button
+                type="button"
+                onClick={() => handleSort("created")}
+                className="flex items-center gap-2 text-sm font-semibold text-slate-800"
+              >
+                Created
+                {getSortIcon("created")}
+              </button>
+            </th>
 
-                    <div>
+            {/* ACTIONS */}
+            <th className="px-3 py-5 text-left text-sm font-semibold text-slate-800">
+              Actions
+            </th>
+          </tr>
+        </thead>
 
-                      <p className="font-semibold text-gray-900">
-                        {tenant.organization}
-                      </p>
-
-                      <p className="text-sm text-gray-500">
-                        Tenant #{tenant.id}
-                      </p>
-
-                    </div>
-
+        {/* TABLE BODY */}
+        <tbody>
+          {tenants.map((tenant) => (
+            <tr
+              key={tenant.id}
+              className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50"
+            >
+              {/* ORGANIZATION */}
+              <td className="px-3 py-5">
+                <div className="flex items-center gap-4">
+                  {/* BUSINESS ICON */}
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-green-100">
+                    <MdBusiness className="text-2xl text-green-600" />
                   </div>
 
-                </td>
+                  {/* ORGANIZATION NAME */}
+                  <div className="w-[240px] shrink-0">
+                    <p className="break-words text-base font-semibold text-slate-900">
+                      {tenant.organization || "-"}
+                    </p>
 
-                <td className="px-6 py-5 text-gray-700">
-                  {tenant.contact}
-                </td>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Tenant #{tenant.tenantId || tenant.id || "-"}
+                    </p>
+                  </div>
 
-                <td className="px-6 py-5 text-gray-600">
-                  {tenant.email}
-                </td>
-
-                <td className="px-6 py-5 text-center font-medium text-gray-700">
-                  {tenant.employees}
-                </td>
-
-                <td className="px-6 py-5 text-center">
-
-                  <span
-                    className={`rounded-full px-4 py-1 text-xs font-semibold ${statusStyle[tenant.status]}`}
+                  {/* VIEW / EYE */}
+                  <button
+                    type="button"
+                    onClick={() => onView && onView(tenant)}
+                    title="View tenant"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 transition hover:bg-blue-100"
                   >
-                    {tenant.status}
-                  </span>
+                    <MdVisibility className="text-xl" />
+                  </button>
+                </div>
+              </td>
 
-                </td>
+              {/* CONTACT */}
+              <td className="px-3 py-5 text-sm text-slate-700">
+                {tenant.contact && tenant.contact !== "-"
+                  ? tenant.contact
+                  : "-"}
+              </td>
 
-                <td className="px-6 py-5 text-center text-gray-600">
-                  {tenant.created}
-                </td>
+              {/* EMAIL */}
+              <td className="px-3 py-5 text-sm text-slate-700">
+                {tenant.email || "-"}
+              </td>
 
-                <td className="px-6 py-5">
+              {/* EMPLOYEES */}
+              <td className="px-3 py-5 text-sm text-slate-700">
+                {Number(tenant.employees) || 0}
+              </td>
 
-                  <div className="flex items-center justify-center gap-3">
+              {/* STATUS */}
+              <td className="px-3 py-5">
+                <span
+                  className={`inline-flex rounded-full px-4 py-1.5 text-xs font-medium ${
+                    tenant.status === "Active"
+                      ? "border border-green-200 bg-green-100 text-green-700"
+                      : tenant.status === "Pending"
+                      ? "border border-yellow-200 bg-yellow-100 text-yellow-700"
+                      : "border border-gray-200 bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  {tenant.status || "Inactive"}
+                </span>
+              </td>
 
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onView?.(tenant);
-                      }}
-                      className="rounded-xl bg-blue-50 p-2 text-blue-600 transition hover:bg-blue-100"
-                    >
-                      <MdVisibility size={20} />
-                    </button>
+              {/* CREATED */}
+              <td className="px-3 py-5 text-sm text-slate-700">
+                {tenant.created || "-"}
+              </td>
 
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onEdit?.(tenant);
-                      }}
-                      className="rounded-xl bg-yellow-50 p-2 text-yellow-600 transition hover:bg-yellow-100"
-                    >
-                      <MdEdit size={20} />
-                    </button>
-
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete?.(tenant);
-                      }}
-                      className="rounded-xl bg-red-50 p-2 text-red-600 transition hover:bg-red-100"
-                    >
-                      <MdDelete size={20} />
-                    </button>
-
-                  </div>
-
-                </td>
-
-              </tr>
-
-            ))}
-
-          </tbody>
-
-        </table>
-
-      </div>
-
+              {/* ACTIONS - DELETE ONLY */}
+              <td className="px-3 py-5">
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => onDelete && onDelete(tenant)}
+                    title="Delete tenant"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600 transition hover:bg-red-100"
+                  >
+                    <MdDelete className="text-xl" />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };

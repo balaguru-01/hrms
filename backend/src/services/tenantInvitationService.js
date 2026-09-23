@@ -77,7 +77,11 @@ const tenantInvitationService = async ({
     const normalizedEmail =
         email.trim().toLowerCase();
 
-    if (!emailRegex.test(normalizedEmail)) {
+    if (
+        !emailRegex.test(
+            normalizedEmail
+        )
+    ) {
         const error = new Error(
             "Please enter a valid email address."
         );
@@ -112,7 +116,7 @@ const tenantInvitationService = async ({
     }
 
     // ---------------------------------------
-    // 4. Create Pending Tenant
+    // 4. Create / Restore Pending Tenant
     // ---------------------------------------
 
     let newTenant;
@@ -123,30 +127,26 @@ const tenantInvitationService = async ({
     try {
 
         // ---------------------------------------
-        // DEBUG: Check what backend receives
+        // Find tenant by email
         // ---------------------------------------
+        //
+        // IMPORTANT:
+        // Do NOT filter isDeleted here.
+        // We need to know whether the email exists
+        // even when the old record was soft deleted.
+        // ---------------------------------------
+
+        const existingTenant =
+            await Tenant.findOne({
+                email: normalizedEmail,
+            });
 
         console.log(
             "========================================"
         );
 
         console.log(
-            "TENANT INVITATION DEBUG"
-        );
-
-        console.log(
-            "Original Organization:",
-            organizationName
-        );
-
-        console.log(
-            "Normalized Organization:",
-            normalizedOrganizationName
-        );
-
-        console.log(
-            "Original Email:",
-            email
+            "TENANT INVITATION EMAIL CHECK"
         );
 
         console.log(
@@ -155,33 +155,26 @@ const tenantInvitationService = async ({
         );
 
         console.log(
-            "========================================"
-        );
-
-        // ---------------------------------------
-        // Check existing tenant by email
-        // ---------------------------------------
-
-        const existingTenant =
-            await Tenant.findOne({
-                email: normalizedEmail,
-                isDeleted: false,
-            });
-
-        // ---------------------------------------
-        // DEBUG: Check whether tenant exists
-        // ---------------------------------------
-
-        console.log(
             "Existing Tenant:",
             existingTenant
         );
 
+        console.log(
+            "========================================"
+        );
+
         // ---------------------------------------
-        // If tenant already exists
+        // Existing tenant that is NOT deleted
+        // ---------------------------------------
+        //
+        // This means the email is already attached
+        // to an active/pending tenant record.
         // ---------------------------------------
 
-        if (existingTenant) {
+        if (
+            existingTenant &&
+            existingTenant.isDeleted !== true
+        ) {
 
             const error = new Error(
                 "An invitation has already been sent to this email address."
@@ -196,22 +189,20 @@ const tenantInvitationService = async ({
         }
 
         // ---------------------------------------
-        // Check old deleted tenant
+        // Existing tenant but deleted
+        // ---------------------------------------
+        //
+        // Reuse the old record instead of creating
+        // another record with the same unique email.
         // ---------------------------------------
 
-        const deletedTenant =
-            await Tenant.findOne({
-                email: normalizedEmail,
-                isDeleted: true,
-            });
+        if (
+            existingTenant &&
+            existingTenant.isDeleted === true
+        ) {
 
-        // ---------------------------------------
-        // Reuse old deleted tenant
-        // ---------------------------------------
-
-        if (deletedTenant) {
-
-            newTenant = deletedTenant;
+            newTenant =
+                existingTenant;
 
             newTenant.orgName =
                 normalizedOrganizationName;
@@ -219,9 +210,11 @@ const tenantInvitationService = async ({
             newTenant.employeeCount =
                 newTenant.employeeCount ?? 0;
 
-            // Do not replace the complete subscription
-            // object because it contains nested plan data.
-            if (!newTenant.subscription) {
+            // Keep the existing subscription object
+            // because it may contain nested plan data.
+            if (
+                !newTenant.subscription
+            ) {
                 newTenant.subscription = {};
             }
 
@@ -229,9 +222,11 @@ const tenantInvitationService = async ({
                 "Pending";
 
             if (
-                newTenant.subscription.employeeLimit ===
+                newTenant.subscription
+                    .employeeLimit ===
                     undefined ||
-                newTenant.subscription.employeeLimit ===
+                newTenant.subscription
+                    .employeeLimit ===
                     null
             ) {
                 newTenant.subscription.employeeLimit =
@@ -243,24 +238,32 @@ const tenantInvitationService = async ({
                     invitedBy.userId,
 
                 name:
-                    invitedBy.name || null,
+                    invitedBy.name ||
+                    null,
 
                 role:
-                    invitedBy.role || "",
+                    invitedBy.role ||
+                    "",
             };
 
-            newTenant.isActive = false;
+            newTenant.isActive =
+                false;
 
-            newTenant.isDeleted = false;
+            newTenant.isDeleted =
+                false;
 
             await newTenant.save();
 
-            tenantNeedsCleanup = true;
+            tenantNeedsCleanup =
+                true;
 
         } else {
 
             // ---------------------------------------
-            // Create brand-new Pending Tenant
+            // No tenant exists
+            // ---------------------------------------
+            //
+            // Create a completely new tenant.
             // ---------------------------------------
 
             newTenant =
@@ -276,7 +279,8 @@ const tenantInvitationService = async ({
                         0,
 
                     subscription: {
-                        status: "Pending",
+                        status:
+                            "Pending",
                     },
 
                     createdBy: {
@@ -284,46 +288,34 @@ const tenantInvitationService = async ({
                             invitedBy.userId,
 
                         name:
-                            invitedBy.name || null,
+                            invitedBy.name ||
+                            null,
 
                         role:
-                            invitedBy.role || "",
+                            invitedBy.role ||
+                            "",
                     },
 
                     updatedBy: {
-                        userId: null,
-                        name: null,
-                        role: null,
+                        userId:
+                            null,
+
+                        name:
+                            null,
+
+                        role:
+                            null,
                     },
 
-                    isActive: false,
+                    isActive:
+                        false,
 
-                    isDeleted: false,
+                    isDeleted:
+                        false,
                 });
-console.log("========================================");
-console.log("PENDING TENANT CREATED");
-console.log("Tenant ID:", newTenant._id.toString());
-console.log("Organization:", newTenant.orgName);
-console.log("Email:", newTenant.email);
-console.log(
-    "Status:",
-    newTenant.subscription?.status
-);
-console.log(
-    "isActive:",
-    newTenant.isActive
-);
-console.log(
-    "isDeleted:",
-    newTenant.isDeleted
-);
 
-const verifyTenant =
-    await Tenant.findById(newTenant._id).lean();
-
-console.log("DATABASE VERIFY:", verifyTenant);
-console.log("========================================");
-            tenantNeedsCleanup = true;
+            tenantNeedsCleanup =
+                true;
         }
 
     } catch (error) {
@@ -373,21 +365,24 @@ console.log("========================================");
                 "Duplicate tenant data already exists.";
 
             if (
-                duplicateField === "email"
+                duplicateField ===
+                "email"
             ) {
                 duplicateMessage =
                     "An invitation has already been sent to this email address.";
             }
 
             if (
-                duplicateField === "orgName"
+                duplicateField ===
+                "orgName"
             ) {
                 duplicateMessage =
                     "An organization with this name already exists.";
             }
 
             if (
-                duplicateField === "companyCode"
+                duplicateField ===
+                "companyCode"
             ) {
                 duplicateMessage =
                     "This company code already exists.";
@@ -403,7 +398,8 @@ console.log("========================================");
 
             duplicateError.auditReason =
                 `Duplicate tenant field: ${
-                    duplicateField || "unknown"
+                    duplicateField ||
+                    "unknown"
                 }`;
 
             throw duplicateError;
@@ -468,10 +464,12 @@ console.log("========================================");
                         invitedBy.userId,
 
                     name:
-                        invitedBy.name || "",
+                        invitedBy.name ||
+                        "",
 
                     role:
-                        invitedBy.role || "",
+                        invitedBy.role ||
+                        "",
                 },
             },
 
@@ -493,8 +491,8 @@ console.log("========================================");
     } catch (error) {
 
         // Email failed.
-        // Hide the tenant again so the same
-        // email can be invited again later.
+        // Hide the tenant again so the same email
+        // can be invited again later.
 
         if (tenantNeedsCleanup) {
 
@@ -503,12 +501,17 @@ console.log("========================================");
                 await Tenant.findByIdAndUpdate(
                     newTenant._id,
                     {
-                        isDeleted: true,
-                        isActive: false,
+                        isDeleted:
+                            true,
+
+                        isActive:
+                            false,
                     }
                 );
 
-            } catch (cleanupError) {
+            } catch (
+                cleanupError
+            ) {
 
                 console.error(
                     "Failed to cleanup pending tenant:",
@@ -556,13 +559,16 @@ console.log("========================================");
                     invitedBy.userId,
 
                 name:
-                    invitedBy.name || "",
+                    invitedBy.name ||
+                    "",
 
                 role:
-                    invitedBy.role || "",
+                    invitedBy.role ||
+                    "",
 
                 designation:
-                    invitedBy.designation || null,
+                    invitedBy.designation ||
+                    null,
             },
 
             module:

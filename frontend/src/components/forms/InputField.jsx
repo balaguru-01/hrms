@@ -11,6 +11,7 @@ const InputField = ({
   disabled = false,
   icon,
   autoComplete = "off",
+  helperText,
 }) => {
   return (
     <div className="space-y-2">
@@ -48,6 +49,7 @@ const InputField = ({
             outline-none
             transition-all
             duration-200
+            ${helperText ? "pb-8" : ""}
             ${icon ? "pl-12 pr-4" : "px-4"}
             focus:border-green-600
             focus:ring-2
@@ -57,6 +59,12 @@ const InputField = ({
             disabled:text-gray-500
           `}
         />
+
+        {helperText && (
+          <span className="pointer-events-none absolute bottom-2 left-4 text-[10px] text-gray-400">
+            {helperText}
+          </span>
+        )}
       </div>
     </div>
   );
