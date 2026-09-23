@@ -2,8 +2,7 @@ import { Route, Routes, Outlet } from "react-router-dom";
 
 import ChooseLogin from "./pages/auth/ChooseLogin";
 import EnterpriseLogin from "./pages/auth/EnterpriseLogin";
-import TenantLogin from "./pages/auth/TenantLogin";
-import TenantOrganization from "./pages/auth/TenantOrganization";
+
 import UserRegistration from "./pages/auth/UserRegistration";
 
 import NotFound from "./pages/errors/NotFound";
@@ -12,12 +11,11 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import PublicOnlyRoute from "./routes/PublicOnlyRoute";
 
 import EnterpriseDashboard from "./pages/enterprise/EnterpriseDashboard";
-import TenantManagement from "./pages/enterprise/TenantManagement";
+
 
 import Users from "./pages/enterprise/Users";
 import InvitationsSent from "./pages/enterprise/InvitationsSent";
 
-import SuperAdminDashboard from "./pages/superadmin/SuperAdminDashboard";
 
 import { EnterpriseUserProvider } from "./context/EnterpriseUserContext";
 
@@ -56,15 +54,9 @@ function AppRoutes() {
         element={<UserRegistration />}
       />
 
-      <Route
-        path={ROUTES.TENANT_ORGANIZATION}
-        element={<TenantOrganization />}
-      />
+     
 
-      <Route
-        path={ROUTES.TENANT_LOGIN}
-        element={<TenantLogin />}
-      />
+      
 
       {/* Enterprise Admin routes */}
 
@@ -85,12 +77,7 @@ function AppRoutes() {
             element={<EnterpriseDashboard />}
           />
 
-        <Route
-          path={
-            ROUTES.ENTERPRISE_TENANT_MANAGEMENT
-          }
-          element={<TenantManagement />}
-        />
+      
 
           <Route
             path={ROUTES.ENTERPRISE_USERS}
@@ -115,12 +102,7 @@ function AppRoutes() {
           />
         }
       >
-        <Route
-          path={
-            ROUTES.SUPER_ADMIN_DASHBOARD
-          }
-          element={<SuperAdminDashboard />}
-        />
+       
       </Route>
 
       <Route
