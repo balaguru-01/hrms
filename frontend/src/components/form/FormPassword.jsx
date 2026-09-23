@@ -9,11 +9,11 @@ import {
 const FormPassword = ({
   field,
   registration,
+  error,
+  formLoading,
 }) => {
-  const [
-    showPassword,
-    setShowPassword,
-  ] = useState(false);
+  const [showPassword, setShowPassword] =
+    useState(false);
 
   const {
     name,
@@ -23,8 +23,12 @@ const FormPassword = ({
     inputClassName = "",
   } = field;
 
+  const isDisabled =
+    disabled || formLoading;
+
   return (
     <div className="space-y-2">
+      {/* Label */}
       <label
         htmlFor={name}
         className="block text-sm font-medium text-gray-700"
@@ -39,8 +43,10 @@ const FormPassword = ({
       </label>
 
       <div className="relative">
+        {/* Lock Icon */}
         <MdLock className="absolute left-4 top-1/2 z-10 -translate-y-1/2 text-xl text-gray-400" />
 
+        {/* Password Input */}
         <input
           id={name}
           type={
@@ -48,13 +54,38 @@ const FormPassword = ({
               ? "text"
               : "password"
           }
-          name={name}
           placeholder={placeholder}
-          disabled={disabled}
+          disabled={isDisabled}
           {...registration}
-          className={`w-full rounded-xl border border-gray-300 ${inputClassName || "py-3"} pl-12 pr-12 outline-none transition-all duration-200 focus:border-green-600 focus:ring-2 focus:ring-green-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500 [&::-ms-reveal]:hidden [&::-ms-clear]:hidden`}
+          className={`
+            w-full
+            rounded-xl
+            border
+            pl-12
+            pr-12
+            outline-none
+            transition-all
+            duration-200
+            focus:ring-2
+            disabled:cursor-not-allowed
+            disabled:bg-gray-100
+            disabled:text-gray-500
+            [&::-ms-reveal]:hidden
+            [&::-ms-clear]:hidden
+
+            ${
+              error
+                ? "border-red-500 focus:border-red-500 focus:ring-red-100"
+                : "border-gray-300 focus:border-green-600 focus:ring-green-100"
+            }
+
+            ${
+              inputClassName || "py-3"
+            }
+          `}
         />
 
+        {/* Show / Hide Password Button */}
         <button
           type="button"
           onClick={() =>
@@ -62,7 +93,7 @@ const FormPassword = ({
               (previous) => !previous
             )
           }
-          disabled={disabled}
+          disabled={isDisabled}
           aria-label={
             showPassword
               ? "Hide password"
@@ -77,6 +108,13 @@ const FormPassword = ({
           )}
         </button>
       </div>
+
+      {/* Validation Error */}
+      {error && (
+        <p className="text-sm text-red-500">
+          {error}
+        </p>
+      )}
     </div>
   );
 };

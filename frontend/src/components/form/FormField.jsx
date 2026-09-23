@@ -6,12 +6,15 @@ const FormField = ({
   registration,
   control,
   formLoading,
+  error,
 }) => {
   if (field.type === "password") {
     return (
       <FormPassword
         field={field}
         registration={registration}
+        error={error}
+        formLoading={formLoading}
       />
     );
   }
@@ -30,6 +33,7 @@ const FormField = ({
         registration={registration}
         control={control}
         formLoading={formLoading}
+        error={error}
       />
     );
   }
@@ -38,6 +42,8 @@ const FormField = ({
     <FormInput
       field={field}
       registration={registration}
+      error={error}
+      formLoading={formLoading}
     />
   );
 };

@@ -2,6 +2,7 @@ import {
   useForm,
   useWatch,
 } from "react-hook-form";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import FormField from "./FormField";
@@ -18,43 +19,40 @@ const DynamicForm = ({
   loading = false,
   className = "",
   mode = "onSubmit",
-
   forgotPassword = false,
   forgotPasswordText = "Forgot password?",
   onForgotPassword,
-
   disableSubmitUntilFilled = true,
   twoColumnLayout = false,
-
   submitButtonFullWidth = true,
-
-  buttons = null,
+  secondaryAction = null,
 }) => {
   const {
     control,
     register,
     handleSubmit,
     formState: {
+      errors,
       isSubmitting,
+      isValid,
     },
   } = useForm({
     resolver: schema
       ? zodResolver(schema)
       : undefined,
-
     defaultValues,
-
     mode,
-
     reValidateMode: "onChange",
-
-    shouldFocusError: false,
+    shouldFocusError: true,
   });
 
   const fieldValues = useWatch({
     control,
   });
 
+  // ---------------------------------------
+  // CHECK REQUIRED FIELDS
+  // ---------------------------------------
   const isFormFilled = fields
     .filter(
       (field) => field.required !== false
@@ -70,35 +68,55 @@ const DynamicForm = ({
       );
     });
 
+  // ---------------------------------------
+  // LOADING
+  // ---------------------------------------
   const isFormLoading =
     loading || isSubmitting;
 
+  // ---------------------------------------
+  // SUBMIT BUTTON
+  // ---------------------------------------
   const isSubmitDisabled =
     (disableSubmitUntilFilled &&
-      !isFormFilled) ||
+      (!isFormFilled || !isValid)) ||
     isFormLoading;
 
-  const hasOddNumberOfFields =
-    fields.length % 2 !== 0;
-
+  // ---------------------------------------
+  // VALID SUBMIT
+  // ---------------------------------------
   const handleValidSubmit = async (
     data
   ) => {
     try {
       await onSubmit?.(data);
-    } catch {
-      return;
+    } catch (error) {
+      console.error(
+        "Form submit error:",
+        error
+      );
     }
   };
 
+  // ---------------------------------------
+  // INVALID SUBMIT
+  // ---------------------------------------
   const handleInvalidSubmit = (
     validationErrors
   ) => {
+    console.log(
+      "Validation errors:",
+      validationErrors
+    );
+
     onValidationError?.(
       validationErrors
     );
   };
 
+  // ---------------------------------------
+  // FORGOT PASSWORD
+  // ---------------------------------------
   const handleForgotPassword = () => {
     if (isFormLoading) {
       return;
@@ -107,21 +125,8 @@ const DynamicForm = ({
     onForgotPassword?.();
   };
 
-  const defaultButton = {
-    type: "submit",
-    variant: "primary",
-    disabled: isSubmitDisabled,
-    fullWidth: submitButtonFullWidth,
-    loadingText,
-    text: submitText,
-  };
-
-  const formButtons = Array.isArray(buttons)
-    ? buttons
-    : [defaultButton];
-
-  const hasMultipleButtons =
-    formButtons.length > 1;
+  const hasSecondaryAction =
+    Boolean(secondaryAction);
 
   return (
     <form
@@ -139,29 +144,91 @@ const DynamicForm = ({
             : "space-y-4"
         }
       >
-        {fields.map((field, index) => (
-          <div
-            key={field.name}
-            className={
-              twoColumnLayout &&
-              hasOddNumberOfFields &&
-              index === 0
-                ? "sm:col-span-2"
-                : ""
-            }
-          >
-            <FormField
-              field={field}
-              registration={register(
-                field.name
-              )}
-              control={control}
-              formLoading={isFormLoading}
-            />
-          </div>
-        ))}
+        {fields.map((field) => {
+          // ---------------------------------------
+          // FIELD REGISTRATION
+          // ---------------------------------------
+          const fieldRegistration =
+            register(field.name, {
+              // Add validation rules
+              ...field.rules,
+
+              // Custom input handling
+              onChange: (event) => {
+                const input =
+                  event.target;
+
+                // FIRST NAME
+                if (
+                  field.name ===
+                  "firstName"
+                ) {
+                  input.value =
+                    input.value.replace(
+                      /[^A-Za-z]/g,
+                      ""
+                    );
+                }
+
+                // LAST NAME
+                if (
+                  field.name ===
+                  "lastName"
+                ) {
+                  input.value =
+                    input.value.replace(
+                      /[^A-Za-z]/g,
+                      ""
+                    );
+                }
+
+                // PHONE NUMBER
+                if (
+                  field.name ===
+                  "phone"
+                ) {
+                  input.value =
+                    input.value
+                      .replace(
+                        /\D/g,
+                        ""
+                      )
+                      .slice(0, 10);
+                }
+              },
+            });
+
+          return (
+            <div
+              key={field.name}
+              className={
+                field.fullWidth
+                  ? "sm:col-span-2"
+                  : ""
+              }
+            >
+              <FormField
+                field={field}
+                registration={
+                  fieldRegistration
+                }
+                control={control}
+                formLoading={
+                  isFormLoading
+                }
+                error={
+                  errors[field.name]
+                    ?.message
+                }
+              />
+            </div>
+          );
+        })}
       </div>
 
+      {/* ---------------------------------------
+          FORGOT PASSWORD
+      --------------------------------------- */}
       {forgotPassword && (
         <div className="mt-4 flex items-center justify-end text-sm">
           <button
@@ -177,83 +244,39 @@ const DynamicForm = ({
         </div>
       )}
 
+      {/* ---------------------------------------
+          SUBMIT AREA
+      --------------------------------------- */}
       <div
         className={
-          hasMultipleButtons
+          hasSecondaryAction
             ? "mt-6 flex items-center justify-end gap-3"
             : "mt-6 flex justify-center"
         }
       >
-        {formButtons.map(
-          (button, index) => {
-            const isSubmitButton =
-              button.type === "submit";
+        {secondaryAction}
 
-            const buttonLoading =
-              isSubmitButton &&
-              isFormLoading;
-
-            const buttonDisabled =
-              button.disabled !== undefined
-                ? button.disabled ||
-                  (isSubmitButton &&
-                    isSubmitDisabled)
-                : isSubmitButton
-                  ? isSubmitDisabled
-                  : isFormLoading;
-
-            const buttonText =
-              buttonLoading
-                ? button.loadingText ||
-                  loadingText
-                : button.text ||
-                  button.children ||
-                  submitText;
-
-            return (
-              <FormButton
-                key={
-                  button.id ||
-                  `${button.type}-${index}`
-                }
-                type={
-                  button.type ||
-                  "submit"
-                }
-                variant={
-                  button.variant ||
-                  "primary"
-                }
-                loading={
-                  buttonLoading
-                }
-                disabled={
-                  buttonDisabled
-                }
-                fullWidth={
-                  hasMultipleButtons
-                    ? false
-                    : button.fullWidth ??
-                      submitButtonFullWidth
-                }
-                onClick={
-                  button.onClick
-                }
-                className={
-                  hasMultipleButtons
-                    ? "w-fit px-8 py-2.5 text-sm"
-                    : button.fullWidth ===
-                        false ||
-                      !submitButtonFullWidth
-                      ? "w-fit px-8 py-2.5 text-sm"
-                      : ""
-                }
-              >
-                {buttonText}
-              </FormButton>
-            );
+        <FormButton
+          type="submit"
+          loading={isFormLoading}
+          disabled={isSubmitDisabled}
+          fullWidth={
+            hasSecondaryAction
+              ? false
+              : submitButtonFullWidth
           }
-        )}
+          className={
+            hasSecondaryAction
+              ? "w-fit px-8 py-2.5 text-sm"
+              : submitButtonFullWidth
+                ? ""
+                : "w-fit px-8 py-2.5 text-sm"
+          }
+        >
+          {isFormLoading
+            ? loadingText
+            : submitText}
+        </FormButton>
       </div>
     </form>
   );
